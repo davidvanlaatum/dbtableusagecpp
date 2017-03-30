@@ -16,10 +16,6 @@ int main ( int argc, char *argv[] ) {
       driver.parseStdIn ( NULL );
     }
   } catch ( std::exception &e ) {
-    yy::SQLParser::syntax_error *e2;
-    if ( ( e2 = dynamic_cast<yy::SQLParser::syntax_error *> (&e) ) != NULL ) {
-      std::cerr << e2->location << ": ";
-    }
     std::cerr << e.what () << std::endl;
     exit ( 1 );
   } catch ( ... ) {
