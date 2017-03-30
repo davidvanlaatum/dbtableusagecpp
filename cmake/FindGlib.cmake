@@ -1,4 +1,4 @@
-# FindGLib.cmake
+# FindGlib.cmake
 # <https://github.com/nemequ/gnome-cmake>
 #
 # CMake support for GLib/GObject/GIO.
