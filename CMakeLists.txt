@@ -59,6 +59,7 @@ set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES src/position.
         coverage.info coverage.junit.xml coverage.xml)
 if (test)
     enable_testing()
+    find_package(Threads REQUIRED)
     if (coverage)
         include(CodeCoverage)
         setup_target_for_coverage(runUnitTests_coverage runUnitTests coverage)
