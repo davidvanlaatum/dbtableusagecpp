@@ -1,6 +1,12 @@
-language: c
+language: cpp
+before_install:
+  - sudo add-apt-repository ppa:george-edison55/cmake-3.x
 install:
   - apt-cache search cmake
 script:
   - mkdir build && cd build && cmake -Dtest=ON -DCMAKE_BUILD_TYPE=Debug .. && cmake --build .
 
+addons:
+  apt:
+    packages:
+      - cmake
