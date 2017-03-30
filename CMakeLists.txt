@@ -13,7 +13,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 add_definitions(-DYYDEBUG -DYY_NO_INPUT -DYY_NO_UNPUT)
 find_package(BISON REQUIRED)
 find_package(FLEX REQUIRED)
-find_package(Soci REQUIRED)
+#find_package(Soci REQUIRED)
 find_package(GLib REQUIRED)
 
 include_directories(${SOCI_INCLUDE_DIR} ${GLib_INCLUDE_DIRS})
