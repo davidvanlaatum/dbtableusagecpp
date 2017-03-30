@@ -8,7 +8,7 @@
 #include "SQLObject.h"
 class SQLDefault : public SQLObject {
 public:
-    std::string toString () const override;
+    virtual std::string toString () const;
 
 };
 

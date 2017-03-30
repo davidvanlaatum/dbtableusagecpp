@@ -16,7 +16,7 @@ DB *DB::setName ( std::string name ) {
 std::list<Table *> DB::getTables () {
   std::list<Table *> rt;
 
-  for ( auto it = tables.begin (); it != tables.end (); it++ ) {
+  for ( std::map<std::string,Table>::iterator it = tables.begin (); it != tables.end (); it++ ) {
     rt.push_back ( &it->second );
   }
 

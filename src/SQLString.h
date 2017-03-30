@@ -9,7 +9,7 @@
 class SQLString : public SQLObject {
 public:
     SQLString ( const std::string &value );
-    std::string toString () const override;
+    virtual std::string toString () const;
 private:
     std::string value;
 };

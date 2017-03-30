@@ -63,7 +63,7 @@ void MySQLEventParser::parseTableMap ( mysql_event *event, size_t len ) {
 }
 
 void MySQLEventParser::dump () {
-  for ( auto it = tableMap.begin (); it != tableMap.end (); it++ ) {
+  for ( std::map<uint64_t,MySQLTableMapEntry>::iterator it = tableMap.begin (); it != tableMap.end (); it++ ) {
     std::cout << it->second << std::endl;
   }
 }

@@ -13,7 +13,7 @@ public:
     SetStatement ( SQLObjectList<> *args );
     SetStatement ();
     virtual ~SetStatement ();
-    std::string toString () const override;
+    virtual std::string toString () const;
     const SQLObjectList<SetPair *> &getArgs () const;
 private:
     SQLObjectList<SetPair *> args;

@@ -11,7 +11,7 @@
 class SQLDeleteStatement : public SQLStatement {
 public:
     SQLDeleteStatement ( const std::string &table, SQLExpression *where );
-    std::string toString () const override;
+    virtual std::string toString () const;
 
 private:
     std::string table;

@@ -13,7 +13,7 @@ class SQLBinLogStatement : public SQLStatement {
 public:
     SQLBinLogStatement ( yy::location yylloc, const char *data, MySQLEventParser *parser );
     virtual ~SQLBinLogStatement ();
-    virtual std::string toString () const override;
+    virtual std::string toString () const;
 };
 
 

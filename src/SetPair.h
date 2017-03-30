@@ -10,7 +10,7 @@ class SetPair : public SQLObject {
 public:
     virtual ~SetPair ();
     SetPair ( const std::string &name, SQLObject *value );
-    std::string toString () const override;
+    virtual std::string toString () const;
     const std::string &getName () const;
     SQLObject *getValue () const;
 

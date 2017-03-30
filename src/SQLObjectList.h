@@ -10,13 +10,13 @@
 #include <list>
 #include "SQLObject.h"
 
-template <class T=SQLObject *> class SQLObjectList : public std::list<T>, public SQLObject {
+template <typename T=SQLObject *> class SQLObjectList : public std::list<T>, public SQLObject {
 public:
-    virtual std::string toString () const override {
+    virtual std::string toString () const {
       std::stringstream rt;
       rt << "(";
 
-      for ( auto it = this->begin (); it != this->end (); ++it )
+      for ( typename SQLObjectList<T>::const_iterator it = this->begin (); it != this->end (); ++it )
         rt << (it != this->begin () ? "," : "") << (*it);
 
       rt << ")";

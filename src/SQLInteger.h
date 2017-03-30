@@ -8,7 +8,7 @@
 #include "SQLObject.h"
 class SQLInteger : public SQLObject {
 public:
-    std::string toString () const override;
+    virtual std::string toString () const;
     int64_t toInt() const;
 
 private:

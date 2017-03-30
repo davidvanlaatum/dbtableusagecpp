@@ -10,7 +10,7 @@ DB *Host::getDB ( std::string name ) {
 
 std::list<DB *> Host::getDBs () {
   std::list<DB *> rt ( dbs.size () );
-  for ( auto it = dbs.begin (); it != dbs.end (); it++ ) {
+  for ( std::map<std::string,DB>::iterator it = dbs.begin (); it != dbs.end (); it++ ) {
     rt.push_back ( &it->second );
   }
   return rt;

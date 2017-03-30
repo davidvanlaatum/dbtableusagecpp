@@ -16,6 +16,8 @@ endfunction()
 checkandaddflag(-Wall CMAKE_CXX_FLAGS)
 checkandaddflag(-ansi CMAKE_CXX_FLAGS)
 checkandaddflag(-Wpedantic CMAKE_CXX_FLAGS)
+checkandaddflag(-Wno-variadic-macros CMAKE_CXX_FLAGS)
+checkandaddflag(-Wno-c++11-long-long CMAKE_CXX_FLAGS)
 
 checkandaddflag(-O0 CMAKE_CXX_FLAGS_DEBUG)
 checkandaddflag(-g CMAKE_CXX_FLAGS_DEBUG)

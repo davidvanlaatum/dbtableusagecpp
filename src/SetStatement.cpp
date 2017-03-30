@@ -6,7 +6,7 @@
 
 SetStatement::SetStatement ( SQLObjectList<> *args ) {
   if (args) {
-    for ( auto it = args->begin (); it != args->end (); ++it ) {
+    for ( SQLObjectList<>::iterator it = args->begin (); it != args->end (); ++it ) {
       if ( SetPair *SetPair = dynamic_cast<class SetPair *>(*it) ) {
         this->args.push ( SetPair );
       }
@@ -15,7 +15,7 @@ SetStatement::SetStatement ( SQLObjectList<> *args ) {
 }
 
 SetStatement::~SetStatement () {
-  for ( auto it = args.begin (); it != args.end (); ++it ) {
+  for ( SQLObjectList<SetPair *>::iterator it = args.begin (); it != args.end (); ++it ) {
     delete *it;
   }
   args.clear ();
