@@ -5,6 +5,8 @@
 #ifndef DBTABLEUSAGECPP_EVENTS_H
 #define DBTABLEUSAGECPP_EVENTS_H
 
+#include <stdint.h>
+
 struct mysql_event {
     int32_t timestamp;
     uint8_t type;
