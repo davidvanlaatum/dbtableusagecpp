@@ -90,6 +90,7 @@ stmt: set_stmt
 
 set_stmt: SET set_args_list {
   ctx.push(@$, new SetStatement($2));
+  delete $2;
 };
 
 set_args_list: set_args {
