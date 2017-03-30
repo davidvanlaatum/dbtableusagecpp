@@ -65,8 +65,7 @@ using namespace std;
 %}
 
 %initial-action {
- // Filename for locations here
- @$.begin.filename = @$.end.filename = new std::string(ctx.getFileName());
+ @$.begin.filename = @$.end.filename = &ctx.getFileName();
 }
 %%
 
@@ -99,6 +98,7 @@ set_args_list: set_args { $$ = new SQLObjectList<>(); $$->push($1); }
 
 set_args: variable_name '=' set_value {
     $$ = new SetPair($1,$3);
+    free($1);
 };
 
 set_value: value { $$ = $1; }
