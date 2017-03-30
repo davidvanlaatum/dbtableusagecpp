@@ -14,7 +14,7 @@ function(checkandaddflag flag addto)
     endif()
 endfunction()
 checkandaddflag(-Wall CMAKE_CXX_FLAGS)
-checkandaddflag(-std=c++11 CMAKE_CXX_FLAGS)
+checkandaddflag(-ansi CMAKE_CXX_FLAGS)
 checkandaddflag(-Wpedantic CMAKE_CXX_FLAGS)
 
 checkandaddflag(-O0 CMAKE_CXX_FLAGS_DEBUG)
