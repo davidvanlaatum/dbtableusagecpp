@@ -5,5 +5,6 @@ before_install:
   - sudo apt-get install cmake -y
 install:
   - apt-cache show cmake
+  - apt-cache search soci
 script:
   - mkdir build && cd build && cmake -Dtest=ON -DCMAKE_BUILD_TYPE=Debug .. && cmake --build .
