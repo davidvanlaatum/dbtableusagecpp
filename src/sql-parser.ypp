@@ -51,7 +51,6 @@ using namespace std;
 %token USE
 %token COLLATE
 %token WHERE
-%token PSUDOLINE
 
 %type <listval> set_args_list
 %type <sqlval> set_args set_value value
@@ -71,9 +70,7 @@ using namespace std;
 }
 %%
 
-stmt_list:
-    %empty
-  | stmt ';'
+stmt_list: stmt ';'
   | ';'
   | error ';'
   | stmt error ';'
