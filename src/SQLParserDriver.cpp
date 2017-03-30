@@ -3,6 +3,7 @@
 //
 #include <string.h>
 #include <sys/time.h>
+#include <errno.h>
 #include "SQLParserDriver.h"
 #include "SQLParserContext.h"
 #include "sql-parser.hpp"
