@@ -4,6 +4,7 @@
 
 %define parser_class_name "SQLParser"
 %debug
+%error-verbose
 
 %{
 #include <string.h>
@@ -163,7 +164,7 @@ expr: USERVAR '=' value;
 
 namespace yy {
   void SQLParser::error ( location const &loc, const std::string &s ) {
-    ctx.error() << loc << ": l" << s << " at " << yytext << std::endl;
+    ctx.error() << loc << ": " << s << " at " << yytext << std::endl;
   }
 }
 
