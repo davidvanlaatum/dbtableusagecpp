@@ -1,0 +1,170 @@
+%language "C++"
+%defines
+%locations
+
+%define parser_class_name {SQLParser}
+%define parse.error verbose
+
+%{
+#include <iostream>
+using namespace std;
+#include "SQLParserContext.h"
+%}
+
+%parse-param { SQLParserContext &ctx }
+%lex-param   { SQLParserContext &ctx }
+
+%union {
+       int ival;
+       char *sval;
+       SQLObject *sqlval;
+       SQLObjectList<> *listval;
+       SQLExpression *express;
+};
+
+%destructor { std::cerr << "free at " << @$ << " " << $$ << std::endl; free($$); } <sval>
+%destructor { std::cerr << "free at " << @$ << " " << $$ << std::endl; delete $$; } <sqlval>
+%destructor { std::cerr << "free at " << @$ << " " << $$ << std::endl; delete $$; } <listval>
+%destructor { std::cerr << "free at " << @$ << " " << $$ << std::endl; delete $$; } <express>
+
+/* declare tokens */
+%token <ival> NUMBER
+%token <sval> STRING
+%token <sval> USERVAR
+%token <sval> IDENTIFIER
+%token BINLOG
+%token SET
+%token DELIMITER
+%token DEFAULT
+%token TIMESTAMP
+%token TBEGIN
+%token ROLLBACK
+%token COMMIT
+%token INSERT
+%token REPLACE
+%token DELETE
+%token INTO
+%token FROM
+%token VALUES
+%token USE
+%token COLLATE
+%token WHERE
+%token PSUDOLINE
+
+%type <listval> set_args_list
+%type <sqlval> set_args set_value value
+%type <sval> variable_name table_name identifier
+%type <express> opt_where where_stmt expr_list expr
+
+%{
+  extern int yylex(yy::SQLParser::semantic_type *yylval,
+       yy::SQLParser::location_type* yylloc,
+       SQLParserContext &ctx);
+  extern char *yytext;
+%}
+
+%initial-action {
+ // Filename for locations here
+ @$.begin.filename = @$.end.filename = new std::string(ctx.getFileName());
+}
+%%
+
+stmt_list: stmt ';'
+  | ';'
+  | stmt_list stmt ';'
+  | stmt_list ';' {
+    yyerrok;
+  }
+  ;
+
+stmt: binlog_stmt
+   ;
+
+binlog_stmt: BINLOG STRING {
+  ctx.push(@$, new SQLBinLogStatement(@$,$2,ctx.getEventParser()));
+  free($2);
+};
+
+stmt: set_stmt
+;
+
+set_stmt: SET set_args_list {
+  ctx.push(@$, new SetStatement($2));
+};
+
+set_args_list: set_args { $$ = new SQLObjectList<>(); $$->push($1); }
+  | set_args_list ',' set_args { $1->push($3); $$ = $1; };
+
+set_args: variable_name '=' set_value {
+    $$ = new SetPair($1,$3);
+};
+
+set_value: value { $$ = $1; }
+| DEFAULT { $$ = new SQLDefault(); }
+;
+
+variable_name: USERVAR { $$ = $1; }
+| TIMESTAMP { $$ = strdup(yytext); };
+
+stmt: DELIMITER;
+stmt: TBEGIN;
+stmt: COMMIT;
+stmt: ROLLBACK;
+
+table_name: identifier | identifier '.' identifier;
+identifier: STRING | IDENTIFIER;
+
+replace_stmt: REPLACE INTO table_name VALUES '(' value_list ')';
+
+value_list: value |
+  value_list ',' value;
+
+value: STRING { $$ = new SQLString($1); }
+ | NUMBER { $$ = new SQLInteger($1); }
+ | function
+ | identifier STRING COLLATE STRING
+ | expr
+;
+
+function: identifier '(' value_list ')';
+
+stmt: replace_stmt;
+
+stmt_use: USE identifier {
+  ctx.updateDB($2);
+  free($2);
+};
+
+stmt: stmt_use;
+
+delete_stmt: DELETE FROM table_name opt_where {
+  ctx.push(@$, new SQLDeleteStatement($3,$4));
+};
+
+stmt: delete_stmt;
+
+opt_where: { $$ = NULL; } | where_stmt;
+
+where_stmt: WHERE expr_list { $$ = $2; }
+
+expr_list: expr | expr_list expr;
+
+expr: USERVAR '=' value;
+%%
+
+namespace yy {
+  void SQLParser::error ( location const &loc, const std::string &s ) {
+//    ctx.error() << loc << ": l" << s << " at " << yytext << std::endl;
+    throw syntax_error(loc,s);
+  }
+}
+
+void yyerror ( yy::SQLParser::location_type *yylloc, const char *s, ... ) {
+  va_list ap;
+  va_start( ap, s );
+  char *msg = NULL;
+  vasprintf ( &msg, s, ap );
+  std::string bmsg = msg;
+  free ( msg );
+  throw yy::SQLParser::syntax_error(*yylloc,bmsg);
+}
