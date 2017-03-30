@@ -8,6 +8,8 @@
 
 #include <string>
 #include <ostream>
+#include <stdint.h>
+
 class MySQLTableMapEntry {
 public:
     MySQLTableMapEntry ( uint64_t id, std::string schema, std::string name );
