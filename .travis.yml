@@ -1,7 +1,8 @@
 language: cpp
 before_install:
+  - sudo add-apt-repository ppa:wacha/soci
 #  - sudo add-apt-repository ppa:csaba-kertesz/random -y
-#  - sudo apt-get update -q
+  - sudo apt-get update -q
 #  - sudo apt-get install cmake -y
 install:
   - apt-cache show cmake
