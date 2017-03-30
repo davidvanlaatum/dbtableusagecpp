@@ -2,8 +2,8 @@
 // Created by David van Laatum on 26/3/17.
 //
 
+#include <strings.h>
 #include <iostream>
-#include "strings.h"
 #include "SQLParserContext.h"
 
 SQLParserContext::SQLParserContext ( std::string fileName, SQLParserCallback *callback ) : fileName ( fileName ),

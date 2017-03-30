@@ -2,6 +2,7 @@
 // Created by David van Laatum on 27/3/17.
 //
 
+#include <string.h>
 #include <iostream>
 #include "MySQLEventParser.h"
 
