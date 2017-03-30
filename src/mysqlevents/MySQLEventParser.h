@@ -5,7 +5,6 @@
 #ifndef DBTABLEUSAGECPP_MYSQLEVENTPARSER_H
 #define DBTABLEUSAGECPP_MYSQLEVENTPARSER_H
 
-#include <cstdint>
 #include <cstdio>
 #include <map>
 #include "events.h"

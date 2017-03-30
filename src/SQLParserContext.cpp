@@ -17,12 +17,12 @@ void SQLParserContext::push ( yy::location yylloc, SQLStatement *statement ) {
   std::cout << yylloc << " " << *statement << std::endl;
 
   if ( SetStatement *set = dynamic_cast<SetStatement *>(statement) ) {
-    for ( SQLObjectList<SetPair*>::const_iterator it = set->getArgs ().begin (); it != set->getArgs ().end (); ++it ) {
-      if ( (*it)->getName () == "TIMESTAMP" ) {
-        if ( SQLInteger *t = dynamic_cast<SQLInteger *> ((*it)->getValue ()) ) {
+    for ( SQLObjectList<SetPair *>::const_iterator it = set->getArgs ().begin (); it != set->getArgs ().end (); ++it ) {
+      if ( ( *it )->getName () == "TIMESTAMP" ) {
+        if ( SQLInteger *t = dynamic_cast<SQLInteger *> (( *it )->getValue ()) ) {
           updateTime ( t->toInt () );
         } else {
-          std::cerr << yylloc << " invalid value for timestamp " << (*it)->getValue () << std::endl;
+          std::cerr << yylloc << " invalid value for timestamp " << ( *it )->getValue () << std::endl;
         }
       }
     }
@@ -56,7 +56,7 @@ void SQLParserContext::parseComment ( const char *comment ) {
 void SQLParserContext::updateDB ( std::string db ) {
   if ( db.at ( 0 ) == '`' ) {
     db.erase ( 0, 1 );
-    db.pop_back ();
+    db.erase ( db.end () );
   }
 
   std::cout << "DB is now " << db << std::endl;
