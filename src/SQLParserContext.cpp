@@ -10,6 +10,7 @@ SQLParserContext::SQLParserContext ( std::string fileName, SQLParserCallback *ca
                                                                                            callback ( callback ) {
   errorStream = &std::cerr;
   outStream = &std::cout;
+  timestamp = 0;
 }
 
 void SQLParserContext::push ( yy::location yylloc, SQLStatement *statement ) {
