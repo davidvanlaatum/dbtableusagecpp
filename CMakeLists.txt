@@ -127,7 +127,7 @@ if (test)
     target_link_libraries(runUnitTests shared GTest GMock GMockMain)
     add_test(NAME unittests COMMAND runUnitTests)
     set_property(TEST unittests PROPERTY
-            ENVIRONMENT "GTEST_OUTPUT=xml:unit.xml GTEST_COLOR=auto"
+            ENVIRONMENT "GTEST_OUTPUT=xml:unit.xml"
             )
 endif ()
 include(CPack)
