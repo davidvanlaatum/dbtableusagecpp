@@ -2,6 +2,7 @@
 // Created by David van Laatum on 26/3/17.
 //
 
+#include <stdio.h>
 #include "SQLInteger.h"
 
 std::string SQLInteger::toString () const {
