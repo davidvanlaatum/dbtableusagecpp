@@ -65,7 +65,7 @@ WHERE { return token::WHERE; }
 <COMMENT>"*/"   { BEGIN oldstate; }
 <COMMENT>.      { yylloc->step ();};
 <COMMENT>\n     { yylloc->lines(1);}
-<COMMENT><<EOF>> { yyerror(yylloc,"unclosed comment"); }
+<COMMENT><<EOF>> { yyerror(yylloc,"unclosed comment"); return 0; }
 
 [a-zA-Z0-9_]+ {yylval->sval = strdup(yytext); return token::IDENTIFIER; }
 

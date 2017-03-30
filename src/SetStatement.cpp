@@ -5,10 +5,12 @@
 #include "SetStatement.h"
 
 SetStatement::SetStatement ( SQLObjectList<> *args ) {
-  for ( auto it = args->begin (); it != args->end (); ++it ) {
-    if ( SetPair *SetPair = dynamic_cast<class SetPair *>(*it) ) {
-      this->args.push ( SetPair );
-      args->erase ( it );
+  if (args) {
+    for ( auto it = args->begin (); it != args->end (); ++it ) {
+      if ( SetPair *SetPair = dynamic_cast<class SetPair *>(*it) ) {
+        this->args.push ( SetPair );
+        args->erase ( it );
+      }
     }
   }
 }

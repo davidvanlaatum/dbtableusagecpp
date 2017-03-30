@@ -71,12 +71,14 @@ using namespace std;
 }
 %%
 
-stmt_list: stmt ';'
+stmt_list:
+    %empty
+  | stmt ';'
   | ';'
+  | error ';'
+  | stmt error ';'
   | stmt_list stmt ';'
-  | stmt_list ';' {
-    yyerrok;
-  }
+  | stmt_list ';'
   ;
 
 stmt: binlog_stmt
@@ -95,7 +97,8 @@ set_stmt: SET set_args_list {
 };
 
 set_args_list: set_args { $$ = new SQLObjectList<>(); $$->push($1); }
-  | set_args_list ',' set_args { $1->push($3); $$ = $1; };
+  | set_args_list ',' set_args { $1->push($3); $$ = $1; }
+  | error;
 
 set_args: variable_name '=' set_value {
     $$ = new SetPair($1,$3);
@@ -156,8 +159,7 @@ expr: USERVAR '=' value;
 
 namespace yy {
   void SQLParser::error ( location const &loc, const std::string &s ) {
-//    ctx.error() << loc << ": l" << s << " at " << yytext << std::endl;
-    throw syntax_error(loc,s);
+    ctx.error() << loc << ": l" << s << " at " << yytext << std::endl;
   }
 }
 
@@ -166,7 +168,6 @@ void yyerror ( yy::SQLParser::location_type *yylloc, const char *s, ... ) {
   va_start( ap, s );
   char *msg = NULL;
   vasprintf ( &msg, s, ap );
-  std::string bmsg = msg;
+  std::cerr << yylloc << ": " << msg << std::endl;
   free ( msg );
-  throw yy::SQLParser::syntax_error(*yylloc,bmsg);
 }
