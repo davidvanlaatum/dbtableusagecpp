@@ -45,6 +45,7 @@ set(SOURCE_FILES src/sql-parser.ypp src/sql-lexer.l
         )
 
 add_library(shared ${SOURCE_FILES})
+target_include_directories(shared PUBLIC ${CMAKE_SOURCE_DIR}/src)
 target_link_libraries(shared ${MYSQL_LIBRARIES} ${SOCI_LIBRARY} ${GLib_LIBRARY})
 
 add_executable(dbtableusagecpp src/main.cpp)
@@ -55,6 +56,7 @@ install(EXPORT dbtableusagecpp DESTINATION lib/dbtableusagecpp)
 set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES src/position.hh src/location.hh src/stack.hh
         coverage.info coverage.junit.xml coverage.xml)
 if (test)
+    enable_testing()
     if (coverage)
         include(CodeCoverage)
         setup_target_for_coverage(runUnitTests_coverage runUnitTests coverage)
@@ -79,29 +81,25 @@ if (test)
     set(GMOCK_LIBRARY "${GTEST_LOCATION}/${LIBPREFIX}gmock${LIBSUFFIX}")
     set(GMOCK_MAINLIB "${GTEST_LOCATION}/${LIBPREFIX}gmock_main${LIBSUFFIX}")
 
-    add_library(GTest IMPORTED STATIC GLOBAL)
+    add_library(GTest INTERFACE)
     set_target_properties(GTest PROPERTIES
-            IMPORTED_LOCATION "${GTEST_LIBRARY}"
-            IMPORTED_INTERFACE_INCLUDE_DIRECTORIES "${GTEST_INCLUDES}"
-            IMPORTED_LINK_INTERFACE_LIBRARIES "${CMAKE_THREAD_LIBS_INIT}")
+            INTERFACE_LOCATION "${GTEST_LIBRARY}"
+            INTERFACE_INCLUDE_DIRECTORIES "${GTEST_INCLUDES}")
 
-    add_library(GMock IMPORTED STATIC GLOBAL)
+    add_library(GMock INTERFACE)
     set_target_properties(GMock PROPERTIES
-            IMPORTED_LOCATION "${GMOCK_LIBRARY}"
-            IMPORTED_INTERFACE_INCLUDE_DIRECTORIES "${GMOCK_INCLUDES}"
-            IMPORTED_LINK_INTERFACE_LIBRARIES "${CMAKE_THREAD_LIBS_INIT}")
+            INTERFACE_LOCATION "${GMOCK_LIBRARY}"
+            INTERFACE_INCLUDE_DIRECTORIES "${GMOCK_INCLUDES}")
 
     add_library(GMockMain IMPORTED STATIC GLOBAL)
     set_target_properties(GMockMain PROPERTIES
             IMPORTED_LOCATION "${GMOCK_MAINLIB}"
-            IMPORTED_LINK_INTERFACE_LIBRARIES
-            "${GTEST_LIBRARY};${CMAKE_THREAD_LIBS_INIT}")
+            IMPORTED_LINK_INTERFACE_LIBRARIES "${CMAKE_THREAD_LIBS_INIT}")
 
     add_dependencies(GTest GTestExternal)
-
-    enable_testing()
+    add_dependencies(GMock GTestExternal)
+    add_dependencies(GMockMain GTestExternal)
     add_executable(runUnitTests test/tests.cpp)
-    target_include_directories(runUnitTests PUBLIC ${CMAKE_SOURCE_DIR}/src)
     target_link_libraries(runUnitTests shared GTest GMock GMockMain)
     add_test(NAME unittests COMMAND runUnitTests)
 endif ()
