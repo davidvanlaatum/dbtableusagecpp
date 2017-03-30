@@ -4,7 +4,7 @@
 
 #include <string.h>
 #include <iostream>
-#include <exception>
+#include <stdexcept>
 #include "MySQLEventParser.h"
 
 void MySQLEventParser::parse ( yy::location location, const char *data, size_t len ) {
