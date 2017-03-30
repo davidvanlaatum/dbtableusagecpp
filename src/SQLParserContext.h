@@ -19,7 +19,7 @@ class SQLParserContext {
 public:
     SQLParserContext ( std::string fileName, SQLParserCallback *callback );
     void push ( yy::location yylloc, SQLStatement *statement );
-    const std::string &getFileName () const;
+    std::string &getFileName ();
     void print ();
     MySQLEventParser *getEventParser ();
     void parseComment ( const char *comment );

@@ -34,7 +34,7 @@ void SQLParserContext::push ( yy::location yylloc, SQLStatement *statement ) {
   delete statement;
 }
 
-const std::string &SQLParserContext::getFileName () const {
+std::string &SQLParserContext::getFileName () {
   return fileName;
 }
 
