@@ -3,7 +3,7 @@
 %locations
 
 %define parser_class_name "SQLParser"
-%define parse.error verbose
+%debug
 
 %{
 #include <iostream>
