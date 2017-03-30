@@ -126,5 +126,8 @@ if (test)
     add_executable(runUnitTests test/tests.cpp)
     target_link_libraries(runUnitTests shared GTest GMock GMockMain)
     add_test(NAME unittests COMMAND runUnitTests)
+    set_property(TEST unittests PROPERTY
+            ENVIRONMENT "GTEST_OUTPUT=xml:unit.xml GTEST_COLOR=auto"
+            )
 endif ()
 include(CPack)
