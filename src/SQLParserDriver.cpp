@@ -1,6 +1,7 @@
 //
 // Created by David van Laatum on 29/3/17.
 //
+#include <string.h>
 #include <sys/time.h>
 #include "SQLParserDriver.h"
 #include "SQLParserContext.h"
