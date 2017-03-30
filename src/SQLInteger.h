@@ -5,6 +5,7 @@
 #ifndef DBTABLEUSAGECPP_SQLINTEGER_H
 #define DBTABLEUSAGECPP_SQLINTEGER_H
 
+#include <stdint.h>
 #include "SQLObject.h"
 class SQLInteger : public SQLObject {
 public:
