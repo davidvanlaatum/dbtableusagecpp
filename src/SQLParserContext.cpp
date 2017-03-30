@@ -3,6 +3,7 @@
 //
 
 #include <iostream>
+#include "strings.h"
 #include "SQLParserContext.h"
 
 SQLParserContext::SQLParserContext ( std::string fileName, SQLParserCallback *callback ) : fileName ( fileName ),
