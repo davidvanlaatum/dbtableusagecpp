@@ -1,9 +1,8 @@
 language: cpp
 before_install:
   - sudo add-apt-repository ppa:wacha/soci
-#  - sudo add-apt-repository ppa:csaba-kertesz/random -y
   - sudo apt-get update -q
-#  - sudo apt-get install cmake -y
+  - curl https://cmake.org/files/v3.6/cmake-3.6.3-Linux-x86_64.tar.gz | sudo tar -x -z --strip-components 1 -C /usr
 install:
   - apt-cache show cmake
   - apt-cache search soci
