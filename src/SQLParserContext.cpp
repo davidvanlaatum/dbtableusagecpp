@@ -14,7 +14,7 @@ SQLParserContext::SQLParserContext ( std::string fileName, SQLParserCallback *ca
 }
 
 void SQLParserContext::push ( yy::location yylloc, SQLStatement *statement ) {
-  std::cout << yylloc << " " << *statement << std::endl;
+  out () << yylloc << " " << *statement << std::endl;
 
   if ( SetStatement *set = dynamic_cast<SetStatement *>(statement) ) {
     for ( SQLObjectList<SetPair *>::const_iterator it = set->getArgs ().begin (); it != set->getArgs ().end (); ++it ) {
@@ -22,7 +22,7 @@ void SQLParserContext::push ( yy::location yylloc, SQLStatement *statement ) {
         if ( SQLInteger *t = dynamic_cast<SQLInteger *> (( *it )->getValue ()) ) {
           updateTime ( t->toInt () );
         } else {
-          std::cerr << yylloc << " invalid value for timestamp " << ( *it )->getValue () << std::endl;
+          error () << yylloc << " invalid value for timestamp " << ( *it )->getValue () << std::endl;
         }
       }
     }
@@ -59,18 +59,18 @@ void SQLParserContext::updateDB ( std::string db ) {
     db.erase ( db.end () );
   }
 
-  std::cout << "DB is now " << db << std::endl;
+  out () << "DB is now " << db << std::endl;
 }
 
 void SQLParserContext::updateTime ( time_t timestamp ) {
   if ( this->timestamp != timestamp ) {
-    std::cout << "Now at " << timestamp << std::endl;
+    out () << "Now at " << timestamp << std::endl;
   }
   this->timestamp = timestamp;
 }
 
 void SQLParserContext::setErrorStream ( std::ostream *stream ) {
-
+  errorStream = stream;
 }
 
 std::ostream &SQLParserContext::error () const {

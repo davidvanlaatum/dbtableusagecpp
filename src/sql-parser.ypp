@@ -25,10 +25,10 @@ using namespace std;
        SQLExpression *express;
 };
 
-%destructor { std::cerr << "free at " << @$ << " " << $$ << std::endl; free($$); } <sval>
-%destructor { std::cerr << "free at " << @$ << " " << $$ << std::endl; delete $$; } <sqlval>
-%destructor { std::cerr << "free at " << @$ << " " << $$ << std::endl; delete $$; } <listval>
-%destructor { std::cerr << "free at " << @$ << " " << $$ << std::endl; delete $$; } <express>
+%destructor { free($$); } <sval>
+%destructor { delete $$; } <sqlval>
+%destructor { delete $$; } <listval>
+%destructor { delete $$; } <express>
 
 /* declare tokens */
 %token <ival> NUMBER
@@ -168,11 +168,11 @@ namespace yy {
   }
 }
 
-void yyerror ( yy::SQLParser::location_type *yylloc, const char *s, ... ) {
+void yyerror ( yy::SQLParser::location_type *yylloc, SQLParserContext &ctx, const char *s, ... ) {
   va_list ap;
   va_start( ap, s );
   char *msg = NULL;
   vasprintf ( &msg, s, ap );
-  std::cerr << yylloc << ": " << msg << std::endl;
+  ctx.error() << *yylloc << ": " << msg << std::endl;
   free ( msg );
 }

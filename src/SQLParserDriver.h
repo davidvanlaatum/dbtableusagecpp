@@ -10,12 +10,19 @@
 
 class SQLParserDriver {
 public:
-    void parseFile ( std::string file, SQLParserCallback *callback ) throw ( std::runtime_error );
-    void parseString ( std::string buffer, SQLParserCallback *callback ) throw ( std::runtime_error );
-    void parseStdIn ( SQLParserCallback *callback ) throw ( std::runtime_error );
+    SQLParserDriver ();
+    SQLParserDriver ( std::ostream *errorStream, std::ostream *outStream, std::ostream *debugStream );
+    void parseFile ( std::string file, SQLParserCallback *callback ) throw ( SQLParserFailedException );
+    void parseString ( std::string buffer, SQLParserCallback *callback ) throw ( SQLParserFailedException );
+    void parseStdIn ( SQLParserCallback *callback ) throw ( SQLParserFailedException );
+    void setErrorStream ( std::ostream *errorStream );
+    void setOutStream ( std::ostream *outStream );
+    void setDebugStream ( std::ostream *debugStream );
 protected:
-    void parse ( std::string file, SQLParserCallback *callback ) throw ( std::runtime_error );
+    void parse ( std::string file, SQLParserCallback *callback ) throw ( SQLParserFailedException );
+    std::ostream *errorStream;
+    std::ostream *outStream;
+    std::ostream *debugStream;
 };
-
 
 #endif //DBTABLEUSAGECPP_SQLPARSER_H

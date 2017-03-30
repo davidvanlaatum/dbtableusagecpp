@@ -12,8 +12,17 @@ struct yy_buffer_state;
 extern yy_buffer_state *yy_scan_string ( const char *yy_str );
 extern void yy_delete_buffer ( yy_buffer_state *b );
 
+SQLParserDriver::SQLParserDriver () {
+  errorStream = NULL;
+  outStream = NULL;
+  debugStream = NULL;
+}
 
-void SQLParserDriver::parseFile ( std::string file, SQLParserCallback *callback )  throw ( std::runtime_error ) {
+SQLParserDriver::SQLParserDriver ( std::ostream *errorStream, std::ostream *outStream, std::ostream *debugStream )
+  : errorStream ( errorStream ), outStream ( outStream ), debugStream ( debugStream ) {
+}
+
+void SQLParserDriver::parseFile ( std::string file, SQLParserCallback *callback )  throw ( SQLParserFailedException ) {
   errno = 0;
   if ( ( yyin = fopen ( file.data (), "r" ) ) != NULL ) {
     try {
@@ -30,7 +39,7 @@ void SQLParserDriver::parseFile ( std::string file, SQLParserCallback *callback 
 }
 
 void
-SQLParserDriver::parseString ( std::string buffer, SQLParserCallback *callback ) throw ( std::runtime_error ) {
+SQLParserDriver::parseString ( std::string buffer, SQLParserCallback *callback ) throw ( SQLParserFailedException ) {
   yy_buffer_state *bufferState = yy_scan_string ( buffer.data () );
   try {
     parse ( "buffer", callback );
@@ -41,22 +50,35 @@ SQLParserDriver::parseString ( std::string buffer, SQLParserCallback *callback )
   yy_delete_buffer ( bufferState );
 }
 
-void SQLParserDriver::parseStdIn ( SQLParserCallback *callback )  throw ( std::runtime_error ) {
+void SQLParserDriver::parseStdIn ( SQLParserCallback *callback )  throw ( SQLParserFailedException ) {
   parse ( "stdin", callback );
 }
 
-void SQLParserDriver::parse ( std::string file, SQLParserCallback *callback )  throw ( std::runtime_error ) {
-  struct timeval start, end, diff;
-
-  gettimeofday ( &start, NULL );
+void SQLParserDriver::parse ( std::string file, SQLParserCallback *callback )  throw ( SQLParserFailedException ) {
   SQLParserContext ctx ( file, callback );
+  if ( outStream ) {
+    ctx.setOutStream ( outStream );
+  }
+  if ( errorStream ) {
+    ctx.setErrorStream ( errorStream );
+  }
   ::yy::SQLParser parser ( ctx );
-//  parser.set_debug_level ( 1 );
+  if ( debugStream ) {
+    parser.set_debug_stream ( *debugStream );
+    parser.set_debug_level ( 1 );
+  }
 
   parser.parse ();
+}
 
-  gettimeofday ( &end, NULL );
-  timersub( &end, &start, &diff );
+void SQLParserDriver::setErrorStream ( std::ostream *errorStream ) {
+  SQLParserDriver::errorStream = errorStream;
+}
 
-  ctx.out () << "Runtime " << diff.tv_sec << "." << diff.tv_usec << std::endl;
+void SQLParserDriver::setOutStream ( std::ostream *outStream ) {
+  SQLParserDriver::outStream = outStream;
+}
+
+void SQLParserDriver::setDebugStream ( std::ostream *debugStream ) {
+  SQLParserDriver::debugStream = debugStream;
 }

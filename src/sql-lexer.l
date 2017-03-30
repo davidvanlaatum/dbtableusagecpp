@@ -4,7 +4,7 @@
 # include "SQLParserContext.h"
 # include "sql-parser.hpp"
 using namespace yy;
-void yyerror(yy::SQLParser::location_type* yylloc, const char *s, ...);
+void yyerror(yy::SQLParser::location_type* yylloc, SQLParserContext &ctx, const char *s, ...);
 void adjustLines(yy::SQLParser::location_type *location, char *text);
 
 #define YY_DECL int yylex(yy::SQLParser::semantic_type *yylval, \
@@ -65,11 +65,11 @@ WHERE { return token::WHERE; }
 <COMMENT>"*/"   { BEGIN oldstate; }
 <COMMENT>.      { yylloc->step ();};
 <COMMENT>\n     { yylloc->lines(1);}
-<COMMENT><<EOF>> { yyerror(yylloc,"unclosed comment"); return 0; }
+<COMMENT><<EOF>> { yyerror(yylloc,ctx,"unclosed comment"); return 0; }
 
 [a-zA-Z0-9_]+ {yylval->sval = strdup(yytext); return token::IDENTIFIER; }
 
-.	{ yyerror(yylloc,"Mystery char %c", *yytext); }
+.	{ yyerror(yylloc,ctx,"Mystery char %c", *yytext); }
 %%
 void adjustLines ( yy::SQLParser::location_type *location, char *text ) {
   char *pos = NULL;

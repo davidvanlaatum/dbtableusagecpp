@@ -10,13 +10,21 @@
 using namespace testing;
 
 TEST( ScanBuffer, Buffer ) {
-  SQLParserDriver driver;
+  std::stringstream output;
+  SQLParserDriver driver ( &output, &output, NULL );
   StrictMock<MockSQLParserCallback> callback;
   EXPECT_CALL ( callback, statement ( _, _ ) );
   driver.parseString ( "SET TIMESTAMP=123;", &callback );
 }
 
 TEST ( ErrorTests, UnclosedComment ) {
-  SQLParserDriver driver;
-  driver.parseString ( "/*", NULL );
+  std::stringstream output;
+  SQLParserDriver driver ( &output, &output, NULL );
+  driver.parseString ( "    /*", NULL );
+
+  std::string first;
+  std::getline (output,first);
+  ASSERT_EQ(first,"buffer:1.5-6: unclosed comment");
+  std::getline (output,first);
+  ASSERT_EQ(first,"buffer:1.5-6: syntax error, unexpected $end at ");
 }
