@@ -1,0 +1,1036 @@
+%language "C++"
+%defines
+%locations
+
+%define parser_class_name "SQLParser"
+%debug
+%error-verbose
+%{
+#include <stdlib.h>
+#include <stdarg.h>
+#include <string.h>
+#include <string>
+#include "SQLParserContext.h"
+#include "SQLBinLogStatement.h"
+#include "SQLObjectList.h"
+#include "SQLSetStatement.h"
+#include "SQLDeleteStatement.h"
+#include "SQLString.h"
+#include "SQLDefault.h"
+#include "SQLInteger.h"
+#include "SQLUseDatabase.h"
+#include "SQLIdentifier.h"
+#include "SQLTable.h"
+#include "SQLColumn.h"
+#include "SQLFunction.h"
+#include "SQLReplaceIntoStatement.h"
+#include "SQLAnd.h"
+#include "SQLOr.h"
+#include "SQLEquals.h"
+#include "SQLCreateDatabaseStatement.h"
+#include "SQLCreateTableStatement.h"
+#include "SQLBeginStatement.h"
+#include "SQLCommitStatement.h"
+#include "SQLRollbackStatement.h"
+
+void emit(const char *s, ...);
+std::string format(const char *s, ... );
+%}
+
+%parse-param { SQLParserContext &ctx }
+%lex-param   { SQLParserContext &ctx }
+
+%union {
+  int intval;
+  double floatval;
+  char *strval;
+  int subtok;
+  SQLObject *sqlval;
+  SQLObjectList<> *listval;
+  SQLStatement *statement;
+  SQLIdentifier *id;
+  SQLTable *table;
+  SQLColumn *column;
+  SQLComparisionType comparisionType;
+}
+
+%{
+  extern int yylex(yy::SQLParser::semantic_type *yylval,
+       yy::SQLParser::location_type* yylloc,
+       SQLParserContext &ctx);
+  extern char *yytext;
+%}
+
+%destructor { if($$) free($$); } <strval>
+%destructor {} <intval>
+%destructor {} <subtok>
+%destructor {} <floatval>
+%destructor {} <comparisionType>
+%destructor { if($$) delete $$; } <*>
+
+  /* names and literal values */
+
+%token <strval> NAME
+%token <strval> STRING
+%token <intval> INTNUM
+%token <intval> BOOL
+%token <floatval> APPROXNUM
+
+       /* user @abc names */
+
+%token <strval> USERVAR
+
+       /* operators and precedence levels */
+
+%right ASSIGN
+%left OR
+%left XOR
+%left ANDOP
+%nonassoc IN IS LIKE REGEXP
+%left NOT '!'
+%left BETWEEN
+%left <comparisionType> COMPARISON /* = <> < > <= >= <=> */
+%left '|'
+%left '&'
+%left <subtok> SHIFT /* << >> */
+%left '+' '-'
+%left '*' '/' '%' MOD
+%left '^'
+%nonassoc UMINUS
+
+%token ADD
+%token ALL
+%token ALTER
+%token ANALYZE
+%token AND
+%token ANY
+%token AS
+%token ASC
+%token AUTO_INCREMENT
+%token BEFORE
+%token BETWEEN
+%token BIGINT
+%token BINARY
+%token BIT
+%token BLOB
+%token BOTH
+%token BY
+%token CALL
+%token CASCADE
+%token CASE
+%token CHANGE
+%token CHAR
+%token CHECK
+%token COLLATE
+%token COLUMN
+%token COMMENT
+%token CONDITION
+%token CONSTRAINT
+%token CONTINUE
+%token CONVERT
+%token CREATE
+%token CROSS
+%token CURRENT_DATE
+%token CURRENT_TIME
+%token CURRENT_TIMESTAMP
+%token CURRENT_USER
+%token CURSOR
+%token DATABASE
+%token DATABASES
+%token DATE
+%token DATETIME
+%token DAY_HOUR
+%token DAY_MICROSECOND
+%token DAY_MINUTE
+%token DAY_SECOND
+%token DECIMAL
+%token DECLARE
+%token DEFAULT
+%token DELAYED
+%token DELETE
+%token DESC
+%token DESCRIBE
+%token DETERMINISTIC
+%token DISTINCT
+%token DISTINCTROW
+%token DIV
+%token DOUBLE
+%token DROP
+%token DUAL
+%token EACH
+%token ELSE
+%token ELSEIF
+%token ENCLOSED
+%token END
+%token ENUM
+%token ESCAPED
+%token <subtok> EXISTS
+%token EXIT
+%token EXPLAIN
+%token FETCH
+%token FLOAT
+%token FOR
+%token FORCE
+%token FOREIGN
+%token FROM
+%token FULLTEXT
+%token GRANT
+%token GROUP
+%token HAVING
+%token HIGH_PRIORITY
+%token HOUR_MICROSECOND
+%token HOUR_MINUTE
+%token HOUR_SECOND
+%token IF
+%token IGNORE
+%token IN
+%token INDEX
+%token INFILE
+%token INNER
+%token INOUT
+%token INSENSITIVE
+%token INSERT
+%token INT
+%token INTEGER
+%token INTERVAL
+%token INTO
+%token ITERATE
+%token JOIN
+%token KEY
+%token KEYS
+%token KILL
+%token LEADING
+%token LEAVE
+%token LEFT
+%token LIKE
+%token LIMIT
+%token LINES
+%token LOAD
+%token LOCALTIME
+%token LOCALTIMESTAMP
+%token LOCK
+%token LONG
+%token LONGBLOB
+%token LONGTEXT
+%token LOOP
+%token LOW_PRIORITY
+%token MATCH
+%token MEDIUMBLOB
+%token MEDIUMINT
+%token MEDIUMTEXT
+%token MINUTE_MICROSECOND
+%token MINUTE_SECOND
+%token MOD
+%token MODIFIES
+%token NATURAL
+%token NOT
+%token NO_WRITE_TO_BINLOG
+%token NULLX
+%token NUMBER
+%token ON
+%token ONDUPLICATE
+%token OPTIMIZE
+%token OPTION
+%token OPTIONALLY
+%token OR
+%token ORDER
+%token OUT
+%token OUTER
+%token OUTFILE
+%token PRECISION
+%token PRIMARY
+%token PROCEDURE
+%token PURGE
+%token QUICK
+%token READ
+%token READS
+%token REAL
+%token REFERENCES
+%token REGEXP
+%token RELEASE
+%token RENAME
+%token REPEAT
+%token REPLACE
+%token REQUIRE
+%token RESTRICT
+%token RETURN
+%token REVOKE
+%token RIGHT
+%token ROLLUP
+%token SCHEMA
+%token SCHEMAS
+%token SECOND_MICROSECOND
+%token SELECT
+%token SENSITIVE
+%token SEPARATOR
+%token SET
+%token SHOW
+%token SMALLINT
+%token SOME
+%token SONAME
+%token SPATIAL
+%token SPECIFIC
+%token SQL
+%token SQLEXCEPTION
+%token SQLSTATE
+%token SQLWARNING
+%token SQL_BIG_RESULT
+%token SQL_CALC_FOUND_ROWS
+%token SQL_SMALL_RESULT
+%token SSL
+%token STARTING
+%token STRAIGHT_JOIN
+%token TABLE
+%token TEMPORARY
+%token TEXT
+%token TERMINATED
+%token THEN
+%token TIME
+%token TIMESTAMP
+%token TINYBLOB
+%token TINYINT
+%token TINYTEXT
+%token TO
+%token TRAILING
+%token TRIGGER
+%token UNDO
+%token UNION
+%token UNIQUE
+%token UNLOCK
+%token UNSIGNED
+%token UPDATE
+%token USAGE
+%token USE
+%token USING
+%token UTC_DATE
+%token UTC_TIME
+%token UTC_TIMESTAMP
+%token VALUES
+%token VARBINARY
+%token VARCHAR
+%token VARYING
+%token WHEN
+%token WHERE
+%token WHILE
+%token WITH
+%token WRITE
+%token XOR
+%token YEAR
+%token YEAR_MONTH
+%token ZEROFILL
+%token DELIMITER;
+%token BINLOG;
+%token TBEGIN;
+%token ROLLBACK;
+%token COMMIT;
+%token <strval>INTRODUCER
+
+ /* functions with special syntax */
+%token FSUBSTRING
+%token FTRIM
+%token FDATE_ADD FDATE_SUB
+%token FCOUNT
+
+%type <intval> select_opts select_expr_list
+%type <intval> case_list
+%type <intval> groupby_list opt_with_rollup opt_asc_desc
+%type <intval> table_references opt_inner_cross opt_outer
+%type <intval> left_or_right opt_left_or_right_outer column_list
+%type <intval> index_list opt_for_join
+
+%type <intval> delete_opts delete_list
+%type <intval> insert_opts
+%type <intval> insert_asgn_list opt_if_not_exists update_opts update_asgn_list
+%type <intval> opt_temporary opt_length opt_binary opt_uz enum_list
+%type <intval> column_atts data_type opt_ignore_replace
+%type <strval> varaible_name
+
+%type <statement> set_stmt select_stmt delete_stmt insert_stmt replace_stmt update_stmt create_database_stmt
+%type <statement> create_table_stmt use_stmt binlog_stmt
+%type <listval> set_list opt_groupby opt_orderby opt_into_list insert_vals_list opt_val_list val_list insert_vals
+%type <listval> create_col_list
+%type <sqlval> expr set_expr opt_where opt_having opt_limit set_value
+%type <id> opt_as_alias identifier
+%type <table> table_name
+%type <column> column_name
+
+/** unsure **/
+%type <sqlval> table_factor join_table join_condition index_hint table_subquery opt_ondupupdate opt_col_names
+%type <sqlval> create_definition opt_csc create_select_statement trim_ltb interval_exp
+
+%start stmt_list
+%initial-action {
+ @$.begin.filename = @$.end.filename = &ctx.getFileName();
+}
+%%
+
+stmt_list: stmt ';'
+  | ';'
+  | error ';'
+  | stmt error ';'
+  | stmt_list stmt ';'
+  | stmt_list ';'
+  | stmt
+  ;
+
+   /* statements: select statement */
+
+stmt: select_stmt { ctx.push(@$,$1); }
+   ;
+
+select_stmt: SELECT select_opts select_expr_list
+                        { $$ = NULL; emit("SELECTNODATA %d %d", $2, $3); } ;
+    | SELECT select_opts select_expr_list
+     FROM table_references
+     opt_where opt_groupby opt_having opt_orderby opt_limit
+     opt_into_list { $$ = NULL; emit("SELECT %d %d %d", $2, $3, $5); } ;
+;
+
+opt_where: /* nil */ { $$ = NULL; }
+   | WHERE expr { $$ = $2; };
+
+opt_groupby: /* nil */ { $$ = NULL; }
+   | GROUP BY groupby_list opt_with_rollup
+                             { $$ = NULL; emit("GROUPBYLIST %d %d", $3, $4); }
+;
+
+groupby_list: expr opt_asc_desc
+                             { $$ = NULL; emit("GROUPBY %d",  $2); $$ = 1; }
+   | groupby_list ',' expr opt_asc_desc
+                             { $$ = NULL; emit("GROUPBY %d",  $4); $$ = $1 + 1; }
+   ;
+
+opt_asc_desc: /* nil */ { $$ = 0; }
+   | ASC                { $$ = 0; }
+   | DESC               { $$ = 1; }
+    ;
+
+opt_with_rollup: /* nil */  { $$ = 0; }
+   | WITH ROLLUP  { $$ = 1; }
+   ;
+
+opt_having: /* nil */  { $$ = NULL; } | HAVING expr { $$ = NULL; emit("HAVING"); };
+
+opt_orderby: /* nil */  { $$ = NULL; } | ORDER BY groupby_list { $$ = NULL; emit("ORDERBY %d", $3); }
+   ;
+
+opt_limit: /* nil */  { $$ = NULL; } | LIMIT expr { $$ = NULL; emit("LIMIT 1"); }
+  | LIMIT expr ',' expr             { $$ = NULL; emit("LIMIT 2"); }
+  ;
+
+opt_into_list: /* nil */ { $$ = NULL; }
+   | INTO column_list { $$ = NULL; emit("INTO %d", $2); }
+   ;
+
+column_list: NAME { $$ = NULL; emit("COLUMN %s", $1); free($1); $$ = 1; }
+  | column_list ',' NAME  { $$ = NULL; emit("COLUMN %s", $3); free($3); $$ = $1 + 1; }
+  ;
+
+select_opts:                          { $$ = 0; }
+| select_opts ALL                 { if($$ & 01) error(@$,"duplicate ALL option"); $$ = $1 | 01; }
+| select_opts DISTINCT            { if($$ & 02) error(@$,"duplicate DISTINCT option"); $$ = $1 | 02; }
+| select_opts DISTINCTROW         { if($$ & 04) error(@$,"duplicate DISTINCTROW option"); $$ = $1 | 04; }
+| select_opts HIGH_PRIORITY       { if($$ & 010) error(@$,"duplicate HIGH_PRIORITY option"); $$ = $1 | 010; }
+| select_opts STRAIGHT_JOIN       { if($$ & 020) error(@$,"duplicate STRAIGHT_JOIN option"); $$ = $1 | 020; }
+| select_opts SQL_SMALL_RESULT    { if($$ & 040) error(@$,"duplicate SQL_SMALL_RESULT option"); $$ = $1 | 040; }
+| select_opts SQL_BIG_RESULT      { if($$ & 0100) error(@$,"duplicate SQL_BIG_RESULT option"); $$ = $1 | 0100; }
+| select_opts SQL_CALC_FOUND_ROWS { if($$ & 0200) error(@$,"duplicate SQL_CALC_FOUND_ROWS option"); $$ = $1 | 0200; }
+    ;
+
+select_expr_list: select_expr { $$ = 1; }
+    | select_expr_list ',' select_expr {$$ = $1 + 1; }
+    | '*' { $$ = NULL; emit("SELECTALL"); $$ = 1; }
+    ;
+
+select_expr: expr opt_as_alias ;
+
+table_references:    table_reference { $$ = 1; }
+    | table_references ',' table_reference { $$ = $1 + 1; }
+    ;
+
+table_reference:  table_factor
+  | join_table
+;
+
+table_factor:
+    NAME opt_as_alias index_hint { $$ = NULL; emit("TABLE %s", $1); free($1); }
+  | NAME '.' NAME opt_as_alias index_hint { $$ = NULL; emit("TABLE %s.%s", $1, $3);
+                               free($1); free($3); }
+  | table_subquery opt_as NAME { $$ = NULL; emit("SUBQUERYAS %s", $3); free($3); }
+  | '(' table_references ')' { $$ = NULL; emit("TABLEREFERENCES %d", $2); }
+  ;
+
+opt_as: AS
+  | /* nil */
+  ;
+
+opt_as_alias: AS NAME { $$ = NULL; emit ("ALIAS %s", $2); free($2); }
+  | NAME              { $$ = NULL; emit ("ALIAS %s", $1); free($1); }
+  | /* nil */         { $$ = NULL; }
+  ;
+
+join_table:
+    table_reference opt_inner_cross JOIN table_factor opt_join_condition
+                  { $$ = NULL; emit("JOIN %d", 0100+$2); }
+  | table_reference STRAIGHT_JOIN table_factor
+                  { $$ = NULL; emit("JOIN %d", 0200); }
+  | table_reference STRAIGHT_JOIN table_factor ON expr
+                  { $$ = NULL; emit("JOIN %d", 0200); }
+  | table_reference left_or_right opt_outer JOIN table_factor join_condition
+                  { $$ = NULL; emit("JOIN %d", 0300+$2+$3); }
+  | table_reference NATURAL opt_left_or_right_outer JOIN table_factor
+                  { $$ = NULL; emit("JOIN %d", 0400+$3); }
+  ;
+
+opt_inner_cross: /* nil */ { $$ = 0; }
+   | INNER { $$ = 1; }
+   | CROSS  { $$ = 2; }
+;
+
+opt_outer: /* nil */  { $$ = 0; }
+   | OUTER {$$ = 4; }
+   ;
+
+left_or_right: LEFT { $$ = 1; }
+    | RIGHT { $$ = 2; }
+    ;
+
+opt_left_or_right_outer: LEFT opt_outer { $$ = 1 + $2; }
+   | RIGHT opt_outer  { $$ = 2 + $2; }
+   | /* nil */ { $$ = 0; }
+   ;
+
+opt_join_condition: join_condition | /* nil */;
+
+join_condition:
+    ON expr { $$ = NULL; emit("ONEXPR"); }
+    | USING '(' column_list ')' { $$ = NULL; emit("USING %d", $3); }
+    ;
+
+index_hint:
+     USE KEY opt_for_join '(' index_list ')'
+                  { $$ = NULL; emit("INDEXHINT %d %d", $5, 010+$3); }
+   | IGNORE KEY opt_for_join '(' index_list ')'
+                  { $$ = NULL; emit("INDEXHINT %d %d", $5, 020+$3); }
+   | FORCE KEY opt_for_join '(' index_list ')'
+                  { $$ = NULL; emit("INDEXHINT %d %d", $5, 030+$3); }
+   | /* nil */  { $$ = NULL; }
+   ;
+
+opt_for_join: FOR JOIN { $$ = 1; }
+   | /* nil */ { $$ = 0; }
+   ;
+
+index_list: NAME  { $$ = NULL; emit("INDEX %s", $1); free($1); $$ = 1; }
+   | index_list ',' NAME { $$ = NULL; emit("INDEX %s", $3); free($3); $$ = $1 + 1; }
+   ;
+
+table_subquery: '(' select_stmt ')' { $$ = NULL; emit("SUBQUERY"); }
+   ;
+
+   /* statements: delete statement */
+
+stmt: delete_stmt { ctx.push(@$,$1); }
+   ;
+
+table_name: identifier {
+    $$ = new SQLTable($1);
+} | identifier '.' identifier {
+    $$ = new SQLTable($1,$3);
+};
+
+column_name: identifier {
+    $$ = new SQLColumn($1);
+} | identifier '.' identifier {
+    $$ = new SQLColumn(new SQLTable($1),$3);
+} | identifier '.' identifier '.' identifier {
+    $$ = new SQLColumn(new SQLTable($1,$3),$5);
+};
+
+delete_stmt: DELETE delete_opts FROM table_name
+    opt_where opt_orderby opt_limit {
+      $$ = new SQLDeleteStatement($4,$5);
+};
+
+delete_opts: delete_opts LOW_PRIORITY { $$ = $1 + 01; }
+   | delete_opts QUICK { $$ = $1 + 02; }
+   | delete_opts IGNORE { $$ = $1 + 04; }
+   | /* nil */ { $$ = 0; }
+   ;
+
+delete_stmt: DELETE delete_opts
+    delete_list
+    FROM table_references opt_where
+            { $$ = NULL; emit("DELETEMULTI %d %d %d", $2, $3, $5); }
+
+delete_list: NAME opt_dot_star { $$ = NULL; emit("TABLE %s", $1); free($1); $$ = 1; }
+   | delete_list ',' NAME opt_dot_star
+            { $$ = NULL; emit("TABLE %s", $3); free($3); $$ = $1 + 1; }
+   ;
+
+opt_dot_star: /* nil */ | '.' '*' ;
+
+delete_stmt: DELETE delete_opts
+    FROM delete_list
+    USING table_references opt_where
+            { $$ = NULL; emit("DELETEMULTI %d %d %d", $2, $4, $6); }
+;
+
+   /* statements: insert statement */
+
+stmt: insert_stmt { ctx.push(@$,$1); }
+   ;
+
+insert_stmt: INSERT insert_opts opt_into NAME
+     opt_col_names
+     VALUES insert_vals_list
+     opt_ondupupdate { $$ = NULL; emit("INSERTVALS %d %d %s", $2, $7, $4); free($4); }
+   ;
+
+opt_ondupupdate: /* nil */ { $$ = NULL; }
+   | ONDUPLICATE KEY UPDATE insert_asgn_list { $$ = NULL; emit("DUPUPDATE %d", $4); }
+   ;
+
+insert_opts: /* nil */ { $$ = 0; }
+   | insert_opts LOW_PRIORITY { $$ = $1 | 01 ; }
+   | insert_opts DELAYED { $$ = $1 | 02 ; }
+   | insert_opts HIGH_PRIORITY { $$ = $1 | 04 ; }
+   | insert_opts IGNORE { $$ = $1 | 010 ; }
+   ;
+
+opt_into: INTO | /* nil */
+   ;
+
+opt_col_names: /* nil */ { $$ = NULL; }
+   | '(' column_list ')' { $$ = NULL; emit("INSERTCOLS %d", $2); }
+   ;
+
+insert_vals_list: '(' insert_vals ')' { $$ = $2; }
+   | insert_vals_list ',' '(' insert_vals ')' { $$ = NULL; emit("VALUES %d", $4); }
+
+insert_vals:
+     expr { $$ = new SQLObjectList<>(); $$->push($1); }
+   | DEFAULT { $$ = new SQLObjectList<>(); $$->push(new SQLDefault()); }
+   | insert_vals ',' expr { $$->push($3); }
+   | insert_vals ',' DEFAULT { $$->push(new SQLDefault()); }
+   ;
+
+insert_stmt: INSERT insert_opts opt_into NAME
+    SET insert_asgn_list
+    opt_ondupupdate
+     { $$ = NULL; emit("INSERTASGN %d %d %s", $2, $6, $4); free($4); }
+   ;
+
+insert_stmt: INSERT insert_opts opt_into NAME opt_col_names
+    select_stmt
+    opt_ondupupdate { $$ = NULL; emit("INSERTSELECT %d %s", $2, $4); free($4); }
+  ;
+
+insert_asgn_list:
+     NAME COMPARISON expr
+     { if ($2 != EQUALTO) error(@$,format("bad insert assignment to %s", $1));
+       $$ = NULL; emit("ASSIGN %s", $1); free($1); $$ = 1; }
+   | NAME COMPARISON DEFAULT
+               { if ($2 != EQUALTO) error(@$,format("bad insert assignment to %s", $1));
+                 $$ = NULL; emit("DEFAULT"); $$ = NULL; emit("ASSIGN %s", $1); free($1); $$ = 1; }
+   | insert_asgn_list ',' NAME COMPARISON expr
+               { if ($4 != EQUALTO) error(@$,format("bad insert assignment to %s", $1));
+                 $$ = NULL; emit("ASSIGN %s", $3); free($3); $$ = $1 + 1; }
+   | insert_asgn_list ',' NAME COMPARISON DEFAULT
+               { if ($4 != EQUALTO) error(@$,format("bad insert assignment to %s", $1));
+                 $$ = NULL; emit("DEFAULT"); $$ = NULL; emit("ASSIGN %s", $3); free($3); $$ = $1 + 1; }
+   ;
+
+   /** replace just like insert **/
+stmt: replace_stmt { ctx.push(@$,$1); };
+
+replace_stmt: REPLACE insert_opts opt_into table_name
+     opt_col_names
+     VALUES insert_vals_list
+     opt_ondupupdate { $$ = new SQLReplaceIntoStatement($4,$7); }
+   ;
+
+replace_stmt: REPLACE insert_opts opt_into NAME
+    SET insert_asgn_list
+    opt_ondupupdate
+     { $$ = NULL; emit("REPLACEASGN %d %d %s", $2, $6, $4); free($4); }
+   ;
+
+replace_stmt: REPLACE insert_opts opt_into NAME opt_col_names
+    select_stmt
+    opt_ondupupdate { $$ = NULL; emit("REPLACESELECT %d %s", $2, $4); free($4); }
+  ;
+
+/** update **/
+stmt: update_stmt { ctx.push(@$,$1); };
+
+update_stmt: UPDATE update_opts table_references
+    SET update_asgn_list
+    opt_where
+    opt_orderby
+opt_limit { $$ = NULL; emit("UPDATE %d %d %d", $2, $3, $5); };
+
+update_opts: /* nil */ { $$ = 0; }
+   | insert_opts LOW_PRIORITY { $$ = $1 | 01 ; }
+   | insert_opts IGNORE { $$ = $1 | 010 ; }
+   ;
+
+update_asgn_list:
+     NAME COMPARISON expr
+       { if ($2 != EQUALTO) error(@$,format("bad insert assignment to %s", $1));
+   $$ = NULL; emit("ASSIGN %s", $1); free($1); $$ = 1; }
+   | NAME '.' NAME COMPARISON expr
+       { if ($4 != EQUALTO) error(@$,format("bad insert assignment to %s", $1));
+   $$ = NULL; emit("ASSIGN %s.%s", $1, $3); free($1); free($3); $$ = 1; }
+   | update_asgn_list ',' NAME COMPARISON expr
+       { if ($4 != EQUALTO) error(@$,format("bad insert assignment to %s", $3));
+   $$ = NULL; emit("ASSIGN %s.%s", $3); free($3); $$ = $1 + 1; }
+   | update_asgn_list ',' NAME '.' NAME COMPARISON expr
+       { if ($6 != EQUALTO) error(@$,format("bad insert assignment to %s.$s", $3, $5));
+   $$ = NULL; emit("ASSIGN %s.%s", $3, $5); free($3); free($5); $$ = 1; }
+   ;
+
+
+   /** create database **/
+
+stmt: create_database_stmt { ctx.push(@$,$1); }
+   ;
+
+create_database_stmt:
+     CREATE DATABASE opt_if_not_exists identifier { $$ = new SQLCreateDatabaseStatement($4); }
+   | CREATE SCHEMA opt_if_not_exists identifier { $$ = new SQLCreateDatabaseStatement($4); }
+   ;
+
+opt_if_not_exists:  /* nil */ { $$ = 0; }
+   | IF EXISTS           { if(!$2)error(@$,"IF EXISTS doesn't exist");
+                        $$ = $2; /* NOT EXISTS hack */ }
+   ;
+
+
+   /** create table **/
+stmt: create_table_stmt { ctx.push(@$,$1); };
+
+create_table_stmt: CREATE opt_temporary TABLE opt_if_not_exists table_name '(' create_col_list ')' {
+  $$ = new SQLCreateTableStatement($5, $7);
+};
+
+create_table_stmt: CREATE opt_temporary TABLE opt_if_not_exists table_name '(' create_col_list ')'
+create_select_statement { $$ = NULL; emit("CREATESELECT %d %d %d %s", $2, $4, $7, $5); free($5); }
+    ;
+
+create_table_stmt: CREATE opt_temporary TABLE opt_if_not_exists table_name create_select_statement { $$ = NULL; emit("CREATESELECT %d %d 0 %s", $2, $4, $5); free($5); }
+    ;
+
+create_col_list: create_definition { $$ = NULL; }
+    | create_col_list ',' create_definition { $$ = NULL; }
+    ;
+
+create_definition: { emit("STARTCOL"); } NAME data_type column_atts
+                   { $$ = NULL; emit("COLUMNDEF %d %s", $3, $2); free($2); }
+
+    | PRIMARY KEY '(' column_list ')'    { $$ = NULL; emit("PRIKEY %d", $4); }
+    | KEY '(' column_list ')'            { $$ = NULL; emit("KEY %d", $3); }
+    | INDEX '(' column_list ')'          { $$ = NULL; emit("KEY %d", $3); }
+    | FULLTEXT INDEX '(' column_list ')' { $$ = NULL; emit("TEXTINDEX %d", $4); }
+    | FULLTEXT KEY '(' column_list ')'   { $$ = NULL; emit("TEXTINDEX %d", $4); }
+    ;
+
+column_atts: /* nil */ { $$ = 0; }
+    | column_atts NOT NULLX             { $$ = NULL; emit("ATTR NOTNULL"); $$ = $1 + 1; }
+    | column_atts NULLX
+    | column_atts DEFAULT STRING        { $$ = NULL; emit("ATTR DEFAULT STRING %s", $3); free($3); $$ = $1 + 1; }
+    | column_atts DEFAULT INTNUM        { $$ = NULL; emit("ATTR DEFAULT NUMBER %d", $3); $$ = $1 + 1; }
+    | column_atts DEFAULT APPROXNUM     { $$ = NULL; emit("ATTR DEFAULT FLOAT %g", $3); $$ = $1 + 1; }
+    | column_atts DEFAULT BOOL          { $$ = NULL; emit("ATTR DEFAULT BOOL %d", $3); $$ = $1 + 1; }
+    | column_atts AUTO_INCREMENT        { $$ = NULL; emit("ATTR AUTOINC"); $$ = $1 + 1; }
+    | column_atts UNIQUE '(' column_list ')' { $$ = NULL; emit("ATTR UNIQUEKEY %d", $4); $$ = $1 + 1; }
+    | column_atts UNIQUE KEY { $$ = NULL; emit("ATTR UNIQUEKEY"); $$ = $1 + 1; }
+    | column_atts PRIMARY KEY { $$ = NULL; emit("ATTR PRIKEY"); $$ = $1 + 1; }
+    | column_atts KEY { $$ = NULL; emit("ATTR PRIKEY"); $$ = $1 + 1; }
+    | column_atts COMMENT STRING { $$ = NULL; emit("ATTR COMMENT %s", $3); free($3); $$ = $1 + 1; }
+    ;
+
+opt_length: /* nil */ { $$ = 0; }
+   | '(' INTNUM ')' { $$ = $2; }
+   | '(' INTNUM ',' INTNUM ')' { $$ = $2 + 1000*$4; }
+   ;
+
+opt_binary: /* nil */ { $$ = 0; }
+   | BINARY { $$ = 4000; }
+   ;
+
+opt_uz: /* nil */ { $$ = 0; }
+   | opt_uz UNSIGNED { $$ = $1 | 1000; }
+   | opt_uz ZEROFILL { $$ = $1 | 2000; }
+   ;
+
+opt_csc: /* nil */ { $$ = NULL; }
+   | opt_csc CHAR SET STRING { $$ = NULL; emit("COLCHARSET %s", $4); free($4); }
+   | opt_csc COLLATE STRING { $$ = NULL; emit("COLCOLLATE %s", $3); free($3); }
+   ;
+
+data_type:
+     BIT opt_length { $$ = 10000 + $2; }
+   | TINYINT opt_length opt_uz { $$ = 10000 + $2; }
+   | SMALLINT opt_length opt_uz { $$ = 20000 + $2 + $3; }
+   | MEDIUMINT opt_length opt_uz { $$ = 30000 + $2 + $3; }
+   | INT opt_length opt_uz { $$ = 40000 + $2 + $3; }
+   | INTEGER opt_length opt_uz { $$ = 50000 + $2 + $3; }
+   | BIGINT opt_length opt_uz { $$ = 60000 + $2 + $3; }
+   | REAL opt_length opt_uz { $$ = 70000 + $2 + $3; }
+   | DOUBLE opt_length opt_uz { $$ = 80000 + $2 + $3; }
+   | FLOAT opt_length opt_uz { $$ = 90000 + $2 + $3; }
+   | DECIMAL opt_length opt_uz { $$ = 110000 + $2 + $3; }
+   | DATE { $$ = 100001; }
+   | TIME { $$ = 100002; }
+   | TIMESTAMP { $$ = 100003; }
+   | DATETIME { $$ = 100004; }
+   | YEAR { $$ = 100005; }
+   | CHAR opt_length opt_csc { $$ = 120000 + $2; }
+   | VARCHAR '(' INTNUM ')' opt_csc { $$ = 130000 + $3; }
+   | BINARY opt_length { $$ = 140000 + $2; }
+   | VARBINARY '(' INTNUM ')' { $$ = 150000 + $3; }
+   | TINYBLOB { $$ = 160001; }
+   | BLOB { $$ = 160002; }
+   | MEDIUMBLOB { $$ = 160003; }
+   | LONGBLOB { $$ = 160004; }
+   | TINYTEXT opt_binary opt_csc { $$ = 170000 + $2; }
+   | TEXT opt_binary opt_csc { $$ = 171000 + $2; }
+   | MEDIUMTEXT opt_binary opt_csc { $$ = 172000 + $2; }
+   | LONGTEXT opt_binary opt_csc { $$ = 173000 + $2; }
+   | ENUM '(' enum_list ')' opt_csc { $$ = 200000 + $3; }
+   | SET '(' enum_list ')' opt_csc { $$ = 210000 + $3; }
+   ;
+
+enum_list: STRING { $$ = NULL; emit("ENUMVAL %s", $1); free($1); $$ = 1; }
+   | enum_list ',' STRING { $$ = NULL; emit("ENUMVAL %s", $3); free($3); $$ = $1 + 1; }
+   ;
+
+create_select_statement: opt_ignore_replace opt_as select_stmt { $$ = NULL; emit("CREATESELECT %d", $1); }
+   ;
+
+opt_ignore_replace: /* nil */ { $$ = 0; }
+   | IGNORE { $$ = 1; }
+   | REPLACE { $$ = 2; }
+   ;
+
+opt_temporary:   /* nil */ { $$ = 0; }
+   | TEMPORARY { $$ = 1;}
+   ;
+
+   /**** set user variables ****/
+
+stmt: set_stmt { ctx.push(@1,$1); }
+   ;
+
+set_stmt: SET set_list {
+  $$ = new SQLSetStatement($2);
+  delete $2;
+};
+
+set_list: set_expr {
+  $$ = new SQLObjectList<>();
+  $$->push($1);
+} | set_list ',' set_expr {
+  $$ = $1;
+  $$->push($3);
+};
+
+varaible_name: USERVAR | TIMESTAMP { $$ = strdup("TIMESTAMP"); };
+
+set_expr:
+      varaible_name COMPARISON set_value {
+        if ($2 != EQUALTO) {
+          error(@$,format("bad set to @%s", $1));
+          $$ = NULL;
+        } else {
+          $$ = new SQLSetPair($1,$3);
+        }
+        free($1);
+      }
+    | varaible_name ASSIGN set_value {
+      $$ = new SQLSetPair($1,$3);
+      free($1);
+    }
+    ;
+
+set_value: expr    { $$ = $1; }
+   | DEFAULT       { $$ = new SQLDefault(); };
+
+   /**** expressions ****/
+expr: INTRODUCER STRING COLLATE STRING { $$ = new SQLString($2); free($1); free($2); free($4); };
+
+expr: column_name          { $$ = $1; }
+   | USERVAR         { $$ = NULL; emit("USERVAR %s", $1); free($1); }
+   | STRING        { $$ = new SQLString($1); free($1); }
+   | INTNUM        { $$ = new SQLInteger($1); }
+   | APPROXNUM     { $$ = NULL; emit("FLOAT %g", $1); }
+   | BOOL          { $$ = NULL; emit("BOOL %d", $1); }
+   ;
+
+
+expr: expr '+' expr { $$ = NULL; emit("ADD"); }
+   | expr '-' expr { $$ = NULL; emit("SUB"); }
+   | expr '*' expr { $$ = NULL; emit("MUL"); }
+   | expr '/' expr { $$ = NULL; emit("DIV"); }
+   | expr '%' expr { $$ = NULL; emit("MOD"); }
+   | expr MOD expr { $$ = NULL; emit("MOD"); }
+   | '-' expr %prec UMINUS { $$ = NULL; emit("NEG"); }
+   | expr ANDOP expr { $$ = new SQLAnd($1,$3); }
+   | expr OR expr { $$ = new SQLOr($1,$3); }
+   | expr XOR expr { $$ = NULL; emit("XOR"); }
+   | expr COMPARISON expr { $$ = SQLComparision::construct($2,$1,$3); }
+   | expr COMPARISON '(' select_stmt ')' { $$ = SQLComparision::construct($2,$1,$4); }
+   | expr COMPARISON ANY '(' select_stmt ')' { $$ = NULL; emit("CMPANYSELECT %d", $2); }
+   | expr COMPARISON SOME '(' select_stmt ')' { $$ = NULL; emit("CMPANYSELECT %d", $2); }
+   | expr COMPARISON ALL '(' select_stmt ')' { $$ = NULL; emit("CMPALLSELECT %d", $2); }
+   | expr '|' expr { $$ = NULL; emit("BITOR"); }
+   | expr '&' expr { $$ = NULL; emit("BITAND"); }
+   | expr '^' expr { $$ = NULL; emit("BITXOR"); }
+   | expr SHIFT expr { $$ = NULL; emit("SHIFT %s", $2==1?"left":"right"); }
+   | NOT expr { $$ = NULL; emit("NOT"); }
+   | '!' expr { $$ = NULL; emit("NOT"); }
+   | USERVAR ASSIGN expr { $$ = NULL; emit("ASSIGN @%s", $1); free($1); }
+   ;
+
+expr:  expr IS NULLX     { $$ = NULL; emit("ISNULL"); }
+   |   expr IS NOT NULLX { $$ = NULL; emit("ISNULL"); $$ = NULL; emit("NOT"); }
+   |   expr IS BOOL      { $$ = NULL; emit("ISBOOL %d", $3); }
+   |   expr IS NOT BOOL  { $$ = NULL; emit("ISBOOL %d", $4); $$ = NULL; emit("NOT"); }
+   ;
+
+expr: expr BETWEEN expr AND expr %prec BETWEEN { $$ = NULL; emit("BETWEEN"); }
+   ;
+
+
+val_list: expr { $$ = new SQLObjectList<>(); $$->push($1); }
+   | expr ',' val_list { $3->push_front($1); $$ = $3; };
+
+opt_val_list: /* nil */ { $$ = NULL; }
+   | val_list { $$ = $1; };
+
+expr: expr IN '(' val_list ')'       { $$ = NULL; emit("ISIN %d", $4); }
+   | expr NOT IN '(' val_list ')'    { $$ = NULL; emit("ISIN %d", $5); $$ = NULL; emit("NOT"); }
+   | expr IN '(' select_stmt ')'     { $$ = NULL; emit("INSELECT"); }
+   | expr NOT IN '(' select_stmt ')' { $$ = NULL; emit("INSELECT"); $$ = NULL; emit("NOT"); }
+   | EXISTS '(' select_stmt ')'      { $$ = NULL; emit("EXISTS"); if($1)$$ = NULL; emit("NOT"); }
+   ;
+
+expr: identifier '(' opt_val_list ')' {  $$ = new SQLFunction($1,$3); }
+   ;
+
+  /* functions with special syntax */
+expr: FCOUNT '(' '*' ')' { $$ = NULL; emit("COUNTALL"); }
+   | FCOUNT '(' expr ')' { $$ = NULL; emit(" CALL 1 COUNT"); }
+
+expr: FSUBSTRING '(' val_list ')' {  $$ = NULL; emit("CALL %d SUBSTR", $3);}
+   | FSUBSTRING '(' expr FROM expr ')' {  $$ = NULL; emit("CALL 2 SUBSTR"); }
+   | FSUBSTRING '(' expr FROM expr FOR expr ')' {  $$ = NULL; emit("CALL 3 SUBSTR"); }
+   | FTRIM '(' val_list ')' { $$ = NULL; emit("CALL %d TRIM", $3); }
+   | FTRIM '(' trim_ltb expr FROM val_list ')' { $$ = NULL; emit("CALL 3 TRIM"); }
+   ;
+
+expr: '(' expr ')' { $$ = $2; };
+
+trim_ltb: LEADING { $$ = NULL; emit("INT 1"); }
+   | TRAILING { $$ = NULL; emit("INT 2"); }
+   | BOTH { $$ = NULL; emit("INT 3"); }
+   ;
+
+expr: FDATE_ADD '(' expr ',' interval_exp ')' { $$ = NULL; emit("CALL 3 DATE_ADD"); }
+   |  FDATE_SUB '(' expr ',' interval_exp ')' { $$ = NULL; emit("CALL 3 DATE_SUB"); }
+   ;
+
+interval_exp: INTERVAL expr DAY_HOUR { $$ = NULL; emit("NUMBER 1"); }
+   | INTERVAL expr DAY_MICROSECOND { $$ = NULL; emit("NUMBER 2"); }
+   | INTERVAL expr DAY_MINUTE { $$ = NULL; emit("NUMBER 3"); }
+   | INTERVAL expr DAY_SECOND { $$ = NULL; emit("NUMBER 4"); }
+   | INTERVAL expr YEAR_MONTH { $$ = NULL; emit("NUMBER 5"); }
+   | INTERVAL expr YEAR       { $$ = NULL; emit("NUMBER 6"); }
+   | INTERVAL expr HOUR_MICROSECOND { $$ = NULL; emit("NUMBER 7"); }
+   | INTERVAL expr HOUR_MINUTE { $$ = NULL; emit("NUMBER 8"); }
+   | INTERVAL expr HOUR_SECOND { $$ = NULL; emit("NUMBER 9"); }
+   ;
+
+expr: CASE expr case_list END           { $$ = NULL; emit("CASEVAL %d 0", $3); }
+   |  CASE expr case_list ELSE expr END { $$ = NULL; emit("CASEVAL %d 1", $3); }
+   |  CASE case_list END                { $$ = NULL; emit("CASE %d 0", $2); }
+   |  CASE case_list ELSE expr END      { $$ = NULL; emit("CASE %d 1", $2); }
+   ;
+
+case_list: WHEN expr THEN expr     { $$ = 1; }
+         | case_list WHEN expr THEN expr { $$ = $1+1; }
+   ;
+
+expr: expr LIKE expr { $$ = NULL; emit("LIKE"); }
+   | expr NOT LIKE expr { $$ = NULL; emit("LIKE"); $$ = NULL; emit("NOT"); }
+   ;
+
+expr: expr REGEXP expr { $$ = NULL; emit("REGEXP"); }
+   | expr NOT REGEXP expr { $$ = NULL; emit("REGEXP"); $$ = NULL; emit("NOT"); }
+   ;
+
+expr: CURRENT_TIMESTAMP { $$ = NULL; emit("NOW"); };
+   | CURRENT_DATE	{ $$ = NULL; emit("NOW"); };
+   | CURRENT_TIME	{ $$ = NULL; emit("NOW"); };
+   ;
+
+expr: BINARY expr %prec UMINUS { $$ = NULL; emit("STRTOBIN"); }
+   ;
+
+/*** misc ***/
+
+stmt: DELIMITER;
+stmt: TBEGIN { ctx.push(@$, new SQLBeginStatement()); }
+stmt: COMMIT { ctx.push(@$, new SQLCommitStatement()); }
+stmt: ROLLBACK { ctx.push(@$, new SQLRollbackStatement()); }
+stmt: binlog_stmt {
+  ctx.push(@$,$1);
+}
+
+binlog_stmt: BINLOG STRING {
+  $$ = new SQLBinLogStatement(@$,$2,ctx.getEventParser());
+  free($2);
+};
+
+stmt: use_stmt {
+  ctx.push(@$,$1);
+};
+
+identifier: NAME {
+  $$ = new SQLIdentifier($1);
+  free($1);
+};
+
+use_stmt: USE identifier {
+  $$ = new SQLUseDatabase($2);
+};
+
+%%
+
+std::string format(const char *s, ... ) {
+  std::string rt;
+  va_list ap;
+  va_start( ap, s );
+  char *msg = NULL;
+  vasprintf ( &msg, s, ap );
+  rt = msg;
+  free ( msg );
+  return rt;
+}
+
+void emit(const char *s, ...)
+{
+  va_list ap;
+  va_start(ap, s);
+
+  printf("rpn: ");
+  vfprintf(stdout, s, ap);
+  printf("\n");
+}
+
+namespace yy {
+  void SQLParser::error ( location const &loc, const std::string &s ) {
+    ctx.error(loc,s);
+  }
+}

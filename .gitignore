@@ -141,3 +141,6 @@ dbtableusagecpp
 runUnitTests
 *.cbp
 *.sqlite
+coverage
+.idea/jenkinsSettings.xml
+.vagrant
