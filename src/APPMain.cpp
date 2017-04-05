@@ -100,7 +100,9 @@ int APPMain::main ( int argc, char *argv[] ) {
 
 void APPMain::parseConfig ( boost::program_options::variables_map &vm ) {
   std::string configFile = vm["config"].as<std::string> ();
+#ifdef HAVE_ABSOLUTE
   configFile = absolute ( boost::filesystem::path ( configFile ) ).generic_string ();
+#endif
   if ( boost::filesystem::exists ( configFile ) || !vm["config"].defaulted () ) {
     po::store ( po::parse_config_file<char> ( configFile.c_str (), config ), vm );
   }
