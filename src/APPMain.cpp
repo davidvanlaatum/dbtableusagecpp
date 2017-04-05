@@ -5,6 +5,7 @@
 #include <boost/filesystem.hpp>
 #include "appversion.h"
 #include <iostream>
+#include <stdio.h>
 #include "APPMain.h"
 #include "SQL/SQLParserDriver.h"
 #include "data/DataCollector.h"
