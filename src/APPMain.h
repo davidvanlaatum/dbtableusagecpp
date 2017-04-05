@@ -11,7 +11,7 @@ namespace po = boost::program_options;
 class APPMain {
 public:
     APPMain ();
-    int main ( int argc, const char *argv[] );
+    int main ( int argc, char *argv[] );
     void parseConfig ( boost::program_options::variables_map &vm );
     void doVersion ();
     void doHelp ( const char *basename );

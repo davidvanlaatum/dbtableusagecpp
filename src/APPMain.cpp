@@ -43,7 +43,7 @@ APPMain::APPMain () : options ( "options" ), config ( "config" ) {
   options.add ( config );
 }
 
-int APPMain::main ( int argc, const char *argv[] ) {
+int APPMain::main ( int argc, char *argv[] ) {
   int exit = 0;
   po::variables_map vm;
   try {
