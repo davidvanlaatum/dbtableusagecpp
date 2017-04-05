@@ -62,7 +62,7 @@ void DataCollector::statement ( yy::location &location, SQLStatement *statement,
     timeval timeDiff;
     timersub ( &now, &start, &timeDiff );
 
-    double speed = diff / ( timeDiff.tv_sec + ( timeDiff.tv_usec / 1000.0f ) );
+    double speed = diff / ( timeDiff.tv_sec + ( timeDiff.tv_usec / 1000000.0f ) );
 
     if ( lastTime != 0 ) {
       std::cerr << toString ( context->currentTime () )

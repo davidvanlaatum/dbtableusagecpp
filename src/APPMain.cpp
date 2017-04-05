@@ -90,6 +90,7 @@ int APPMain::main ( int argc, char *argv[] ) {
               SQLParserDriver driver;
               setupDriver ( driver, vm );
               driver.parseFileHandle ( handle, fetcher.currentLogFile (), &collector );
+              pclose ( handle );
               fetcher.next ();
             }
           }
