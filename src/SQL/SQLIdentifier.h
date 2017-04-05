@@ -19,7 +19,7 @@ public:
     }
 
     virtual void walk ( SQLTreeWalker *walker );
-    virtual SQLIdentifier *clone() const;
+    virtual SQLIdentifier *clone () const;
 private:
     std::string id;
 };

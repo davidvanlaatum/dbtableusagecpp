@@ -16,7 +16,7 @@ public:
     virtual void getTables ( table_type &rt ) const;
     virtual void resolve ( SQLParserContext *context );
     virtual void walk ( SQLTreeWalker *walker );
-    virtual SQLDeleteStatement *clone() const;
+    virtual SQLDeleteStatement *clone () const;
 private:
     boost::shared_ptr<SQLTable> table;
     boost::shared_ptr<SQLObject> where;

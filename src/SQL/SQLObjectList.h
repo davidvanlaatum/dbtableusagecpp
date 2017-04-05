@@ -14,7 +14,7 @@ template<typename T=SQLObject> class SQLObjectList : public std::list<T *>, publ
 public:
     virtual ~SQLObjectList () {
       for ( typename SQLObjectList<T>::iterator it = this->begin (); it != this->end (); ++it )
-        delete ( *it  );
+        delete ( *it );
       this->clear ();
     }
 

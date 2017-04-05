@@ -15,7 +15,7 @@ public:
     Table *getTable ( std::string name );
     DB *setName ( std::string name );
     const std::string &getName () const;
-    void getTables (std::list<Table *> &rt);
+    void getTables ( std::list<Table *> &rt );
 
 private:
     std::string name;

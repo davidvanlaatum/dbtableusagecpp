@@ -27,7 +27,7 @@ public:
 protected:
     void parse ( mysql_format_description_event *event, size_t len );
     void parseTableMap ( mysql_event *event, size_t len );
-    std::string encodedString(char **data);
+    std::string encodedString ( char **data );
 
     std::map<uint8_t, uint8_t> eventHeaderLengths;
     std::map<uint64_t, MySQLTableMapEntry> tableMap;

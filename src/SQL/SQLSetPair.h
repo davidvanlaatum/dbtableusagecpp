@@ -15,7 +15,7 @@ public:
     SQLObject *getValue ();
     virtual void resolve ( SQLParserContext *context );
     virtual void walk ( SQLTreeWalker *walker );
-    virtual SQLSetPair *clone() const;
+    virtual SQLSetPair *clone () const;
 private:
     std::string name;
     boost::shared_ptr<SQLObject> value;

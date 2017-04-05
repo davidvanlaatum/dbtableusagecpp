@@ -20,7 +20,7 @@ public:
     virtual void getTables ( table_type &rt ) const;
     virtual void resolve ( SQLParserContext *context );
     virtual void walk ( SQLTreeWalker *walker );
-    virtual SQLSetStatement *clone() const;
+    virtual SQLSetStatement *clone () const;
 private:
     ArgsType args;
 };

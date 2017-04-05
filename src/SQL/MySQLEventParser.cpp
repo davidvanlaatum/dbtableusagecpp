@@ -29,9 +29,9 @@ MySQLEventParser::parse ( yy::location location, const char *data, size_t len, M
   do {
     std::cout << std::showbase;
     if ( ctx->getDebug () ) {
-      std::cout << location << " time=" << event->timestamp << " type=" << std::hex << (int) (event->type & 0xFF)
-                << " len=" << std::dec << event->len << " flags=" << std::hex << (event->flags & 0xFFFF) << std::endl;
-      std::cout << std::dec;
+      std::cout << location << " time=" << event->timestamp << " type=" << std::hex << ( event->type & 0xFF )
+                << " len=" << std::dec << event->len << " flags=" << std::hex << ( event->flags & 0xFFFF )
+                << std::dec << std::endl;
     }
 
     switch ( event->type ) {
@@ -52,7 +52,7 @@ MySQLEventParser::parse ( yy::location location, const char *data, size_t len, M
         break;
       default: {
         std::stringstream s;
-        s << location << ": Unknown event type " << std::hex << std::showbase << (0xFF&event->type);
+        s << location << ": Unknown event type " << std::hex << std::showbase << ( 0xFF & event->type );
         throw std::runtime_error ( s.str () );
       }
     }

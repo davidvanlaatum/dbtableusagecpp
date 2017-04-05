@@ -52,7 +52,7 @@ void DataCollector::statement ( yy::location &location, SQLStatement *statement,
   timeval now;
   gettimeofday ( &now, NULL );
 
-  if(firstStatement == 0 && context->currentTime () != 0) {
+  if ( firstStatement == 0 && context->currentTime () != 0 ) {
     firstStatement = context->currentTime ();
     start = now;
   }

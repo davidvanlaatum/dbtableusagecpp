@@ -31,5 +31,5 @@ void SQLColumn::walk ( SQLTreeWalker *walker ) {
 }
 
 SQLColumn *SQLColumn::clone () const {
-  return new SQLColumn (table ? table->clone () : NULL, name ? name->clone () : NULL);
+  return new SQLColumn ( table ? table->clone () : NULL, name ? name->clone () : NULL );
 }

@@ -17,5 +17,5 @@ void SQLDefault::walk ( SQLTreeWalker *walker ) {
 }
 
 SQLDefault *SQLDefault::clone () const {
-  return new SQLDefault();
+  return new SQLDefault ();
 }

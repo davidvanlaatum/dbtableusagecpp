@@ -18,7 +18,7 @@ public:
     virtual void getTables ( table_type &rt ) const;
     virtual void resolve ( SQLParserContext *context );
     virtual void walk ( SQLTreeWalker *walker );
-    virtual SQLBinLogStatement *clone() const;
+    virtual SQLBinLogStatement *clone () const;
     virtual void event ( MySQLBinLogEvent *event, MySQLEventParser *parser );
 private:
     table_type tables;

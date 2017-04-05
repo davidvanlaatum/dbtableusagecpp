@@ -16,7 +16,7 @@ public:
     virtual SQLTable *getTable () const;
     virtual void getTables ( table_type &rt ) const;
     virtual void resolve ( SQLParserContext *context );
-    virtual SQLReplaceIntoStatement *clone() const;
+    virtual SQLReplaceIntoStatement *clone () const;
 private:
     boost::shared_ptr<SQLTable> table;
 public:

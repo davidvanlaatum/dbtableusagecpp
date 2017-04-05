@@ -20,7 +20,7 @@ public:
     }
 
     virtual void walk ( SQLTreeWalker *walker );
-    virtual SQLUseDatabase *clone() const;
+    virtual SQLUseDatabase *clone () const;
 private:
     boost::shared_ptr<SQLIdentifier> name;
 };

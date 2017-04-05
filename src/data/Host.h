@@ -14,7 +14,7 @@
 class Host {
 public:
     DB *getDB ( std::string name );
-    void getDBs (std::list<DB *> &rt);
+    void getDBs ( std::list<DB *> &rt );
 
 private:
     std::map<std::string, DB> dbs;

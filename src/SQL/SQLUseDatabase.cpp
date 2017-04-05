@@ -24,5 +24,5 @@ void SQLUseDatabase::walk ( SQLTreeWalker *walker ) {
 }
 
 SQLUseDatabase *SQLUseDatabase::clone () const {
-  return new SQLUseDatabase(name ? name->clone () : NULL);
+  return new SQLUseDatabase ( name ? name->clone () : NULL );
 }

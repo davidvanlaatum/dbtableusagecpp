@@ -12,7 +12,7 @@ void SQLCreateDatabaseStatement::getTables ( SQLStatement::table_type &rt ) cons
 }
 
 std::string SQLCreateDatabaseStatement::toString () const {
-  return std::string();
+  return std::string ();
 }
 
 void SQLCreateDatabaseStatement::resolve ( SQLParserContext *context ) {

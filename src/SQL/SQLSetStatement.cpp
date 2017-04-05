@@ -15,7 +15,7 @@ SQLSetStatement::SQLSetStatement ( SQLObjectList<> *args ) {
 }
 
 SQLSetStatement::~SQLSetStatement () {
-  for(ArgsType::iterator it = args.begin (); it != args.end (); ++it) {
+  for ( ArgsType::iterator it = args.begin (); it != args.end (); ++it ) {
     delete *it;
   }
   args.clear ();

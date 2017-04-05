@@ -24,7 +24,7 @@ void SQLBeginStatement::walk ( SQLTreeWalker *walker ) {
 }
 
 SQLObject *SQLBeginStatement::clone () const {
-  return new SQLBeginStatement();
+  return new SQLBeginStatement ();
 }
 
 void SQLBeginStatement::getTables ( SQLStatement::table_type &rt ) const {

@@ -11,7 +11,7 @@ class SQLEquals : public SQLComparision {
 public:
     SQLEquals ( SQLObject *left, SQLObject *right );
     virtual std::string toString () const;
-    virtual SQLEquals *clone() const;
+    virtual SQLEquals *clone () const;
 };
 
 

@@ -17,7 +17,7 @@ public:
     virtual void resolve ( SQLParserContext *context );
     static boost::shared_ptr<SQLObject> simplify ( SQLFunction *function );
     virtual void walk ( SQLTreeWalker *walker );
-    virtual SQLFunction *clone() const;
+    virtual SQLFunction *clone () const;
 private:
     boost::scoped_ptr<SQLIdentifier> name;
     boost::scoped_ptr<SQLObjectList<> > args;

@@ -14,7 +14,7 @@ public:
     virtual std::string toString () const;
     virtual void resolve ( SQLParserContext *context );
     virtual void walk ( SQLTreeWalker *walker );
-    virtual SQLAnd *clone() const;
+    virtual SQLAnd *clone () const;
 private:
     boost::scoped_ptr<SQLObject> left;
     boost::scoped_ptr<SQLObject> right;

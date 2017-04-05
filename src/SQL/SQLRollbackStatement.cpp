@@ -21,7 +21,7 @@ void SQLRollbackStatement::walk ( SQLTreeWalker *walker ) {
 }
 
 SQLObject *SQLRollbackStatement::clone () const {
-  return new SQLRollbackStatement();
+  return new SQLRollbackStatement ();
 }
 
 void SQLRollbackStatement::getTables ( SQLStatement::table_type &rt ) const {

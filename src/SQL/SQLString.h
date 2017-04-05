@@ -12,7 +12,7 @@ public:
     virtual std::string toString () const;
     virtual void resolve ( SQLParserContext *context );
     virtual void walk ( SQLTreeWalker *walker );
-    virtual SQLString *clone() const;
+    virtual SQLString *clone () const;
 private:
     std::string value;
 };

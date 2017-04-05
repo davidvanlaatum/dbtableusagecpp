@@ -12,5 +12,5 @@ std::string SQLEquals::toString () const {
 }
 
 SQLEquals *SQLEquals::clone () const {
-  return new SQLEquals(left ? left->clone () : NULL, right ? right->clone () : NULL);
+  return new SQLEquals ( left ? left->clone () : NULL, right ? right->clone () : NULL );
 }

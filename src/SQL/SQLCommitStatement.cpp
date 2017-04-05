@@ -21,7 +21,7 @@ void SQLCommitStatement::walk ( SQLTreeWalker *walker ) {
 }
 
 SQLCommitStatement *SQLCommitStatement::clone () const {
-  return new SQLCommitStatement();
+  return new SQLCommitStatement ();
 }
 
 void SQLCommitStatement::getTables ( SQLStatement::table_type &rt ) const {
