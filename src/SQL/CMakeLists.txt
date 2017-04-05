@@ -41,7 +41,10 @@ add_library(sqlParser
         MySQLBinLogUpdateRowsEvent.cpp MySQLBinLogUpdateRowsEvent.h
         MySQLBinLogDeleteRowsEvent.cpp MySQLBinLogDeleteRowsEvent.h
         SQLCreateTableStatement.cpp SQLCreateTableStatement.h
-        SQLBeginStatement.cpp SQLBeginStatement.h SQLRollbackStatement.cpp SQLRollbackStatement.h SQLCommitStatement.cpp SQLCommitStatement.h)
+        SQLBeginStatement.cpp SQLBeginStatement.h
+        SQLRollbackStatement.cpp SQLRollbackStatement.h
+        SQLCommitStatement.cpp SQLCommitStatement.h
+        )
 target_link_libraries(sqlParser ${GLib_LIBRARY} Boost::boost)
 target_include_directories(sqlParser
         PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}
