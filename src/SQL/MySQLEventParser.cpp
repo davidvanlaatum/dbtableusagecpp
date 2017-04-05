@@ -61,7 +61,6 @@ MySQLEventParser::parse ( yy::location location, const char *data, size_t len, M
 }
 
 void MySQLEventParser::parse ( mysql_format_description_event *event, size_t len ) {
-//  std::cout << event->version << std::endl << event->ver << std::endl << (int) event->len << std::endl;
   binLogVer = event->ver;
   for ( int i = 0; i < event->len; i++ ) {
     eventHeaderLengths[i + 1] = event->typeLen[i];

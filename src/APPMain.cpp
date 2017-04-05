@@ -8,6 +8,7 @@
 #include "APPMain.h"
 #include "SQL/SQLParserDriver.h"
 #include "data/DataCollector.h"
+#include "LogFileFetcher.h"
 namespace po = boost::program_options;
 namespace fs = boost::filesystem;
 
@@ -69,23 +70,31 @@ int APPMain::main ( int argc, char *argv[] ) {
 
     if ( exit == 0 ) {
       try {
+        DataCollector collector;
         if ( vm.count ( "input" ) ) {
           SQLParserDriver driver;
-          DataCollector collector;
-
-          if ( vm["debug"].as<int> () ) {
-            driver.setDebugStream ( &std::cout );
-          }
-          driver.setDebug ( vm["debug"].as<int> () );
-          driver.setVerbose ( vm["verbose"].as<int> () );
+          setupDriver ( driver, vm );
           std::string file = vm["input"].as<std::string> ();
           if ( file == "-" ) {
             driver.parseStdIn ( &collector );
           } else {
             driver.parseFile ( file, &collector );
           }
-          collector.dump ();
+        } else {
+          LogFileFetcher fetcher;
+          fetcher.setConnection ( vm["monitor.host"].as<std::string> (), vm["monitor.user"].as<std::string> (),
+                                  vm["monitor.password"].as<std::string> () );
+          if ( fetcher.fetchLogs () ) {
+            while ( fetcher.hasMoreLogs () ) {
+              FILE *handle = fetcher.fileHandle ();
+              SQLParserDriver driver;
+              setupDriver ( driver, vm );
+              driver.parseFileHandle ( handle, fetcher.currentLogFile (), &collector );
+              fetcher.next ();
+            }
+          }
         }
+        collector.dump ();
       } catch ( std::exception &e ) {
         std::cerr << e.what () << std::endl;
         exit = 1;
@@ -98,6 +107,14 @@ int APPMain::main ( int argc, char *argv[] ) {
   }
 
   return exit;
+}
+
+void APPMain::setupDriver ( SQLParserDriver &driver, const boost::program_options::variables_map &vm ) const {
+  if ( vm["debug"].as<int> () ) {
+    driver.setDebugStream ( &std::cout );
+  }
+  driver.setDebug ( vm["debug"].as<int> () );
+  driver.setVerbose ( vm["verbose"].as<int> () );
 }
 
 void APPMain::parseConfig ( boost::program_options::variables_map &vm ) {

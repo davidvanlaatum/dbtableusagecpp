@@ -57,19 +57,21 @@ void DataCollector::statement ( yy::location &location, SQLStatement *statement,
     start = now;
   }
 
-  if ( statements % 1000 == 0 || lastUpdate.tv_sec < now.tv_sec - 10 ) {
+  if ( lastUpdate.tv_sec < now.tv_sec - 10 ) {
     time_t diff = context->currentTime () - firstStatement;
-    lastTime = context->currentTime ();
     timeval timeDiff;
     timersub ( &now, &start, &timeDiff );
 
     double speed = diff / ( timeDiff.tv_sec + ( timeDiff.tv_usec / 1000.0f ) );
 
-    std::cerr << toString ( context->currentTime () )
-              << " statements: " << statements
-              << " speed: " << std::setw ( 15 ) << speed
-              << " " << location << "\r";
-    lastUpdate = now;
+    if ( lastTime != 0 ) {
+      std::cerr << toString ( context->currentTime () )
+                << " statements: " << statements
+                << " speed: " << std::setw ( 7 ) << speed << "s/s"
+                << " " << location << "\n";
+      lastUpdate = now;
+    }
+    lastTime = context->currentTime ();
     lastStatements = statements;
   }
 }

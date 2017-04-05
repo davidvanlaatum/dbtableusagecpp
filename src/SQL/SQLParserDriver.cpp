@@ -42,6 +42,20 @@ void SQLParserDriver::parseFile ( std::string file, SQLParserCallback *callback 
   yyin = NULL;
 }
 
+void SQLParserDriver::parseFileHandle ( FILE *handle, std::string file,
+                                        SQLParserCallback *callback ) throw ( SQLParserFailedException ) {
+  flushLex ();
+  errno = 0;
+  yyin = handle;
+  try {
+    parse ( file, callback );
+  } catch ( ... ) {
+    fclose ( yyin );
+    throw;
+  }
+  yyin = NULL;
+}
+
 void
 SQLParserDriver::parseString ( std::string buffer, SQLParserCallback *callback ) throw ( SQLParserFailedException ) {
   flushLex ();

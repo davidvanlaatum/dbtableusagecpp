@@ -13,6 +13,7 @@ public:
     SQLParserDriver ();
     SQLParserDriver ( std::ostream *errorStream, std::ostream *outStream, std::ostream *debugStream );
     void parseFile ( std::string file, SQLParserCallback *callback ) throw ( SQLParserFailedException );
+    void parseFileHandle ( FILE *handle, std::string file, SQLParserCallback *callback ) throw ( SQLParserFailedException );
     void parseString ( std::string buffer, SQLParserCallback *callback ) throw ( SQLParserFailedException );
     void parseStdIn ( SQLParserCallback *callback ) throw ( SQLParserFailedException );
     void setErrorStream ( std::ostream *errorStream );
