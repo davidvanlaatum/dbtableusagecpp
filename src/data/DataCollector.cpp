@@ -65,9 +65,15 @@ void DataCollector::statement ( yy::location &location, SQLStatement *statement,
     double speed = diff / ( timeDiff.tv_sec + ( timeDiff.tv_usec / 1000000.0f ) );
 
     if ( lastTime != 0 ) {
+      std::string units = "s/s";
+      if ( speed > 60  ) {
+        speed /= 60.0f;
+        units = "m/s";
+      }
+      std::cerr << std::setprecision(4);
       std::cerr << toString ( context->currentTime () )
                 << " statements: " << statements
-                << " speed: " << std::setw ( 7 ) << speed << "s/s"
+                << " speed: " << std::setw ( 7 ) << speed << units
                 << " " << location << "\n";
       lastUpdate = now;
     }
