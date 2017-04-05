@@ -37,10 +37,19 @@ endif()
 
 set(CMAKE_REQUIRED_LIBRARIES Boost::filesystem)
 CHECK_CXX_SYMBOL_EXISTS(boost::filesystem::absolute boost/filesystem.hpp FILESYSTEM_ABSOLUTE)
-unset(CMAKE_REQUIRED_LIBRARIES)
 if(FILESYSTEM_ABSOLUTE)
     add_definitions(-DHAVE_ABSOLUTE)
 endif()
+set(CMAKE_REQUIRED_LIBRARIES Boost::program_options)
+CHECK_CXX_SOURCE_COMPILES("#include <boost/program_options.hpp>
+    int main() {
+    boost::program_options::parse_config_file<char>(NULL,NULL);
+    return 0;
+}" PARSE_CONFIG_FILE)
+if(PARSE_CONFIG_FILE)
+    add_definitions(-DHAVE_PARSE_CONFIG_FILE)
+endif()
+unset(CMAKE_REQUIRED_LIBRARIES)
 
 #include_directories(${SOCI_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/src ${CMAKE_CURRENT_BINARY_DIR}/src)
 

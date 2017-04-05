@@ -29,7 +29,9 @@ APPMain::APPMain () : options ( "options" ), config ( "config" ) {
            ( "help,h", po::bool_switch (), "produce help message" )
            ( "version,V", po::bool_switch (), "version" )
            ( "dump", po::bool_switch (), "dump settings" )
+#ifdef HAVE_PARSE_CONFIG_FILE
            ( "config,c", po::value<std::string> ()->default_value ( "config.ini" ), "config file" )
+#endif
            ( "input", po::value<std::string> (), "local file to read" );
   config.add_options ()
           ( "debug,d", po::value<int> ()->default_value ( 0 )->implicit_value ( 1 ), "Set debugging level" )
@@ -99,6 +101,7 @@ int APPMain::main ( int argc, char *argv[] ) {
 }
 
 void APPMain::parseConfig ( boost::program_options::variables_map &vm ) {
+#ifdef HAVE_PARSE_CONFIG_FILE
   std::string configFile = vm["config"].as<std::string> ();
 #ifdef HAVE_ABSOLUTE
   configFile = absolute ( boost::filesystem::path ( configFile ) ).generic_string ();
@@ -106,6 +109,7 @@ void APPMain::parseConfig ( boost::program_options::variables_map &vm ) {
   if ( boost::filesystem::exists ( configFile ) || !vm["config"].defaulted () ) {
     po::store ( po::parse_config_file<char> ( configFile.c_str (), config ), vm );
   }
+#endif
 }
 
 void APPMain::doHelp ( const char *basename ) {
