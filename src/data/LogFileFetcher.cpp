@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include <iostream>
+#include <stdint.h>
 #include "LogFileFetcher.h"
 
 void LogFileFetcher::setConnection ( std::string host, std::string user, std::string password ) {
