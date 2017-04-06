@@ -37,17 +37,27 @@ namespace soci {
 
       static void from_base ( values const &v, indicator i, DB &p ) {
         if ( i == i_ok ) {
-          p.setId ( v.get<> ( "ID", 0 ) );
-          p.setHost ( v.get<> ( "HOST", 0 ) );
-          p.setName ( v.get<> ( "NAME", std::string () ) );
+          try {
+            p.setId ( v.get<> ( "ID", 0 ) );
+            p.setHost ( v.get<> ( "HOST", 0 ) );
+            p.setName ( v.get<> ( "NAME", std::string () ) );
+          } catch ( std::bad_cast &e ) {
+            std::cerr << "Bad cast in host from_base" << std::endl;
+            throw;
+          }
         }
       }
 
       static void to_base ( const DB &p, values &v, indicator &ind ) {
-        v.set ( "ID", p.getId () );
-        v.set ( "HOST", p.getHost () );
-        v.set ( "NAME", p.getName () );
-        ind = i_ok;
+        try {
+          v.set ( "ID", p.getId () );
+          v.set ( "HOST", p.getHost () );
+          v.set ( "NAME", p.getName () );
+          ind = i_ok;
+        } catch ( std::bad_cast &e ) {
+          std::cerr << "Bad cast in host to_base" << std::endl;
+          throw;
+        }
       }
   };
 }

@@ -92,7 +92,7 @@ namespace soci {
           v.set<time_type> ( "ALTER", p.getLastAlter (), p.getLastAlter () == 0 ? i_null : i_ok );
           ind = i_ok;
         } catch ( std::bad_cast &e ) {
-          std::cerr << "Bad cast in table from_base" << std::endl;
+          std::cerr << "Bad cast in table to_base" << std::endl;
           throw;
         }
       }

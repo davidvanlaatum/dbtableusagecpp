@@ -42,19 +42,29 @@ namespace soci {
 
       static void from_base ( values const &v, indicator i, Host &p ) {
         if ( i == i_ok ) {
-          p.setId ( v.get<int> ( "ID", p.getId () ) );
-          p.setName ( v.get<> ( "NAME", std::string () ) );
-          p.setLastLogFile ( v.get<> ( "LAST_LOG_FILE", std::string () ) );
-          p.setLastLogPos ( v.get<int> ( "LAST_LOG_POS", 0 ) );
+          try {
+            p.setId ( v.get<int> ( "ID", p.getId () ) );
+            p.setName ( v.get<> ( "NAME", std::string () ) );
+            p.setLastLogFile ( v.get<> ( "LAST_LOG_FILE", std::string () ) );
+            p.setLastLogPos ( v.get<int> ( "LAST_LOG_POS", 0 ) );
+          } catch ( std::bad_cast &e ) {
+            std::cerr << "Bad cast in host from_base" << std::endl;
+            throw;
+          }
         }
       }
 
       static void to_base ( const Host &p, values &v, indicator &ind ) {
-        v.set<int> ( "ID", p.getId () );
-        v.set ( "NAME", p.getName () );
-        v.set ( "LAST_LOG_FILE", p.getLastLogFile (), p.getLastLogFile ().empty () ? i_null : i_ok );
-        v.set<int> ( "LAST_LOG_POS", p.getLastLogPos (), p.getLastLogPos () == 0 ? i_null : i_ok );
-        ind = i_ok;
+        try {
+          v.set<int> ( "ID", p.getId () );
+          v.set ( "NAME", p.getName () );
+          v.set ( "LAST_LOG_FILE", p.getLastLogFile (), p.getLastLogFile ().empty () ? i_null : i_ok );
+          v.set<int> ( "LAST_LOG_POS", p.getLastLogPos (), p.getLastLogPos () == 0 ? i_null : i_ok );
+          ind = i_ok;
+        } catch ( std::bad_cast &e ) {
+          std::cerr << "Bad cast in host to_base" << std::endl;
+          throw;
+        }
       }
   };
 }
