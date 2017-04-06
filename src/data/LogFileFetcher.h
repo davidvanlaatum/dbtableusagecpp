@@ -24,6 +24,7 @@ public:
     uint64_t currentLogFileSize ();
 private:
     int initalOffset;
+    int fileNum;
     std::string host;
     std::string user;
     std::string password;

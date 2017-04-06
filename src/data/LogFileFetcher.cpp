@@ -9,6 +9,7 @@
 
 LogFileFetcher::LogFileFetcher () {
   initalOffset = 0;
+  fileNum = 1;
 }
 
 void LogFileFetcher::setConnection ( std::string host, std::string user, std::string password ) {
@@ -62,7 +63,7 @@ bool LogFileFetcher::hasMoreLogs () {
 FILE *LogFileFetcher::fileHandle () {
   std::stringstream command;
   command << "mysqlbinlog -h" + host + " -R -u " + user + " -p" + password + " " + current->first;
-  if (initalOffset) {
+  if ( initalOffset ) {
     command << " --start-position=" << initalOffset;
     initalOffset = 0;
   }
@@ -71,6 +72,10 @@ FILE *LogFileFetcher::fileHandle () {
 
 void LogFileFetcher::next () {
   current++;
+  fileNum++;
+  if ( hasMoreLogs () ) {
+    std::cerr << "Now on file " << fileNum << " of " << logFiles.size () << std::endl;
+  }
 }
 
 uint64_t LogFileFetcher::currentLogFileSize () {
