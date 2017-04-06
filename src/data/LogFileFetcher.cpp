@@ -23,7 +23,17 @@ bool LogFileFetcher::fetchLogs ( const Host *pHost ) {
       if ( pHost && !pHost->getLastLogFile ().empty () && pHost->getLastLogFile () == it->get<std::string> ( 0 ) ) {
         logFiles.clear ();
       }
-      logFiles[it->get<std::string> ( 0 )] = (size_t) it->get<uint64_t> ( 1 );
+      switch ( it->get_properties ( 1 ).get_data_type () ) {
+        case dt_integer:
+          logFiles[it->get<std::string> ( 0 )] = (size_t) it->get<int> ( 1 );
+          break;
+        case dt_long_long:
+          logFiles[it->get<std::string> ( 0 )] = (size_t) it->get <long long> ( 1 );
+          break;
+        case dt_unsigned_long_long:
+          logFiles[it->get<std::string> ( 0 )] = (size_t) it->get<unsigned long long> ( 1 );
+          break;
+      }
     }
 
     current = logFiles.begin ();
