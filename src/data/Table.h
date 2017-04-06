@@ -7,6 +7,7 @@
 
 #include <string>
 #include <soci.h>
+#include <iostream>
 #include "DBObject.h"
 
 class Table : public DBObject {
@@ -55,48 +56,45 @@ namespace soci {
   template<>
   struct type_conversion<Table> {
       typedef values base_type;
+      typedef int time_type;
 
       static void from_base ( values const &v, indicator i, Table &p ) {
         if ( i == i_ok ) {
-          p.setId ( v.get<int> ( "ID" ) );
-          p.setName ( v.get<> ( "NAME", std::string () ) );
-          p.setDatabase ( v.get<int> ( "DATABASE" ) );
-          p.setCreated ( v.get < long
-          long > ( "CREATED", 0 ) );
-          p.setLastWrite ( v.get < long
-          long > ( "WRITE", 0 ) );
-          p.setLastRead ( v.get < long
-          long > ( "READ", 0 ) );
-          p.setLastInsert ( v.get < long
-          long > ( "INSERT", 0 ) );
-          p.setLastUpdate ( v.get < long
-          long > ( "UPDATE", 0 ) );
-          p.setLastDelete ( v.get < long
-          long > ( "DELETE", 0 ) );
-          p.setLastAlter ( v.get < long
-          long > ( "ALTER", 0 ) );
+          try {
+            p.setId ( v.get<int> ( "ID" ) );
+            p.setName ( v.get<> ( "NAME", std::string () ) );
+            p.setDatabase ( v.get<int> ( "DATABASE" ) );
+            p.setCreated ( v.get<time_type> ( "CREATED", 0 ) );
+            p.setLastWrite ( v.get<time_type> ( "WRITE", 0 ) );
+            p.setLastRead ( v.get<time_type> ( "READ", 0 ) );
+            p.setLastInsert ( v.get<time_type> ( "INSERT", 0 ) );
+            p.setLastUpdate ( v.get<time_type> ( "UPDATE", 0 ) );
+            p.setLastDelete ( v.get<time_type> ( "DELETE", 0 ) );
+            p.setLastAlter ( v.get<time_type> ( "ALTER", 0 ) );
+          } catch ( std::bad_cast &e ) {
+            std::cerr << "Bad cast in table from_base" << std::endl;
+            throw;
+          }
         }
       }
 
       static void to_base ( const Table &p, values &v, indicator &ind ) {
-        v.set<int> ( "ID", p.getId () );
-        v.set ( "NAME", p.getName () );
-        v.set<int> ( "DATABASE", p.getDatabase () );
-        v.set < long
-        long > ( "CREATED", p.getCreated (), p.getCreated () == 0 ? i_null : i_ok );
-        v.set < long
-        long > ( "WRITE", p.getLastWrite (), p.getLastWrite () == 0 ? i_null : i_ok );
-        v.set < long
-        long > ( "READ", p.getLastRead (), p.getLastRead () == 0 ? i_null : i_ok );
-        v.set < long
-        long > ( "INSERT", p.getLastInsert (), p.getLastInsert () == 0 ? i_null : i_ok );
-        v.set < long
-        long > ( "UPDATE", p.getLastUpdate (), p.getLastUpdate () == 0 ? i_null : i_ok );
-        v.set < long
-        long > ( "DELETE", p.getLastDelete (), p.getLastDelete () == 0 ? i_null : i_ok );
-        v.set < long
-        long > ( "ALTER", p.getLastAlter (), p.getLastAlter () == 0 ? i_null : i_ok );
-        ind = i_ok;
+        try {
+          v.set<int> ( "ID", p.getId () );
+          v.set ( "NAME", p.getName () );
+          v.set<int> ( "DATABASE", p.getDatabase () );
+          v.set<time_type> ( "CREATED", p.getCreated (), p.getCreated () == 0 ? i_null : i_ok );
+          v.set<time_type> ( "WRITE", p.getLastWrite (), p.getLastWrite () == 0 ? i_null : i_ok );
+          v.set<time_type> ( "READ", p.getLastRead (), p.getLastRead () == 0 ? i_null : i_ok );
+          v.set<time_type> ( "INSERT", p.getLastInsert (), p.getLastInsert () == 0 ? i_null : i_ok );
+          v.set<time_type> ( "UPDATE", p.getLastUpdate (), p.getLastUpdate () == 0 ? i_null : i_ok );
+          v.set<time_type> ( "DELETE", p.getLastDelete (), p.getLastDelete () == 0 ? i_null : i_ok );
+          v.set<time_type> ( "ALTER", p.getLastAlter (), p.getLastAlter () == 0 ? i_null : i_ok );
+          ind = i_ok;
+        } catch ( std::bad_cast &e ) {
+          std::cerr << "Bad cast in table from_base" << std::endl;
+          throw;
+        }
       }
   };
 }
