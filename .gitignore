@@ -145,5 +145,6 @@ coverage
 .idea/jenkinsSettings.xml
 .vagrant
 .idea/sonarSettings.xml
+!mysql.sql
 *.sql
 *.ini

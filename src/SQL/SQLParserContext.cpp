@@ -122,6 +122,10 @@ int SQLParserContext::getDebug () const {
   return debug;
 }
 
+uint64_t SQLParserContext::getLogPos () const {
+  return logPos;
+}
+
 void yyerror ( location *yylloc, SQLParserContext &ctx, const char *s, ... ) {
   va_list ap;
   va_start( ap, s );

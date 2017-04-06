@@ -51,6 +51,13 @@ FIND_LIBRARY(
     PATH_SUFFIXES lib${LIB_SUFFIX})
 MARK_AS_ADVANCED(SOCI_LIBRARY)
 
+if (SOCI_LIBRARY)
+    add_library(Soci INTERFACE)
+    set_target_properties(Soci PROPERTIES
+            INTERFACE_LOCATION "${SOCI_LIBRARY}"
+            INTERFACE_INCLUDE_DIRECTORIES "${SOCI_INCLUDE_DIRS}")
+endif ()
+
 GET_FILENAME_COMPONENT(SOCI_LIBRARY_DIR ${SOCI_LIBRARY} PATH)
 MARK_AS_ADVANCED(SOCI_LIBRARY_DIR)
 
@@ -72,6 +79,8 @@ IF(SOCI_INCLUDE_DIR AND SOCI_LIBRARY)
         IF(SOCI_${plugin}_PLUGIN)
             MESSAGE(STATUS "    * Plugin ${plugin} found ${SOCI_${plugin}_PLUGIN}.")
             SET(SOCI_${plugin}_FOUND True)
+            add_library(Soci${plugin} SHARED IMPORTED GLOBAL)
+            set_property(TARGET Soci${plugin} PROPERTY IMPORTED_LOCATION ${SOCI_${plugin}_PLUGIN})
         ELSE()
             MESSAGE(STATUS "    * Plugin ${plugin} not found.")
             SET(SOCI_${plugin}_FOUND False)
@@ -87,6 +96,14 @@ IF(SOCI_INCLUDE_DIR AND SOCI_LIBRARY)
             MESSAGE(SEND_ERROR "Required component ${component} not found.")
         ENDIF()
     ENDFOREACH()
+
+    IF (TARGET Socimysql)
+        find_library(MYSQLCLIENT NAMES mysqlclient HINTS /opt/local/lib/mysql55/mysql/)
+        IF (NOT MYSQLCLIENT)
+            message(FATAL_ERROR "Failed to find mysqlclient")
+        ENDIF ()
+        set_property(TARGET Socimysql PROPERTY INTERFACE_LINK_LIBRARIES ${MYSQLCLIENT})
+    ENDIF ()
 
 ENDIF()
 

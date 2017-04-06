@@ -8,24 +8,26 @@
 #include <string>
 #include <list>
 #include "soci.h"
+#include "Host.h"
 
 using namespace soci;
 
 class LogFileFetcher {
 public:
     void setConnection ( std::string host, std::string user, std::string password );
-    bool fetchLogs ();
+    bool fetchLogs ( const Host *host );
     std::string currentLogFile ();
     bool hasMoreLogs ();
     FILE *fileHandle ();
-    void next();
+    void next ();
+    uint64_t currentLogFileSize ();
 private:
     std::string host;
     std::string user;
     std::string password;
     session sql;
-    std::list<std::string> logFiles;
-    std::list<std::string>::iterator current;
+    std::map<std::string, uint64_t> logFiles;
+    std::map<std::string, uint64_t>::iterator current;
 };
 
 

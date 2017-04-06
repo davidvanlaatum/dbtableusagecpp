@@ -6,6 +6,7 @@
 #include "appversion.h"
 #include <iostream>
 #include <stdio.h>
+#include <DataStore.h>
 #include "APPMain.h"
 #include "SQL/SQLParserDriver.h"
 #include "data/DataCollector.h"
@@ -83,15 +84,25 @@ int APPMain::main ( int argc, char *argv[] ) {
           }
         } else {
           LogFileFetcher fetcher;
+          DataStore dataStore;
           fetcher.setConnection ( vm["monitor.host"].as<std::string> (), vm["monitor.user"].as<std::string> (),
                                   vm["monitor.password"].as<std::string> () );
-          if ( fetcher.fetchLogs () ) {
+          dataStore.setConnection ( vm["storage.url"].as<std::string> () );
+          collector.setMonitoredHost ( vm["monitor.host"].as<std::string> () );
+          collector.setDataStore ( &dataStore );
+          if ( fetcher.fetchLogs ( collector.getHost () ) ) {
             while ( fetcher.hasMoreLogs () ) {
+              collector.setCurrentFileSize ( fetcher.currentLogFileSize () );
               FILE *handle = fetcher.fileHandle ();
               SQLParserDriver driver;
               setupDriver ( driver, vm );
               driver.parseFileHandle ( handle, fetcher.currentLogFile (), &collector );
-              pclose ( handle );
+              int rt = pclose ( handle );
+              if ( rt != 0 ) {
+                std::stringstream s ( "mysqlbinlog exited with " );
+                s << rt;
+                throw new std::runtime_error ( s.str () );
+              }
               fetcher.next ();
             }
           }

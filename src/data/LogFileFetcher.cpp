@@ -12,21 +12,31 @@ void LogFileFetcher::setConnection ( std::string host, std::string user, std::st
   this->password = password;
 }
 
-bool LogFileFetcher::fetchLogs () {
-  sql.open ( "mysql://host=" + host + " user=" + user + " password=" + password );
+bool LogFileFetcher::fetchLogs ( const Host *pHost ) {
+  try {
+    sql.open ( "mysql://host=" + host + " user=" + user + " password=" + password );
 
-  rowset<row> rs = ( sql.prepare << "SHOW MASTER LOGS" );
+    rowset<row> rs = ( sql.prepare << "SHOW MASTER LOGS" );
 
-  for ( rowset<row>::const_iterator it = rs.begin (); it != rs.end (); ++it ) {
-    logFiles.push_back ( ( *it ).get<std::string> ( 0 ) );
+    for ( rowset<row>::const_iterator it = rs.begin (); it != rs.end (); ++it ) {
+      if ( pHost && !pHost->getLastLogFile ().empty () && pHost->getLastLogFile () == it->get<std::string> ( 0 ) ) {
+        logFiles.clear ();
+      }
+      logFiles[it->get<std::string> ( 0 )] = (size_t) it->get<uint64_t> ( 1 );
+    }
+
+    current = logFiles.begin ();
+
+    sql.close ();
+  } catch ( ... ) {
+    sql.close ();
+    throw;
   }
-
-  current = logFiles.begin ();
   return true;
 }
 
 std::string LogFileFetcher::currentLogFile () {
-  return *current;
+  return current->first;
 }
 
 bool LogFileFetcher::hasMoreLogs () {
@@ -34,10 +44,14 @@ bool LogFileFetcher::hasMoreLogs () {
 }
 
 FILE *LogFileFetcher::fileHandle () {
-  std::string command = "mysqlbinlog -h" + host + " -R -u " + user + " -p" + password + " " + *current;
+  std::string command = "mysqlbinlog -h" + host + " -R -u " + user + " -p" + password + " " + current->first;
   return popen ( command.c_str (), "r" );
 }
 
 void LogFileFetcher::next () {
   current++;
+}
+
+uint64_t LogFileFetcher::currentLogFileSize () {
+  return current->second;
 }

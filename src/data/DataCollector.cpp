@@ -4,6 +4,9 @@
 
 #include <location.hh>
 #include <boost/date_time.hpp>
+#include <SQLBeginStatement.h>
+#include <SQLCommitStatement.h>
+#include <SQLRollbackStatement.h>
 #include "boost/date_time/local_time_adjustor.hpp"
 #include "boost/date_time/c_local_time_adjustor.hpp"
 #include "DataCollector.h"
@@ -23,6 +26,9 @@ DataCollector::DataCollector () {
   lastStatements = 0;
   lastTime = 0;
   firstStatement = 0;
+  currentFileSize = 0;
+  pStore = NULL;
+  inTransaction = false;
 }
 
 std::string toString ( time_t t ) {
@@ -37,15 +43,41 @@ std::string toString ( time_t t ) {
   return s.str ();
 }
 
+std::string bytesToString ( uint64_t bytes ) {
+  std::stringstream s;
+  static const char *postfixes[] = { "kb", "mb", "gb", "tb" };
+  int i = 0;
+  const char *postfix = "b";
+  double value = bytes;
+
+  while ( value > 1024 && i < ( sizeof ( postfixes ) / sizeof ( postfixes[0] ) ) ) {
+    postfix = postfixes[i];
+    value /= 1024;
+    i++;
+  }
+
+  s << std::setprecision ( 3 ) << value << postfix;
+
+  return s.str ();
+}
+
+typedef SQLSetStatement::ArgsType SetArgs;
+
 void DataCollector::statement ( yy::location &location, SQLStatement *statement, SQLParserContext *context ) {
   if ( SQLSetStatement *set = dynamic_cast<SQLSetStatement *> (statement) ) {
-    for ( SQLSetStatement::ArgsType::const_iterator it = set->getArgs ().begin (); it != set->getArgs ().end ();
-          ++it ) {
+    for ( SetArgs::const_iterator it = set->getArgs ().begin (); it != set->getArgs ().end (); ++it ) {
       variables[( *it )->getName ()] = boost::shared_ptr<SQLObject> ( ( *it )->getValue ()->clone () );
     }
   }
 
   statements++;
+
+  if ( dynamic_cast<SQLBeginStatement *> ( statement) ) {
+    inTransaction = true;
+  } else if ( dynamic_cast<SQLCommitStatement * > (statement) || dynamic_cast<SQLRollbackStatement *>(statement) ) {
+    inTransaction = false;
+  }
+
 
   Walker walker ( host, context );
   walker.walk ( statement );
@@ -57,7 +89,10 @@ void DataCollector::statement ( yy::location &location, SQLStatement *statement,
     start = now;
   }
 
-  if ( lastUpdate.tv_sec < now.tv_sec - 10 ) {
+  host->setLastLogPos ( context->getLogPos () );
+
+  if ( lastUpdate.tv_sec < now.tv_sec - 1 && !inTransaction ) {
+    host->setLastLogFile ( *location.begin.filename );
     time_t diff = context->currentTime () - firstStatement;
     timeval timeDiff;
     timersub ( &now, &start, &timeDiff );
@@ -66,16 +101,28 @@ void DataCollector::statement ( yy::location &location, SQLStatement *statement,
 
     if ( lastTime != 0 ) {
       std::string units = "s/s";
-      if ( speed > 60  ) {
+      if ( speed > 60 ) {
         speed /= 60.0f;
         units = "m/s";
       }
-      std::cerr << std::setprecision(4);
+      std::string logPosExtra;
+      if ( currentFileSize > 0 ) {
+        std::stringstream s;
+        s << std::setprecision ( 3 ) << "/" << bytesToString ( currentFileSize ) << " "
+          << ( ( context->getLogPos () / (double) currentFileSize ) * 100 ) << "%";
+        logPosExtra = s.str ();
+      }
+
+      std::cerr << std::setprecision ( 4 );
       std::cerr << toString ( context->currentTime () )
                 << " statements: " << statements
                 << " speed: " << std::setw ( 7 ) << speed << units
+                << " logpos: " << bytesToString ( context->getLogPos () ) << logPosExtra
                 << " " << location << "\n";
       lastUpdate = now;
+      if ( pStore ) {
+        pStore->save ( *host );
+      }
     }
     lastTime = context->currentTime ();
     lastStatements = statements;
@@ -122,6 +169,26 @@ void DataCollector::dump () {
                 << std::endl;
     }
   }
+}
+
+void DataCollector::setCurrentFileSize ( uint64_t currentFileSize ) {
+  DataCollector::currentFileSize = currentFileSize;
+}
+
+void DataCollector::setMonitoredHost ( const std::string &host ) {
+  this->host->setName ( host );
+}
+
+void DataCollector::setDataStore ( DataStore *pStore ) {
+  if ( !pStore->load ( *host.get (), host->getName () ) ) {
+    std::cout << "Host " << host->getName () << " does not exist, creating" << std::endl;
+    pStore->save ( *host.get () );
+  }
+  this->pStore = pStore;
+}
+
+const Host *DataCollector::getHost () const {
+  return host.get ();
 }
 
 DataCollector::Walker::Walker ( boost::shared_ptr<Host> &host, SQLParserContext *context ) : host ( host ),

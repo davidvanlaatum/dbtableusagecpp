@@ -32,6 +32,7 @@ public:
     int getVerbose () const;
     void setDebug ( int debug );
     int getDebug () const;
+    uint64_t getLogPos () const;
 private:
     std::string fileName;
     MySQLEventParser eventParser;

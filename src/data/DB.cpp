@@ -4,7 +4,14 @@
 
 #include "DB.h"
 
+DB::DB () {
+  id = 0;
+}
+
 Table *DB::getTable ( std::string name ) {
+  if ( tables.find ( name ) == tables.end () ) {
+    changed ();
+  }
   return tables[name].setName ( name );
 }
 
@@ -21,4 +28,20 @@ void DB::getTables ( std::list<Table *> &rt ) {
 
 const std::string &DB::getName () const {
   return name;
+}
+
+int DB::getId () const {
+  return id;
+}
+
+void DB::setId ( int id ) {
+  DB::id = id;
+}
+
+int DB::getHost () const {
+  return host;
+}
+
+void DB::setHost ( int host ) {
+  DB::host = host;
 }
