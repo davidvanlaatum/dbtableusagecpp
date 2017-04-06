@@ -7,6 +7,10 @@
 #include <stdint.h>
 #include "LogFileFetcher.h"
 
+LogFileFetcher::LogFileFetcher () {
+  initalOffset = 0;
+}
+
 void LogFileFetcher::setConnection ( std::string host, std::string user, std::string password ) {
   this->host = host;
   this->user = user;
@@ -22,6 +26,7 @@ bool LogFileFetcher::fetchLogs ( const Host *pHost ) {
     for ( rowset<row>::const_iterator it = rs.begin (); it != rs.end (); ++it ) {
       if ( pHost && !pHost->getLastLogFile ().empty () && pHost->getLastLogFile () == it->get<std::string> ( 0 ) ) {
         logFiles.clear ();
+        initalOffset = pHost->getLastLogPos ();
       }
       switch ( it->get_properties ( 1 ).get_data_type () ) {
         case dt_integer:
@@ -55,8 +60,13 @@ bool LogFileFetcher::hasMoreLogs () {
 }
 
 FILE *LogFileFetcher::fileHandle () {
-  std::string command = "mysqlbinlog -h" + host + " -R -u " + user + " -p" + password + " " + current->first;
-  return popen ( command.c_str (), "r" );
+  std::stringstream command;
+  command << "mysqlbinlog -h" + host + " -R -u " + user + " -p" + password + " " + current->first;
+  if (initalOffset) {
+    command << " --start-position=" << initalOffset;
+    initalOffset = 0;
+  }
+  return popen ( command.str ().c_str (), "r" );
 }
 
 void LogFileFetcher::next () {

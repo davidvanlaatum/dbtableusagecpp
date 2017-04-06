@@ -14,6 +14,7 @@ using namespace soci;
 
 class LogFileFetcher {
 public:
+    LogFileFetcher ();
     void setConnection ( std::string host, std::string user, std::string password );
     bool fetchLogs ( const Host *host );
     std::string currentLogFile ();
@@ -22,6 +23,7 @@ public:
     void next ();
     uint64_t currentLogFileSize ();
 private:
+    int initalOffset;
     std::string host;
     std::string user;
     std::string password;

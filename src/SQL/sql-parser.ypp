@@ -373,6 +373,10 @@ stmt_list: stmt ';'
   | stmt
   ;
 
+drop_stmt: DROP TABLE table_name | DROP DATABASE identifier;
+
+stmt: drop_stmt;
+
    /* statements: select statement */
 
 stmt: select_stmt { ctx.push(@$,$1); }
