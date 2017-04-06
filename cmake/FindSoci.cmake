@@ -97,14 +97,6 @@ IF(SOCI_INCLUDE_DIR AND SOCI_LIBRARY)
         ENDIF()
     ENDFOREACH()
 
-    IF (TARGET Socimysql)
-        find_library(MYSQLCLIENT NAMES mysqlclient HINTS /opt/local/lib/mysql55/mysql/)
-        IF (NOT MYSQLCLIENT)
-            message(FATAL_ERROR "Failed to find mysqlclient")
-        ENDIF ()
-        set_property(TARGET Socimysql PROPERTY INTERFACE_LINK_LIBRARIES ${MYSQLCLIENT})
-    ENDIF ()
-
 ENDIF()
 
 #
