@@ -144,3 +144,6 @@ runUnitTests
 coverage
 .idea/jenkinsSettings.xml
 .vagrant
+.idea/sonarSettings.xml
+*.sql
+*.ini
