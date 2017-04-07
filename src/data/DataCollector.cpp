@@ -46,7 +46,7 @@ std::string toString ( time_t t ) {
 std::string bytesToString ( double value ) {
   std::stringstream s;
   static const char *postfixes[] = { "kb", "mb", "gb", "tb" };
-  int i = 0;
+  size_t i = 0;
   const char *postfix = "b";
 
   while ( value > 1024 && i < ( sizeof ( postfixes ) / sizeof ( postfixes[0] ) ) ) {
