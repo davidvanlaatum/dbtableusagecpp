@@ -137,8 +137,9 @@ std::ostream &SQLParserContext::out () const {
 }
 
 void SQLParserContext::error ( location location, std::string msg ) {
+  std::stringstream error;
   bool lineContinue = false;
-  *errorStream << location << ": " << msg << std::endl;
+  error << location << ": " << msg << std::endl;
   int linesOutput = 0;
   std::stringstream s;
   s << location.end.line << ": ";
@@ -149,9 +150,9 @@ void SQLParserContext::error ( location location, std::string msg ) {
     if ( location.begin.line <= lineNumbers[x] && location.end.line >= lineNumbers[x] ) {
       if ( !lineContinue ) {
         linesOutput++;
-        *errorStream << std::setw ( lineNumberLen - 2 ) << lineNumbers[x] << ": ";
+        error << std::setw ( lineNumberLen - 2 ) << lineNumbers[x] << ": ";
       }
-      *errorStream << lineBuffers[x];
+      error << lineBuffers[x];
       lineContinue = !hasLF ( lineBuffers[x] );
       lineLen += strlen ( lineBuffers[x] );
       if ( !lineContinue ) {
@@ -172,19 +173,20 @@ void SQLParserContext::error ( location location, std::string msg ) {
         } else if ( lineNumbers[x] == location.end.line ) {
           indicator << std::setfill ( '-' ) << std::setw ( location.end.column + lineNumberLen ) << "^" << std::endl;
         }
-        *errorStream << indicator.str ();
+        error << indicator.str ();
         lineLen = 0;
       }
     }
   }
 //  if ( linesOutput == 0 ) {
-//    *errorStream << "Failed to find any lines to output lines we have are: ";
+//    error << "Failed to find any lines to output lines we have are: ";
 //    for ( size_t i = 0; i < LINE_BUFFER_COUNT; i++ ) {
 //      size_t x = ( lineBufferIndex + i + 1 ) % LINE_BUFFER_COUNT;
-//      *errorStream << x << "=" << lineNumbers[x] << ",";
+//      error << x << "=" << lineNumbers[x] << ",";
 //    }
-//    *errorStream << std::endl;
+//    error << std::endl;
 //  }
+  *errorStream << error.str ();
 }
 
 boost::shared_ptr<SQLIdentifier> SQLParserContext::getCurrentDatabase () {

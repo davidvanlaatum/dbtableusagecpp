@@ -25,7 +25,7 @@ SQLBinLogStatement::SQLBinLogStatement ( yy::location location, FILE *file, MySQ
   long len = ftell ( file );
   char *buffer = (char *) mmap ( NULL, (size_t) len, PROT_READ, MAP_SHARED, fd, 0 );
   fclose ( file );
-  parser->parse ( location, (char *) buffer, (size_t) len, this );
+  parser->parse ( location, buffer, (size_t) len, this );
   munmap ( buffer, (size_t) len );
 }
 
