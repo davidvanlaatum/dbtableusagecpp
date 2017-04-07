@@ -11,10 +11,12 @@ SQLBinLogStatement::SQLBinLogStatement ( const SQLStatement::table_type &tables 
 }
 
 SQLBinLogStatement::SQLBinLogStatement ( yy::location location, const char *base64, MySQLEventParser *parser ) {
-  gsize len;
-  guchar *data = g_base64_decode ( base64, &len );
-  parser->parse ( location, (char *) data, len, this );
-  g_free ( data );
+  if(base64 && base64[0]) {
+    gsize len;
+    guchar *data = g_base64_decode ( base64, &len );
+    parser->parse ( location, (char *) data, len, this );
+    g_free ( data );
+  }
 }
 
 SQLBinLogStatement::~SQLBinLogStatement () {

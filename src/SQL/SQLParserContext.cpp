@@ -4,6 +4,7 @@
 
 #include <strings.h>
 #include <iostream>
+#include <errno.h>
 #include <stdarg.h>
 #include <string.h>
 #include <boost/scoped_ptr.hpp>
@@ -38,16 +39,20 @@ bool hasLF ( const char *line ) {
 }
 
 SQLParserContext::SQLParserContext ( std::string fileName, SQLParserCallback *callback ) : fileName ( fileName ),
-                                                                                           callback ( callback ),
-                                                                                           eventParser ( this ) {
+                                                                                           eventParser ( this ),
+                                                                                           callback ( callback ) {
   errorStream = &std::cerr;
   outStream = &std::cout;
   timestamp = 0;
   initBuffers ();
+  multiLineBuffer = NULL;
 }
 
 SQLParserContext::~SQLParserContext () {
   initBuffers ();
+  if ( multiLineBuffer ) {
+    fclose ( multiLineBuffer );
+  }
 }
 
 void SQLParserContext::initBuffers () const {
@@ -153,7 +158,11 @@ void SQLParserContext::error ( location location, std::string msg ) {
         if ( lineNumbers[x] == location.begin.line && lineNumbers[x] == location.end.line ) {
           indicator << std::setw ( location.begin.column + lineNumberLen ) << "^";
           if ( location.begin.column + 1 < location.end.column ) {
-            indicator << std::setfill ( '-' ) << std::setw ( location.end.column - location.begin.column - 1 ) << "^";
+            int n = location.end.column - location.begin.column - 1;
+            if ( n > lineLen - location.begin.column ) {
+              n = int ( lineLen - location.begin.column );
+            }
+            indicator << std::setfill ( '-' ) << std::setw ( n ) << "^";
           }
           indicator << std::endl;
         } else if ( lineNumbers[x] == location.begin.line ) {
@@ -167,14 +176,14 @@ void SQLParserContext::error ( location location, std::string msg ) {
       }
     }
   }
-  if ( linesOutput == 0 ) {
-    *errorStream << "Failed to find any lines to output lines we have are: ";
-    for ( size_t i = 0; i < LINE_BUFFER_COUNT; i++ ) {
-      size_t x = ( lineBufferIndex + i + 1 ) % LINE_BUFFER_COUNT;
-      *errorStream << x << "=" << lineNumbers[x] << ",";
-    }
-    *errorStream << std::endl;
-  }
+//  if ( linesOutput == 0 ) {
+//    *errorStream << "Failed to find any lines to output lines we have are: ";
+//    for ( size_t i = 0; i < LINE_BUFFER_COUNT; i++ ) {
+//      size_t x = ( lineBufferIndex + i + 1 ) % LINE_BUFFER_COUNT;
+//      *errorStream << x << "=" << lineNumbers[x] << ",";
+//    }
+//    *errorStream << std::endl;
+//  }
 }
 
 boost::shared_ptr<SQLIdentifier> SQLParserContext::getCurrentDatabase () {
@@ -207,6 +216,35 @@ int SQLParserContext::getDebug () const {
 
 uint64_t SQLParserContext::getLogPos () const {
   return logPos;
+}
+
+void SQLParserContext::appendMultiLine ( const char *buffer ) {
+  if ( !multiLineBuffer ) {
+    multiLineBuffer = tmpfile ();
+  }
+  fputs ( buffer, multiLineBuffer );
+}
+
+char *SQLParserContext::getMultiLineBuffer () {
+  char *rt = NULL;
+  if ( multiLineBuffer ) {
+    errno = 0;
+    size_t len = (size_t) ftell ( multiLineBuffer );
+    if ( errno != 0 ) {
+      throw std::runtime_error ( strerror ( errno ) );
+    }
+    if ( len > 1024 * 1024 ) {
+      *errorStream << "Truncating buffer of length " << len << std::endl;
+      len = 4096;
+    }
+    rt = (char *) malloc ( len + 1 );
+    rt[len] = 0;
+    rewind ( multiLineBuffer );
+    fread ( rt, 1, len, multiLineBuffer );
+    fclose ( multiLineBuffer );
+    multiLineBuffer = NULL;
+  }
+  return rt;
 }
 
 void yyerror ( location *yylloc, SQLParserContext &ctx, const char *s, ... ) {

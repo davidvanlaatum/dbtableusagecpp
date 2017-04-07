@@ -324,6 +324,7 @@ std::string format(const char *s, ... );
 %token ROLLBACK;
 %token COMMIT;
 %token <strval>INTRODUCER
+%token SAVEPOINT
 
  /* functions with special syntax */
 %token FSUBSTRING
@@ -376,6 +377,12 @@ stmt_list: stmt ';'
 drop_stmt: DROP TABLE table_name | DROP DATABASE identifier;
 
 stmt: drop_stmt;
+
+savepoint_stmt: SAVEPOINT identifier {
+  delete $2;
+};
+
+stmt: savepoint_stmt;
 
    /* statements: select statement */
 

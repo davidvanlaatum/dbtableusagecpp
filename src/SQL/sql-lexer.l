@@ -30,6 +30,7 @@ int oldstate;
 
 %x XCOMMENT
 %s BTWMODE
+%x MULTILINESTRING
 
 %%
 
@@ -266,6 +267,7 @@ BINLOG { return token::BINLOG; }
 BEGIN { return token::TBEGIN; }
 ROLLBACK { return token::ROLLBACK; }
 COMMIT { return token::COMMIT; }
+SAVEPOINT { return token::SAVEPOINT; }
 
    /* numbers */
 
@@ -284,8 +286,15 @@ FALSE { yylval->intval = 0; return token::BOOL; }
 
    /* strings */
 
-'(\\.|''|[^'])*' |
-\"(\\.|\"\"|[^"])*\"  { yylval->strval = strdup(yytext); adjustLines(yylloc,yytext); return token::STRING; }
+'(\\.|''|[^'\n])*' |
+\"(\\.|\"\"|[^"\n])*\"  { yylval->strval = strdup(yytext); adjustLines(yylloc,yytext); return token::STRING; }
+
+" "'$ { oldstate = YY_START; BEGIN MULTILINESTRING; }
+<MULTILINESTRING>[a-zA-Z0-9=/+]+ { ctx.appendMultiLine(yytext); }
+<MULTILINESTRING>\n { yylloc->lines(1); }
+<MULTILINESTRING><<EOF>> { yyerror(yylloc,ctx,"unclosed multi-line string"); return 0;};
+<MULTILINESTRING>' { BEGIN oldstate; yylval->strval = ctx.getMultiLineBuffer(); return token::STRING; }
+<MULTILINESTRING>.               { yyerror(yylloc,ctx,"mystery character in multi-line string '%c'", *yytext);}
 
 '(\\.|[^'])*$         { yyerror(yylloc,ctx,"Unterminated string %s", yytext); }
 \"(\\.|[^"])*$ { yyerror(yylloc,ctx,"Unterminated string %s", yytext); }
