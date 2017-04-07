@@ -12,6 +12,7 @@
 class SQLBinLogStatement : public SQLStatement, public MySQLEventParserCallback {
 public:
     SQLBinLogStatement ( yy::location yylloc, const char *data, MySQLEventParser *parser );
+    SQLBinLogStatement ( yy::location yylloc, FILE *file, MySQLEventParser *parser );
     SQLBinLogStatement ( const table_type &tables );
     virtual ~SQLBinLogStatement ();
     virtual std::string toString () const;

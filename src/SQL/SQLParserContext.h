@@ -36,6 +36,7 @@ public:
     uint64_t getLogPos () const;
     void appendMultiLine(const char *buffer);
     char *getMultiLineBuffer();
+    FILE *getMultiLineBufferFile();
 private:
     std::string fileName;
     MySQLEventParser eventParser;

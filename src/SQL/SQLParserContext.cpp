@@ -2,6 +2,7 @@
 // Created by David van Laatum on 26/3/17.
 //
 
+#include <glib.h>
 #include <strings.h>
 #include <iostream>
 #include <errno.h>
@@ -222,7 +223,10 @@ void SQLParserContext::appendMultiLine ( const char *buffer ) {
   if ( !multiLineBuffer ) {
     multiLineBuffer = tmpfile ();
   }
-  fputs ( buffer, multiLineBuffer );
+  size_t len = strlen ( buffer );
+  guchar *data = g_base64_decode ( buffer, &len );
+  fwrite ( data, len, 1, multiLineBuffer );
+  g_free ( data );
 }
 
 char *SQLParserContext::getMultiLineBuffer () {
@@ -245,6 +249,12 @@ char *SQLParserContext::getMultiLineBuffer () {
     multiLineBuffer = NULL;
   }
   return rt;
+}
+
+FILE *SQLParserContext::getMultiLineBufferFile () {
+  FILE *tmp = multiLineBuffer;
+  multiLineBuffer = NULL;
+  return tmp;
 }
 
 void yyerror ( location *yylloc, SQLParserContext &ctx, const char *s, ... ) {

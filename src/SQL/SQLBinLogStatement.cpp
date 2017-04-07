@@ -4,6 +4,7 @@
 
 #include <glib.h>
 #include <iostream>
+#include <sys/mman.h>
 #include "SQLBinLogStatement.h"
 #include "MySQLBinLogEvent.h"
 
@@ -11,12 +12,21 @@ SQLBinLogStatement::SQLBinLogStatement ( const SQLStatement::table_type &tables 
 }
 
 SQLBinLogStatement::SQLBinLogStatement ( yy::location location, const char *base64, MySQLEventParser *parser ) {
-  if(base64 && base64[0]) {
+  if ( base64 && base64[0] ) {
     gsize len;
     guchar *data = g_base64_decode ( base64, &len );
     parser->parse ( location, (char *) data, len, this );
     g_free ( data );
   }
+}
+
+SQLBinLogStatement::SQLBinLogStatement ( yy::location location, FILE *file, MySQLEventParser *parser ) {
+  int fd = fileno ( file );
+  long len = ftell ( file );
+  char *buffer = (char *) mmap ( NULL, (size_t) len, PROT_READ, MAP_SHARED, fd, 0 );
+  fclose ( file );
+  parser->parse ( location, (char *) buffer, (size_t) len, this );
+  munmap ( buffer, (size_t) len );
 }
 
 SQLBinLogStatement::~SQLBinLogStatement () {
@@ -39,10 +49,10 @@ void SQLBinLogStatement::walk ( SQLTreeWalker *walker ) {
 
 }
 
+
 SQLBinLogStatement *SQLBinLogStatement::clone () const {
   return new SQLBinLogStatement ( tables );
 }
-
 
 void SQLBinLogStatement::event ( MySQLBinLogEvent *event, MySQLEventParser *parser ) {
   table_type t = event->getTables ();

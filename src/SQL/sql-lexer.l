@@ -293,7 +293,7 @@ FALSE { yylval->intval = 0; return token::BOOL; }
 <MULTILINESTRING>[a-zA-Z0-9=/+]+ { ctx.appendMultiLine(yytext); }
 <MULTILINESTRING>\n { yylloc->lines(1); }
 <MULTILINESTRING><<EOF>> { yyerror(yylloc,ctx,"unclosed multi-line string"); return 0;};
-<MULTILINESTRING>' { BEGIN oldstate; yylval->strval = ctx.getMultiLineBuffer(); return token::STRING; }
+<MULTILINESTRING>' { BEGIN oldstate; yylval->file = ctx.getMultiLineBufferFile(); return token::MLSTRING; }
 <MULTILINESTRING>.               { yyerror(yylloc,ctx,"mystery character in multi-line string '%c'", *yytext);}
 
 '(\\.|[^'])*$         { yyerror(yylloc,ctx,"Unterminated string %s", yytext); }

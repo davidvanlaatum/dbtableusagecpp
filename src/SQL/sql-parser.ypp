@@ -52,6 +52,7 @@ std::string format(const char *s, ... );
   SQLTable *table;
   SQLColumn *column;
   SQLComparisionType comparisionType;
+  FILE *file;
 }
 
 %{
@@ -66,6 +67,7 @@ std::string format(const char *s, ... );
 %destructor {} <subtok>
 %destructor {} <floatval>
 %destructor {} <comparisionType>
+%destructor { fclose($$); } <file>
 %destructor { if($$) delete $$; } <*>
 
   /* names and literal values */
@@ -325,6 +327,7 @@ std::string format(const char *s, ... );
 %token COMMIT;
 %token <strval>INTRODUCER
 %token SAVEPOINT
+%token <file>MLSTRING
 
  /* functions with special syntax */
 %token FSUBSTRING
@@ -999,9 +1002,9 @@ stmt: binlog_stmt {
   ctx.push(@$,$1);
 }
 
-binlog_stmt: BINLOG STRING {
+binlog_stmt: BINLOG MLSTRING {
   $$ = new SQLBinLogStatement(@$,$2,ctx.getEventParser());
-  free($2);
+//  free($2);
 };
 
 stmt: use_stmt {
