@@ -44,6 +44,13 @@ add_library(sqlParser
         SQLBeginStatement.cpp SQLBeginStatement.h
         SQLRollbackStatement.cpp SQLRollbackStatement.h
         SQLCommitStatement.cpp SQLCommitStatement.h
+        SQLAlterTableStatement.cpp SQLAlterTableStatement.h
+        SQLTableAddColumn.cpp SQLTableAddColumn.h
+        SQLTableDropColumn.cpp SQLTableDropColumn.h
+        SQLTableModifyColumn.cpp SQLTableModifyColumn.h
+        SQLColumnDefinition.cpp SQLColumnDefinition.h
+        SQLDataType.cpp SQLDataType.h
+        SQLColumnAttributes.cpp SQLColumnAttributes.h
         )
 target_link_libraries(sqlParser ${GLib_LIBRARY} Boost::boost)
 target_include_directories(sqlParser

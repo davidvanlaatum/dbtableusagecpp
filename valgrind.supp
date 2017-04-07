@@ -1,0 +1,55 @@
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   fun:_ZN4soci7session4openERKNS_21connection_parametersE
+   fun:_ZN4soci7session4openERKSs
+   fun:_ZN9DataStore13setConnectionESs
+   fun:_ZN7APPMain4mainEiPPc
+   fun:main
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   fun:_ZN4soci7session4openERKNS_21connection_parametersE
+   fun:_ZN4soci7session4openERKSs
+   fun:_ZN9DataStore13setConnectionESs
+   fun:_ZN7APPMain4mainEiPPc
+   fun:main
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   obj:*
+   obj:*
+   obj:*
+   fun:pthread_once
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   fun:_ZN4soci7session4openERKNS_21connection_parametersE
+   fun:_ZN4soci7session4openERKSs
+   fun:_ZN9DataStore13setConnectionESs
+   fun:_ZN7APPMain4mainEiPPc
+}

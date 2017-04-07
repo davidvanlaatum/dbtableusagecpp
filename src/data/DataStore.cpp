@@ -9,7 +9,7 @@ DataStore::DataStore () {
 }
 
 DataStore::~DataStore () {
-
+  sql.close ();
 }
 
 void DataStore::setConnection ( std::string url ) {

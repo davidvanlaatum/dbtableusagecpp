@@ -12,7 +12,6 @@
 #include <string>
 #include "SQLParserContext.h"
 #include "SQLBinLogStatement.h"
-#include "SQLObjectList.h"
 #include "SQLSetStatement.h"
 #include "SQLDeleteStatement.h"
 #include "SQLString.h"
@@ -24,18 +23,38 @@
 #include "SQLColumn.h"
 #include "SQLFunction.h"
 #include "SQLReplaceIntoStatement.h"
-#include "SQLAnd.h"
-#include "SQLOr.h"
-#include "SQLEquals.h"
 #include "SQLCreateDatabaseStatement.h"
 #include "SQLCreateTableStatement.h"
 #include "SQLBeginStatement.h"
 #include "SQLCommitStatement.h"
 #include "SQLRollbackStatement.h"
+#include "SQLAlterTableStatement.h"
+#include "SQLTableAddColumn.h"
+#include "SQLTableDropColumn.h"
+#include "SQLTableModifyColumn.h"
+#include "SQLColumnDefinition.h"
+#include "SQLDataType.h"
+#include "SQLColumnAttributes.h"
 
 void emit(const char *s, ...);
 std::string format(const char *s, ... );
 %}
+
+%code requires {
+#include "SQLObjectList.h"
+#include "SQLAnd.h"
+#include "SQLOr.h"
+#include "SQLEquals.h"
+class SQLStatement;
+class SQLIdentifier;
+class SQLTable;
+class SQLColumn;
+class SQLDataType;
+class SQLDataLength;
+class SQLDataCollation;
+class SQLColumnAttributes;
+class SQLColumnDefinition;
+}
 
 %parse-param { SQLParserContext &ctx }
 %lex-param   { SQLParserContext &ctx }
@@ -45,6 +64,7 @@ std::string format(const char *s, ... );
   double floatval;
   char *strval;
   int subtok;
+  bool flag;
   SQLObject *sqlval;
   SQLObjectList<> *listval;
   SQLStatement *statement;
@@ -53,6 +73,11 @@ std::string format(const char *s, ... );
   SQLColumn *column;
   SQLComparisionType comparisionType;
   FILE *file;
+  SQLDataType *dataType;
+  SQLDataLength *dataLength;
+  SQLDataCollation *dataCollation;
+  SQLColumnAttributes *collumnAttributes;
+  SQLColumnDefinition *columnDefinition;
 }
 
 %{
@@ -67,6 +92,7 @@ std::string format(const char *s, ... );
 %destructor {} <subtok>
 %destructor {} <floatval>
 %destructor {} <comparisionType>
+%destructor {} <flag>
 %destructor { fclose($$); } <file>
 %destructor { if($$) delete $$; } <*>
 
@@ -328,6 +354,7 @@ std::string format(const char *s, ... );
 %token <strval>INTRODUCER
 %token SAVEPOINT
 %token <file>MLSTRING
+%token MODIFY
 
  /* functions with special syntax */
 %token FSUBSTRING
@@ -344,23 +371,29 @@ std::string format(const char *s, ... );
 
 %type <intval> delete_opts delete_list
 %type <intval> insert_opts
-%type <intval> insert_asgn_list opt_if_not_exists update_opts update_asgn_list
-%type <intval> opt_temporary opt_length opt_binary opt_uz enum_list
-%type <intval> column_atts data_type opt_ignore_replace
+%type <intval> insert_asgn_list update_opts update_asgn_list
+%type <intval> opt_binary opt_uz
+%type <intval> opt_ignore_replace
 %type <strval> varaible_name
 
 %type <statement> set_stmt select_stmt delete_stmt insert_stmt replace_stmt update_stmt create_database_stmt
-%type <statement> create_table_stmt use_stmt binlog_stmt
+%type <statement> create_table_stmt use_stmt binlog_stmt alter_table_stmt
 %type <listval> set_list opt_groupby opt_orderby opt_into_list insert_vals_list opt_val_list val_list insert_vals
-%type <listval> create_col_list
-%type <sqlval> expr set_expr opt_where opt_having opt_limit set_value
+%type <listval> create_col_list alter_table_opts enum_list
+%type <sqlval> expr set_expr opt_where opt_having opt_limit set_value alter_table_op
 %type <id> opt_as_alias identifier
 %type <table> table_name
 %type <column> column_name
+%type <dataLength> opt_length
+%type <dataType> data_type
+%type <dataCollation> opt_csc
+%type <collumnAttributes> column_atts
+%type <columnDefinition> create_definition
+%type <flag> opt_temporary opt_if_not_exists
 
 /** unsure **/
 %type <sqlval> table_factor join_table join_condition index_hint table_subquery opt_ondupupdate opt_col_names
-%type <sqlval> create_definition opt_csc create_select_statement trim_ltb interval_exp
+%type <sqlval> create_select_statement trim_ltb interval_exp
 
 %start stmt_list
 %initial-action {
@@ -377,7 +410,7 @@ stmt_list: stmt ';'
   | stmt
   ;
 
-drop_stmt: DROP TABLE table_name | DROP DATABASE identifier;
+drop_stmt: DROP opt_temporary TABLE table_name | DROP DATABASE identifier;
 
 stmt: drop_stmt;
 
@@ -386,6 +419,29 @@ savepoint_stmt: SAVEPOINT identifier {
 };
 
 stmt: savepoint_stmt;
+
+opt_column: | COLUMN;
+
+alter_table_stmt: ALTER TABLE table_name alter_table_opts {
+  $$ = new SQLAlterTableStatement($3,$4);
+  delete $4;
+};
+
+alter_table_opts: alter_table_op {
+  $$ = new SQLObjectList<>();
+  $$->push($1);
+} | alter_table_opts ',' alter_table_op {
+  $$ = $1;
+  $1->push ( $3 );
+};
+
+alter_table_op: ADD opt_column create_definition { $$ = new SQLTableAddColumn($3); };
+alter_table_op: DROP opt_column column_name { $$ = new SQLTableDropColumn($3); };
+alter_table_op: MODIFY opt_column create_definition { $$ = new SQLTableModifyColumn($3); };
+
+stmt: alter_table_stmt {
+  ctx.push(@$,$1);
+};
 
    /* statements: select statement */
 
@@ -715,9 +771,9 @@ create_database_stmt:
    | CREATE SCHEMA opt_if_not_exists identifier { $$ = new SQLCreateDatabaseStatement($4); }
    ;
 
-opt_if_not_exists:  /* nil */ { $$ = 0; }
+opt_if_not_exists:  /* nil */ { $$ = false; }
    | IF EXISTS           { if(!$2)error(@$,"IF EXISTS doesn't exist");
-                        $$ = $2; /* NOT EXISTS hack */ }
+                        $$ = true; /* NOT EXISTS hack */ }
    ;
 
 
@@ -725,7 +781,8 @@ opt_if_not_exists:  /* nil */ { $$ = 0; }
 stmt: create_table_stmt { ctx.push(@$,$1); };
 
 create_table_stmt: CREATE opt_temporary TABLE opt_if_not_exists table_name '(' create_col_list ')' {
-  $$ = new SQLCreateTableStatement($5, $7);
+  $$ = new SQLCreateTableStatement($2, $4, $5, $7);
+  delete $7;
 };
 
 create_table_stmt: CREATE opt_temporary TABLE opt_if_not_exists table_name '(' create_col_list ')'
@@ -735,12 +792,12 @@ create_select_statement { $$ = NULL; emit("CREATESELECT %d %d %d %s", $2, $4, $7
 create_table_stmt: CREATE opt_temporary TABLE opt_if_not_exists table_name create_select_statement { $$ = NULL; emit("CREATESELECT %d %d 0 %s", $2, $4, $5); free($5); }
     ;
 
-create_col_list: create_definition { $$ = NULL; }
-    | create_col_list ',' create_definition { $$ = NULL; }
+create_col_list: create_definition { $$ = new SQLObjectList<>(); $$->push($1); }
+    | create_col_list ',' create_definition { $$ = $1; $$->push($3); }
     ;
 
-create_definition: { emit("STARTCOL"); } NAME data_type column_atts
-                   { $$ = NULL; emit("COLUMNDEF %d %s", $3, $2); free($2); }
+create_definition: identifier data_type column_atts
+                   { $$ = new SQLColumnDefinition($1,$2,$3); }
 
     | PRIMARY KEY '(' column_list ')'    { $$ = NULL; emit("PRIKEY %d", $4); }
     | KEY '(' column_list ')'            { $$ = NULL; emit("KEY %d", $3); }
@@ -749,24 +806,24 @@ create_definition: { emit("STARTCOL"); } NAME data_type column_atts
     | FULLTEXT KEY '(' column_list ')'   { $$ = NULL; emit("TEXTINDEX %d", $4); }
     ;
 
-column_atts: /* nil */ { $$ = 0; }
-    | column_atts NOT NULLX             { $$ = NULL; emit("ATTR NOTNULL"); $$ = $1 + 1; }
-    | column_atts NULLX
-    | column_atts DEFAULT STRING        { $$ = NULL; emit("ATTR DEFAULT STRING %s", $3); free($3); $$ = $1 + 1; }
-    | column_atts DEFAULT INTNUM        { $$ = NULL; emit("ATTR DEFAULT NUMBER %d", $3); $$ = $1 + 1; }
-    | column_atts DEFAULT APPROXNUM     { $$ = NULL; emit("ATTR DEFAULT FLOAT %g", $3); $$ = $1 + 1; }
-    | column_atts DEFAULT BOOL          { $$ = NULL; emit("ATTR DEFAULT BOOL %d", $3); $$ = $1 + 1; }
-    | column_atts AUTO_INCREMENT        { $$ = NULL; emit("ATTR AUTOINC"); $$ = $1 + 1; }
+column_atts: /* nil */ { $$ = new SQLColumnAttributes(); }
+    | column_atts NOT NULLX             { $$ = $1; $$->notNull(); }
+    | column_atts NULLX                 { $$ = $1; $$->null(); }
+    | column_atts DEFAULT STRING        { $$ = $1; $$->addDefault($3); free($3); }
+    | column_atts DEFAULT INTNUM        { $$ = $1; $$->addDefault($3); }
+    | column_atts DEFAULT APPROXNUM     { $$ = $1; $$->addDefault($3); }
+    | column_atts DEFAULT BOOL          { $$ = $1; $$->addDefault($3); }
+    | column_atts AUTO_INCREMENT        { $$ = $1; $$->autoIncrement(); }
     | column_atts UNIQUE '(' column_list ')' { $$ = NULL; emit("ATTR UNIQUEKEY %d", $4); $$ = $1 + 1; }
     | column_atts UNIQUE KEY { $$ = NULL; emit("ATTR UNIQUEKEY"); $$ = $1 + 1; }
     | column_atts PRIMARY KEY { $$ = NULL; emit("ATTR PRIKEY"); $$ = $1 + 1; }
     | column_atts KEY { $$ = NULL; emit("ATTR PRIKEY"); $$ = $1 + 1; }
-    | column_atts COMMENT STRING { $$ = NULL; emit("ATTR COMMENT %s", $3); free($3); $$ = $1 + 1; }
+    | column_atts COMMENT STRING { $$ = $1; $$->addComment($3);free($3); }
     ;
 
-opt_length: /* nil */ { $$ = 0; }
-   | '(' INTNUM ')' { $$ = $2; }
-   | '(' INTNUM ',' INTNUM ')' { $$ = $2 + 1000*$4; }
+opt_length: /* nil */ { $$ = NULL; }
+   | '(' INTNUM ')' { $$ = new SQLDataLength($2); }
+   | '(' INTNUM ',' INTNUM ')' { $$ = new SQLDataLength($2,$4); }
    ;
 
 opt_binary: /* nil */ { $$ = 0; }
@@ -779,45 +836,45 @@ opt_uz: /* nil */ { $$ = 0; }
    ;
 
 opt_csc: /* nil */ { $$ = NULL; }
-   | opt_csc CHAR SET STRING { $$ = NULL; emit("COLCHARSET %s", $4); free($4); }
-   | opt_csc COLLATE STRING { $$ = NULL; emit("COLCOLLATE %s", $3); free($3); }
+   | opt_csc CHAR SET STRING { $$ = new SQLDataCollation($4); }
+   | opt_csc COLLATE STRING { $$ = new SQLDataCollation($3); }
    ;
 
 data_type:
-     BIT opt_length { $$ = 10000 + $2; }
-   | TINYINT opt_length opt_uz { $$ = 10000 + $2; }
-   | SMALLINT opt_length opt_uz { $$ = 20000 + $2 + $3; }
-   | MEDIUMINT opt_length opt_uz { $$ = 30000 + $2 + $3; }
-   | INT opt_length opt_uz { $$ = 40000 + $2 + $3; }
-   | INTEGER opt_length opt_uz { $$ = 50000 + $2 + $3; }
-   | BIGINT opt_length opt_uz { $$ = 60000 + $2 + $3; }
-   | REAL opt_length opt_uz { $$ = 70000 + $2 + $3; }
-   | DOUBLE opt_length opt_uz { $$ = 80000 + $2 + $3; }
-   | FLOAT opt_length opt_uz { $$ = 90000 + $2 + $3; }
-   | DECIMAL opt_length opt_uz { $$ = 110000 + $2 + $3; }
-   | DATE { $$ = 100001; }
-   | TIME { $$ = 100002; }
-   | TIMESTAMP { $$ = 100003; }
-   | DATETIME { $$ = 100004; }
-   | YEAR { $$ = 100005; }
-   | CHAR opt_length opt_csc { $$ = 120000 + $2; }
-   | VARCHAR '(' INTNUM ')' opt_csc { $$ = 130000 + $3; }
-   | BINARY opt_length { $$ = 140000 + $2; }
-   | VARBINARY '(' INTNUM ')' { $$ = 150000 + $3; }
-   | TINYBLOB { $$ = 160001; }
-   | BLOB { $$ = 160002; }
-   | MEDIUMBLOB { $$ = 160003; }
-   | LONGBLOB { $$ = 160004; }
-   | TINYTEXT opt_binary opt_csc { $$ = 170000 + $2; }
-   | TEXT opt_binary opt_csc { $$ = 171000 + $2; }
-   | MEDIUMTEXT opt_binary opt_csc { $$ = 172000 + $2; }
-   | LONGTEXT opt_binary opt_csc { $$ = 173000 + $2; }
-   | ENUM '(' enum_list ')' opt_csc { $$ = 200000 + $3; }
-   | SET '(' enum_list ')' opt_csc { $$ = 210000 + $3; }
+     BIT opt_length { $$ = new SQLDataType(token::BIT); }
+   | TINYINT opt_length opt_uz { $$ = new SQLDataType(token::TINYINT,$2,$3); }
+   | SMALLINT opt_length opt_uz { $$ = new SQLDataType(token::SMALLINT,$2,$3); }
+   | MEDIUMINT opt_length opt_uz { $$ = new SQLDataType(token::MEDIUMINT,$2,$3); }
+   | INT opt_length opt_uz { $$ = new SQLDataType(token::INT,$2,$3); }
+   | INTEGER opt_length opt_uz { $$ = new SQLDataType(token::INTEGER,$2,$3); }
+   | BIGINT opt_length opt_uz { $$ = new SQLDataType(token::BIGINT,$2,$3); }
+   | REAL opt_length opt_uz { $$ = new SQLDataType(token::REAL,$2,$3); }
+   | DOUBLE opt_length opt_uz { $$ = new SQLDataType(token::DOUBLE,$2,$3); }
+   | FLOAT opt_length opt_uz { $$ = new SQLDataType(token::FLOAT,$2,$3); }
+   | DECIMAL opt_length opt_uz { $$ = new SQLDataType(token::DECIMAL,$2,$3); }
+   | DATE { $$ = new SQLDataType(token::DATE); }
+   | TIME { $$ = new SQLDataType(token::TIME); }
+   | TIMESTAMP { $$ = new SQLDataType(token::TIMESTAMP); }
+   | DATETIME  { $$ = new SQLDataType(token::DATETIME); }
+   | YEAR { $$ = new SQLDataType(token::YEAR); }
+   | CHAR opt_length opt_csc { $$ = new SQLDataType(token::CHAR,$2,$3); }
+   | VARCHAR '(' INTNUM ')' opt_csc { $$ = new SQLDataType(token::VARCHAR,new SQLDataLength($3),$5); }
+   | BINARY opt_length { $$ = new SQLDataType(token::BINARY,$2); }
+   | VARBINARY '(' INTNUM ')' { $$ = new SQLDataType(token::VARBINARY,new SQLDataLength($3)); }
+   | TINYBLOB { $$ = new SQLDataType(token::TINYBLOB); }
+   | BLOB { $$ = new SQLDataType(token::BLOB); }
+   | MEDIUMBLOB { $$ = new SQLDataType(token::MEDIUMBLOB); }
+   | LONGBLOB { $$ = new SQLDataType(token::LONGBLOB); }
+   | TINYTEXT opt_binary opt_csc { $$ = new SQLDataType(token::TINYTEXT,$3,$2); }
+   | TEXT opt_binary opt_csc { $$ = new SQLDataType(token::TEXT,$3,$2); }
+   | MEDIUMTEXT opt_binary opt_csc { $$ = new SQLDataType(token::MEDIUMTEXT,$3,$2); }
+   | LONGTEXT opt_binary opt_csc { $$ = new SQLDataType(token::LONGTEXT,$3,$2); }
+   | ENUM '(' enum_list ')' opt_csc { $$ = new SQLDataType(token::ENUM,$3,$5); }
+   | SET '(' enum_list ')' opt_csc { $$ = new SQLDataType(token::ENUM,$3,$5); }
    ;
 
-enum_list: STRING { $$ = NULL; emit("ENUMVAL %s", $1); free($1); $$ = 1; }
-   | enum_list ',' STRING { $$ = NULL; emit("ENUMVAL %s", $3); free($3); $$ = $1 + 1; }
+enum_list: STRING { $$ = new SQLObjectList<>(); $$->push(new SQLString($1)); free($1); }
+   | enum_list ',' STRING { $$ = $1; $$->push(new SQLString($3)); free($3);}
    ;
 
 create_select_statement: opt_ignore_replace opt_as select_stmt { $$ = NULL; emit("CREATESELECT %d", $1); }
@@ -828,8 +885,8 @@ opt_ignore_replace: /* nil */ { $$ = 0; }
    | REPLACE { $$ = 2; }
    ;
 
-opt_temporary:   /* nil */ { $$ = 0; }
-   | TEMPORARY { $$ = 1;}
+opt_temporary:   /* nil */ { $$ = false; }
+   | TEMPORARY { $$ = true;}
    ;
 
    /**** set user variables ****/
@@ -1004,7 +1061,6 @@ stmt: binlog_stmt {
 
 binlog_stmt: BINLOG MLSTRING {
   $$ = new SQLBinLogStatement(@$,$2,ctx.getEventParser());
-//  free($2);
 };
 
 stmt: use_stmt {

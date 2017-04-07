@@ -4,6 +4,7 @@
 #include <string.h>
 #include <sys/time.h>
 #include <errno.h>
+#include <signal.h>
 #include "SQLParserDriver.h"
 #include "SQLParserContext.h"
 #include "SQLObjectList.h"
@@ -15,6 +16,13 @@ extern FILE *yyin;
 struct yy_buffer_state;
 extern yy_buffer_state *yy_scan_string ( const char *yy_str );
 extern "C" void flushLex ();
+SQLParserContext *currentContext;
+
+void signalHandler ( int sig ) {
+  if ( currentContext ) {
+    currentContext->setExit ();
+  }
+}
 
 SQLParserDriver::SQLParserDriver () {
   errorStream = NULL;
@@ -76,24 +84,38 @@ void SQLParserDriver::parse ( std::string file, SQLParserCallback *callback )  t
   }
 
   SQLParserContext ctx ( file, callback );
-  ctx.setVerbose ( verbose );
-  ctx.setDebug ( debug );
-  if ( outStream ) {
-    ctx.setOutStream ( outStream );
-  }
-  if ( errorStream ) {
-    ctx.setErrorStream ( errorStream );
-  }
-  ::yy::SQLParser parser ( ctx );
-  if ( debugStream ) {
-    parser.set_debug_stream ( *debugStream );
-    if ( debug > 2 ) {
-      parser.set_debug_level ( debug - 2 );
+  try {
+    currentContext = &ctx;
+    struct sigaction s;
+    bzero ( &s, sizeof ( s ) );
+    s.sa_handler = signalHandler;
+    s.sa_flags = SA_RESETHAND | SA_RESTART;
+    sigaction ( SIGTERM, &s, NULL );
+    sigaction ( SIGINT, &s, NULL );
+    sigaction ( SIGHUP, &s, NULL );
+    ctx.setVerbose ( verbose );
+    ctx.setDebug ( debug );
+    if ( outStream ) {
+      ctx.setOutStream ( outStream );
     }
-  }
+    if ( errorStream ) {
+      ctx.setErrorStream ( errorStream );
+    }
+    ::yy::SQLParser parser ( ctx );
+    if ( debugStream ) {
+      parser.set_debug_stream ( *debugStream );
+      if ( debug > 2 ) {
+        parser.set_debug_level ( debug - 2 );
+      }
+    }
+    currentContext = NULL;
 
-  parser.parse ();
-  yylex_destroy ();
+    parser.parse ();
+    yylex_destroy ();
+  } catch ( ... ) {
+    currentContext = NULL;
+    throw;
+  }
 }
 
 void SQLParserDriver::setErrorStream ( std::ostream *errorStream ) {

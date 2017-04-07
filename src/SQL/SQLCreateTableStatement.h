@@ -10,7 +10,7 @@
 
 class SQLCreateTableStatement : public SQLStatement {
 public:
-    SQLCreateTableStatement ( SQLTable *table, SQLObjectList<> *columns );
+    SQLCreateTableStatement ( bool temporary, bool notExists, SQLTable *table, SQLObjectList<> *columns );
     virtual ~SQLCreateTableStatement ();
     virtual void getTables ( table_type &rt ) const;
     virtual std::string toString () const;
@@ -18,7 +18,10 @@ public:
     virtual void walk ( SQLTreeWalker *walker );
     virtual SQLObject *clone () const;
 private:
+    bool temporary;
+    bool notExists;
     boost::shared_ptr<SQLTable> table;
+    SQLObjectList<> columns;
 };
 
 

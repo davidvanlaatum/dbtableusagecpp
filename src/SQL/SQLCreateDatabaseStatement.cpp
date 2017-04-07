@@ -24,5 +24,7 @@ void SQLCreateDatabaseStatement::walk ( SQLTreeWalker *walker ) {
 }
 
 SQLObject *SQLCreateDatabaseStatement::clone () const {
-  return NULL;
+  SQLCreateDatabaseStatement *rt = new SQLCreateDatabaseStatement ( NULL );
+  rt->name = name;
+  return rt;
 }

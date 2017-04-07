@@ -47,6 +47,7 @@ SQLParserContext::SQLParserContext ( std::string fileName, SQLParserCallback *ca
   timestamp = 0;
   initBuffers ();
   multiLineBuffer = NULL;
+  isShouldExit = false;
 }
 
 SQLParserContext::~SQLParserContext () {
@@ -145,9 +146,13 @@ void SQLParserContext::error ( location location, std::string msg ) {
   s << location.end.line << ": ";
   int lineNumberLen = (int) s.str ().size ();
   size_t lineLen = 0;
+  size_t startLine = location.begin.line;
+  if ( startLine > 1 && location.begin.column <= 1 ) {
+    startLine--;
+  }
   for ( size_t i = 0; i < LINE_BUFFER_COUNT; i++ ) {
     size_t x = ( lineBufferIndex + i + 1 ) % LINE_BUFFER_COUNT;
-    if ( location.begin.line <= lineNumbers[x] && location.end.line >= lineNumbers[x] ) {
+    if ( startLine <= lineNumbers[x] && location.end.line >= lineNumbers[x] ) {
       if ( !lineContinue ) {
         linesOutput++;
         error << std::setw ( lineNumberLen - 2 ) << lineNumbers[x] << ": ";
@@ -257,6 +262,10 @@ FILE *SQLParserContext::getMultiLineBufferFile () {
   FILE *tmp = multiLineBuffer;
   multiLineBuffer = NULL;
   return tmp;
+}
+
+void SQLParserContext::setExit () {
+  isShouldExit = true;
 }
 
 void yyerror ( location *yylloc, SQLParserContext &ctx, const char *s, ... ) {

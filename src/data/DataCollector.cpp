@@ -43,12 +43,11 @@ std::string toString ( time_t t ) {
   return s.str ();
 }
 
-std::string bytesToString ( uint64_t bytes ) {
+std::string bytesToString ( double value ) {
   std::stringstream s;
   static const char *postfixes[] = { "kb", "mb", "gb", "tb" };
   int i = 0;
   const char *postfix = "b";
-  double value = bytes;
 
   while ( value > 1024 && i < ( sizeof ( postfixes ) / sizeof ( postfixes[0] ) ) ) {
     postfix = postfixes[i];
@@ -89,7 +88,7 @@ void DataCollector::statement ( yy::location &location, SQLStatement *statement,
     start = now;
   }
 
-  host->setLastLogPos ( (int)context->getLogPos () );
+  host->setLastLogPos ( (int) context->getLogPos () );
 
   if ( lastUpdate.tv_sec < now.tv_sec - 1 && !inTransaction ) {
     host->setLastLogFile ( *location.begin.filename );
@@ -98,6 +97,7 @@ void DataCollector::statement ( yy::location &location, SQLStatement *statement,
     timersub ( &now, &start, &timeDiff );
 
     double speed = diff / ( timeDiff.tv_sec + ( timeDiff.tv_usec / 1000000.0f ) );
+    double bspeed = 0;
 
     if ( lastTime != 0 ) {
       std::string units = "s/s";
@@ -113,10 +113,19 @@ void DataCollector::statement ( yy::location &location, SQLStatement *statement,
         logPosExtra = s.str ();
       }
 
+      if ( lastLogPos > 0 ) {
+        if ( lastLogPos > context->getLogPos () ) {
+          lastLogPos = 0;
+        }
+        uint64_t bdiff = context->getLogPos () - lastLogPos;
+        bspeed = bdiff / ( timeDiff.tv_sec + ( timeDiff.tv_usec / 1000000.0f ) );
+      }
+
       std::cerr << std::setprecision ( 4 );
       std::cerr << toString ( context->currentTime () )
                 << " statements: " << statements
                 << " speed: " << std::setw ( 7 ) << speed << units
+                << " " << bytesToString ( bspeed ) << "/s"
                 << " logpos: " << bytesToString ( context->getLogPos () ) << logPosExtra
                 << " " << location << "\n";
       lastUpdate = now;
@@ -126,6 +135,7 @@ void DataCollector::statement ( yy::location &location, SQLStatement *statement,
     }
     lastTime = context->currentTime ();
     lastStatements = statements;
+    lastLogPos = context->getLogPos ();
   }
 }
 

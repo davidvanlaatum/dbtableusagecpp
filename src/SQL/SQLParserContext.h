@@ -34,9 +34,15 @@ public:
     void setDebug ( int debug );
     int getDebug () const;
     uint64_t getLogPos () const;
-    void appendMultiLine(const char *buffer);
-    char *getMultiLineBuffer();
-    FILE *getMultiLineBufferFile();
+    void appendMultiLine ( const char *buffer );
+    char *getMultiLineBuffer ();
+    FILE *getMultiLineBufferFile ();
+    void setExit ();
+
+    inline bool shouldExit () {
+      return isShouldExit;
+    }
+
 private:
     std::string fileName;
     MySQLEventParser eventParser;
@@ -47,10 +53,11 @@ private:
     std::ostream *outStream;
     boost::shared_ptr<SQLIdentifier> currentDatabase;
     FILE *multiLineBuffer;
-
-    void setCurrentDatabase ( boost::shared_ptr<SQLIdentifier> shared_ptr );
     int verbose;
     int debug;
+    bool isShouldExit;
+
+    void setCurrentDatabase ( boost::shared_ptr<SQLIdentifier> shared_ptr );
     void initBuffers () const;
 };
 

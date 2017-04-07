@@ -31,24 +31,24 @@ find_package(Soci REQUIRED)
 find_package(GLib REQUIRED)
 find_package(Boost REQUIRED COMPONENTS program_options filesystem date_time)
 find_package(Git)
-if(GIT_FOUND)
+if (GIT_FOUND)
     execute_process(COMMAND git rev-parse HEAD WORKING_DIRECTORY ${CMAKE_SOURCE_DIR} OUTPUT_VARIABLE GIT_HASH OUTPUT_STRIP_TRAILING_WHITESPACE)
-endif()
+endif ()
 
 set(CMAKE_REQUIRED_LIBRARIES Boost::filesystem)
 CHECK_CXX_SYMBOL_EXISTS(boost::filesystem::absolute boost/filesystem.hpp FILESYSTEM_ABSOLUTE)
-if(FILESYSTEM_ABSOLUTE)
+if (FILESYSTEM_ABSOLUTE)
     add_definitions(-DHAVE_ABSOLUTE)
-endif()
+endif ()
 set(CMAKE_REQUIRED_LIBRARIES Boost::program_options)
 CHECK_CXX_SOURCE_COMPILES("#include <boost/program_options.hpp>
     int main() {
     boost::program_options::parse_config_file<char>(NULL,NULL);
     return 0;
 }" PARSE_CONFIG_FILE)
-if(PARSE_CONFIG_FILE)
+if (PARSE_CONFIG_FILE)
     add_definitions(-DHAVE_PARSE_CONFIG_FILE)
-endif()
+endif ()
 unset(CMAKE_REQUIRED_LIBRARIES)
 
 #include_directories(${SOCI_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/src ${CMAKE_CURRENT_BINARY_DIR}/src)
@@ -58,7 +58,14 @@ if (test)
     enable_testing()
     include(GTest)
     add_subdirectory(test)
-endif()
+endif ()
 set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES coverage.info coverage.junit.xml coverage.xml)
 include(CPack)
 configure_file(src/appversion.h.in src/appversion.h)
+
+find_program(VALGRIND valgrind)
+if (VALGRIND)
+    add_custom_target(valgrind COMMAND ${VALGRIND} --show-possibly-lost=yes --num-callers=15 --leak-check=full
+            --suppressions=${CMAKE_SOURCE_DIR}/valgrind.supp $<TARGET_FILE:dbtableusagecpp> $(ARGS) DEPENDS
+            dbtableusagecpp)
+endif ()

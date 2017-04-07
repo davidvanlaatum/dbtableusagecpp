@@ -32,6 +32,7 @@ APPMain::APPMain () : options ( "options" ), config ( "config" ) {
            ( "help,h", po::bool_switch (), "produce help message" )
            ( "version,V", po::bool_switch (), "version" )
            ( "dump", po::bool_switch (), "dump settings" )
+           ( "print", po::bool_switch (), "print usage at end" )
 #ifdef HAVE_PARSE_CONFIG_FILE
            ( "config,c", po::value<std::string> ()->default_value ( "config.ini" ), "config file" )
 #endif
@@ -44,7 +45,7 @@ APPMain::APPMain () : options ( "options" ), config ( "config" ) {
           ( "storage.password", po::value<std::string> (), "password to connect with" )
           ( "monitor.host", po::value<std::string> (), "hostname to connect to for logs" )
           ( "monitor.user", po::value<std::string> (), "Username to connect with" )
-          ( "monitor.password", po::value<std::string> (), "password to connect with" );
+          ( "monitor.password", po::value<std::string> ()->default_value ( "" ), "password to connect with" );
   options.add ( config );
 }
 
@@ -83,6 +84,15 @@ int APPMain::main ( int argc, char *argv[] ) {
             driver.parseFile ( file, &collector );
           }
         } else {
+          if ( !vm.count ( "monitor.host" ) ) {
+            throw std::runtime_error ( "monitor.host is required" );
+          }
+          if ( !vm.count ( "monitor.user" ) ) {
+            throw std::runtime_error ( "monitor.user is required" );
+          }
+          if ( !vm.count ( "storage.url" ) ) {
+            throw std::runtime_error ( "storage.url is required" );
+          }
           LogFileFetcher fetcher;
           DataStore dataStore;
           fetcher.setConnection ( vm["monitor.host"].as<std::string> (), vm["monitor.user"].as<std::string> (),
@@ -91,7 +101,7 @@ int APPMain::main ( int argc, char *argv[] ) {
           collector.setMonitoredHost ( vm["monitor.host"].as<std::string> () );
           collector.setDataStore ( &dataStore );
           if ( fetcher.fetchLogs ( collector.getHost () ) ) {
-            while ( fetcher.hasMoreLogs () ) {
+            while ( exit == 0 && fetcher.hasMoreLogs () ) {
               collector.setCurrentFileSize ( fetcher.currentLogFileSize () );
               FILE *handle = fetcher.fileHandle ();
               SQLParserDriver driver;
@@ -99,15 +109,17 @@ int APPMain::main ( int argc, char *argv[] ) {
               driver.parseFileHandle ( handle, fetcher.currentLogFile (), &collector );
               int rt = pclose ( handle );
               if ( rt != 0 ) {
-                std::stringstream s ( "mysqlbinlog exited with " );
-                s << rt;
-                throw new std::runtime_error ( s.str () );
+                std::cerr << "mysqlbinlog exited with " << rt << std::endl;
+                exit = 1;
+              } else {
+                fetcher.next ();
               }
-              fetcher.next ();
             }
           }
         }
-        collector.dump ();
+        if ( vm["print"].as<bool> () ) {
+          collector.dump ();
+        }
       } catch ( std::exception &e ) {
         std::cerr << e.what () << std::endl;
         exit = 1;

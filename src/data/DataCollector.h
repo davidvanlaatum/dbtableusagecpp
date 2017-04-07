@@ -31,6 +31,7 @@ private:
     timeval start;
     time_t lastTime;
     int lastStatements;
+    uint64_t lastLogPos;
     time_t firstStatement;
     uint64_t currentFileSize;
     bool inTransaction;
