@@ -89,7 +89,7 @@ void DataCollector::statement ( yy::location &location, SQLStatement *statement,
     start = now;
   }
 
-  host->setLastLogPos ( context->getLogPos () );
+  host->setLastLogPos ( (int)context->getLogPos () );
 
   if ( lastUpdate.tv_sec < now.tv_sec - 1 && !inTransaction ) {
     host->setLastLogFile ( *location.begin.filename );

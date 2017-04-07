@@ -11,11 +11,17 @@
 using namespace yy;
 void yyerror(yy::SQLParser::location_type* yylloc, SQLParserContext &ctx, const char *s, ...);
 void adjustLines(yy::SQLParser::location_type *location, char *text);
+int getNextInput(char *buf, int max_size);
 
 #define YY_DECL int yylex(yy::SQLParser::semantic_type *yylval, \
     yy::SQLParser::location_type *yylloc, SQLParserContext &ctx)
 
 # define YY_USER_ACTION  yylloc->columns (yyleng);
+#define YY_INPUT(buf,result,max_size)  {\
+    result = getNextInput(buf, max_size); \
+    if (  result <= 0  ) \
+      result = YY_NULL; \
+    }
 
 typedef yy::SQLParser::token token;
 int oldstate;
@@ -295,15 +301,7 @@ B'[01]+'     { yylval->strval = strdup(yytext); return token::STRING; }
 
 
    /* operators */
-[-+&~|^/%*(),.!]   { return yytext[0]; }
-";" { int c = 0;
-  while ( (c = yyinput()) == '\n' ) {
-    yylloc->lines(1);
-    yylloc->step();
-  }
-  unput(c);
-  return yytext[0];
-}
+[-+&~|^/%*(),.!;]   { return yytext[0]; }
 
 "&&"  { return token::ANDOP; }
 "||"            { return token::OR; }
@@ -358,17 +356,17 @@ _[A-Za-z][A-Za-z0-9_]+ { yylval->strval = strdup(yytext);
 ":="     { return token::ASSIGN; }
 
  /* comments */
-#.*"\n"  { ctx.parseComment(yytext); yylloc->lines(1); yylloc->step();};
-"--"[ \t].*"\n" { yylloc->lines(1); yylloc->step(); };
+#.*"\n"  { ctx.parseComment(yytext); yylloc->lines(1);};
+"--"[ \t].*"\n" { yylloc->lines(1); };
 
 "/*"            { oldstate = YY_START; BEGIN XCOMMENT; }
 <XCOMMENT>"*/"   { BEGIN oldstate; }
 <XCOMMENT>.
-<XCOMMENT>\n     { yylloc->lines(1);yylloc->step();}
+<XCOMMENT>\n     { yylloc->lines(1);}
 <XCOMMENT><<EOF>> { yyerror(yylloc,ctx,"unclosed comment"); return 0; }
 
          /* everything else */
-[ \t]           /* white space */
+[ \t]           /* white space */ { yylloc->step(); }
 \n      { yylloc->lines(1); yylloc->step(); }
 .               { yyerror(yylloc,ctx,"mystery character '%c'", *yytext); }
 

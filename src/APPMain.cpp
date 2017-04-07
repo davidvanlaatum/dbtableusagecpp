@@ -107,7 +107,7 @@ int APPMain::main ( int argc, char *argv[] ) {
             }
           }
         }
-        collector.dump ();
+//        collector.dump ();
       } catch ( std::exception &e ) {
         std::cerr << e.what () << std::endl;
         exit = 1;

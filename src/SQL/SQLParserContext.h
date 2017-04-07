@@ -15,6 +15,7 @@ class SQLParserCallback;
 class SQLParserContext {
 public:
     SQLParserContext ( std::string fileName, SQLParserCallback *callback );
+    virtual ~SQLParserContext ();
     void push ( yy::location &yylloc, SQLStatement *statement );
     std::string &getFileName ();
     void print ();
@@ -46,6 +47,7 @@ private:
     void setCurrentDatabase ( boost::shared_ptr<SQLIdentifier> shared_ptr );
     int verbose;
     int debug;
+    void initBuffers () const;
 };
 
 

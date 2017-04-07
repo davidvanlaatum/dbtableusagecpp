@@ -7,6 +7,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include <boost/scoped_ptr.hpp>
+#include <iomanip>
 #include "SQLParserContext.h"
 #include "SQLParserFailedException.h"
 #include "SQLStatement.h"
@@ -14,12 +15,51 @@
 #include "SQLInteger.h"
 #include "SQLUseDatabase.h"
 
+extern FILE *yyin;
+#define LINE_BUFFER_LEN 100
+#define LINE_BUFFER_COUNT 100
+char *lineBuffers[LINE_BUFFER_COUNT] = { 0 };
+size_t lineNumbers[LINE_BUFFER_COUNT] = { 0 };
+size_t lineBufferIndex = 0;
+size_t lastLineOffset = 0;
+size_t lastLineLen = 0;
+size_t lineNum = 0;
+size_t readBytes = 0;
+
+bool hasLF ( const char *line ) {
+  if ( line == NULL ) {
+    return false;
+  }
+  size_t i = 0;
+  while ( line[i] != 0 && line[i] != '\n' ) {
+    i++;
+  }
+  return line[i] == '\n';
+}
+
 SQLParserContext::SQLParserContext ( std::string fileName, SQLParserCallback *callback ) : fileName ( fileName ),
                                                                                            callback ( callback ),
                                                                                            eventParser ( this ) {
   errorStream = &std::cerr;
   outStream = &std::cout;
   timestamp = 0;
+  initBuffers ();
+}
+
+SQLParserContext::~SQLParserContext () {
+  initBuffers ();
+}
+
+void SQLParserContext::initBuffers () const {
+  readBytes = 0;
+  for ( int i = 0; i < LINE_BUFFER_COUNT; i++ ) {
+    if ( lineBuffers[i] ) {
+      free ( lineBuffers[i] );
+    }
+  }
+  bzero ( lineNumbers, sizeof ( lineNumbers ) );
+  bzero ( lineBuffers, sizeof ( lineBuffers ) );
+  lineNum = 1;
 }
 
 void SQLParserContext::push ( yy::location &yylloc, SQLStatement *statement ) {
@@ -91,7 +131,50 @@ std::ostream &SQLParserContext::out () const {
 }
 
 void SQLParserContext::error ( location location, std::string msg ) {
+  bool lineContinue = false;
   *errorStream << location << ": " << msg << std::endl;
+  int linesOutput = 0;
+  std::stringstream s;
+  s << location.end.line << ": ";
+  int lineNumberLen = (int) s.str ().size ();
+  size_t lineLen = 0;
+  for ( size_t i = 0; i < LINE_BUFFER_COUNT; i++ ) {
+    size_t x = ( lineBufferIndex + i + 1 ) % LINE_BUFFER_COUNT;
+    if ( location.begin.line <= lineNumbers[x] && location.end.line >= lineNumbers[x] ) {
+      if ( !lineContinue ) {
+        linesOutput++;
+        *errorStream << std::setw ( lineNumberLen - 2 ) << lineNumbers[x] << ": ";
+      }
+      *errorStream << lineBuffers[x];
+      lineContinue = !hasLF ( lineBuffers[x] );
+      lineLen += strlen ( lineBuffers[x] );
+      if ( !lineContinue ) {
+        std::stringstream indicator;
+        if ( lineNumbers[x] == location.begin.line && lineNumbers[x] == location.end.line ) {
+          indicator << std::setw ( location.begin.column + lineNumberLen ) << "^";
+          if ( location.begin.column + 1 < location.end.column ) {
+            indicator << std::setfill ( '-' ) << std::setw ( location.end.column - location.begin.column - 1 ) << "^";
+          }
+          indicator << std::endl;
+        } else if ( lineNumbers[x] == location.begin.line ) {
+          indicator << std::setw ( location.begin.column + lineNumberLen ) << "^" << std::setfill ( '-' )
+                    << std::setw ( int ( lineLen - location.begin.column ) ) << ">" << std::endl;
+        } else if ( lineNumbers[x] == location.end.line ) {
+          indicator << std::setfill ( '-' ) << std::setw ( location.end.column + lineNumberLen ) << "^" << std::endl;
+        }
+        *errorStream << indicator.str ();
+        lineLen = 0;
+      }
+    }
+  }
+  if ( linesOutput == 0 ) {
+    *errorStream << "Failed to find any lines to output lines we have are: ";
+    for ( size_t i = 0; i < LINE_BUFFER_COUNT; i++ ) {
+      size_t x = ( lineBufferIndex + i + 1 ) % LINE_BUFFER_COUNT;
+      *errorStream << x << "=" << lineNumbers[x] << ",";
+    }
+    *errorStream << std::endl;
+  }
 }
 
 boost::shared_ptr<SQLIdentifier> SQLParserContext::getCurrentDatabase () {
@@ -146,4 +229,36 @@ void adjustLines ( location *location, char *text ) {
     location->lines ( lines );
     location->columns ( (int) strlen ( text ) );
   }
+}
+
+std::string bytesToString ( uint64_t bytes );
+
+int getNextInput ( char *buf, int max_size ) {
+  int rt = 0;
+  if ( !feof ( yyin ) ) {
+    if ( lastLineOffset >= lastLineLen ) {
+      if ( hasLF ( lineBuffers[lineBufferIndex] ) ) { // if the last line buffer ends in \n we are now on a new line
+        lineNum++;
+      }
+      lineBufferIndex++;
+      if ( lineBufferIndex >= LINE_BUFFER_COUNT ) {
+        lineBufferIndex = 0;
+      }
+      if ( !lineBuffers[lineBufferIndex] ) {
+        lineBuffers[lineBufferIndex] = (char *) malloc ( LINE_BUFFER_LEN );
+      }
+      if ( !fgets ( lineBuffers[lineBufferIndex], LINE_BUFFER_LEN, yyin ) ) {
+        lineBuffers[lineBufferIndex][0] = 0;
+      }
+      lastLineLen = strlen ( lineBuffers[lineBufferIndex] );
+      readBytes += lastLineLen;
+      lastLineOffset = 0;
+      lineNumbers[lineBufferIndex] = lineNum;
+    }
+    if ( lastLineOffset < lastLineLen ) {
+      buf[0] = lineBuffers[lineBufferIndex][lastLineOffset++];
+      return 1;
+    }
+  }
+  return rt;
 }
