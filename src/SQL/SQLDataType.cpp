@@ -8,27 +8,27 @@ SQLDataType::SQLDataType ( yy::SQLParser::token::yytokentype type ) : type ( typ
 
 }
 
-SQLDataType::SQLDataType ( SQLDataType::datatype type, SQLDataLength *length ) : type ( type ), length ( length ) {
+SQLDataType::SQLDataType ( datatype type, SQLDataLength *length ) : type ( type ), length ( length ) {
 
 }
 
-SQLDataType::SQLDataType ( SQLDataType::datatype type, SQLDataLength *length, int flag ) : type ( type ), length
+SQLDataType::SQLDataType ( datatype type, SQLDataLength *length, int flag ) : type ( type ), length
   ( length ) {
 
 }
 
-SQLDataType::SQLDataType ( SQLDataType::datatype type, SQLDataLength *length, SQLDataCollation *collation ) :
+SQLDataType::SQLDataType ( datatype type, SQLDataLength *length, SQLDataCollation *collation ) :
   type ( type ), length ( length ), collation ( collation ) {
 
 }
 
-SQLDataType::SQLDataType ( SQLDataType::datatype type, SQLDataCollation *collation, int flag ) : type ( type ),
+SQLDataType::SQLDataType ( datatype type, SQLDataCollation *collation, int flag ) : type ( type ),
                                                                                                  collation (
                                                                                                    collation ) {
 
 }
 
-SQLDataType::SQLDataType ( SQLDataType::datatype type, SQLObjectList<> *opts, SQLDataCollation *collation ) :
+SQLDataType::SQLDataType ( datatype type, SQLObjectList<> *opts, SQLDataCollation *collation ) :
   type ( type ), collation ( collation ) {
 
 }
@@ -49,8 +49,8 @@ void SQLDataType::walk ( SQLTreeWalker *walker ) {
 // TODO
 }
 
-SQLObject *SQLDataType::clone () const {
-  return new SQLDataType ( 0 );// TODO
+SQLDataType *SQLDataType::clone () const {
+  return new SQLDataType ( (datatype)1 );// TODO
 }
 
 SQLDataLength::SQLDataLength ( int length ) {
@@ -77,12 +77,12 @@ void SQLDataLength::walk ( SQLTreeWalker *walker ) {
 // TODO
 }
 
-SQLObject *SQLDataLength::clone () const {
+SQLDataLength *SQLDataLength::clone () const {
   return new SQLDataLength ( 0 );// TODO
 }
 
 SQLDataCollation::SQLDataCollation ( char *name ) : name ( name ) {
-  free ( name );
+
 }
 
 SQLDataCollation::~SQLDataCollation () {
@@ -101,6 +101,6 @@ void SQLDataCollation::walk ( SQLTreeWalker *walker ) {
 // TODO
 }
 
-SQLObject *SQLDataCollation::clone () const {
-  return new SQLDataCollation ( NULL );// TODO
+SQLDataCollation *SQLDataCollation::clone () const {
+  return new SQLDataCollation ( "" );// TODO
 }

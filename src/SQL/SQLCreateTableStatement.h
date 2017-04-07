@@ -10,13 +10,14 @@
 
 class SQLCreateTableStatement : public SQLStatement {
 public:
+    EMPTY_CONSTRUCTOR(SQLCreateTableStatement)
     SQLCreateTableStatement ( bool temporary, bool notExists, SQLTable *table, SQLObjectList<> *columns );
     virtual ~SQLCreateTableStatement ();
     virtual void getTables ( table_type &rt ) const;
     virtual std::string toString () const;
     virtual void resolve ( SQLParserContext *context );
     virtual void walk ( SQLTreeWalker *walker );
-    virtual SQLObject *clone () const;
+    virtual SQLCreateTableStatement * clone () const;
 private:
     bool temporary;
     bool notExists;

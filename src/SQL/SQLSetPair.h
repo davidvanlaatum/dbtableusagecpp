@@ -8,6 +8,7 @@
 #include "SQLObject.h"
 class SQLSetPair : public SQLObject {
 public:
+    EMPTY_CONSTRUCTOR(SQLSetPair)
     virtual ~SQLSetPair ();
     SQLSetPair ( const std::string &name, SQLObject *value );
     virtual std::string toString () const;

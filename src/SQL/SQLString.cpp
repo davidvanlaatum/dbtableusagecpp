@@ -5,7 +5,7 @@
 #include "SQLString.h"
 
 std::string SQLString::toString () const {
-  return value;
+  return "'" + value + "'";
 }
 
 SQLString::SQLString ( const std::string &value ) : value ( value ) {

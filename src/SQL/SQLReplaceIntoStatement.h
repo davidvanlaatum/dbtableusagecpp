@@ -11,6 +11,7 @@
 
 class SQLReplaceIntoStatement : public SQLStatement {
 public:
+    EMPTY_CONSTRUCTOR(SQLReplaceIntoStatement)
     SQLReplaceIntoStatement ( SQLTable *table, SQLObjectList<> *values );
     virtual std::string toString () const;
     virtual SQLTable *getTable () const;

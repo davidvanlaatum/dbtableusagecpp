@@ -10,6 +10,7 @@
 #include "SQLIdentifier.h"
 class SQLUseDatabase : public SQLStatement {
 public:
+    EMPTY_CONSTRUCTOR(SQLUseDatabase)
     virtual std::string toString () const;
     SQLUseDatabase ( SQLIdentifier *name );
     virtual void getTables ( table_type &rt ) const;

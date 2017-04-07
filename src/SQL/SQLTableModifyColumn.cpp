@@ -23,7 +23,7 @@ void SQLTableModifyColumn::walk ( SQLTreeWalker *walker ) {
 // TODO
 }
 
-SQLObject *SQLTableModifyColumn::clone () const {
+SQLTableModifyColumn *SQLTableModifyColumn::clone () const {
   SQLTableModifyColumn *rt = new SQLTableModifyColumn ( NULL );
   rt->definition = definition;
   return rt;

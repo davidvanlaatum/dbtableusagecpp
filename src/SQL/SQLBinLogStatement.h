@@ -11,6 +11,7 @@
 
 class SQLBinLogStatement : public SQLStatement, public MySQLEventParserCallback {
 public:
+    EMPTY_CONSTRUCTOR(SQLBinLogStatement)
     SQLBinLogStatement ( yy::location yylloc, const char *data, MySQLEventParser *parser );
     SQLBinLogStatement ( yy::location yylloc, FILE *file, MySQLEventParser *parser );
     SQLBinLogStatement ( const table_type &tables );

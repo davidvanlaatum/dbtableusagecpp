@@ -11,9 +11,10 @@
 class SQLDataLength;
 class SQLDataCollation;
 
+typedef yy::SQLParser::token::yytokentype datatype;
 class SQLDataType : public SQLObject {
 public:
-    typedef yy::SQLParser::token::yytokentype datatype;
+    EMPTY_CONSTRUCTOR(SQLDataType)
     SQLDataType ( datatype type );
     SQLDataType ( datatype type, SQLDataLength *length );
     SQLDataType ( datatype type, SQLDataLength *length, int flag );
@@ -24,7 +25,7 @@ public:
     virtual std::string toString () const;
     virtual void resolve ( SQLParserContext *context );
     virtual void walk ( SQLTreeWalker *walker );
-    virtual SQLObject *clone () const;
+    virtual SQLDataType * clone () const;
 private:
     datatype type;
     boost::shared_ptr<SQLDataLength> length;
@@ -33,25 +34,27 @@ private:
 
 class SQLDataLength : public SQLObject {
 public:
+    EMPTY_CONSTRUCTOR(SQLDataLength)
     SQLDataLength ( int length );
     SQLDataLength ( int length, int );
     virtual ~SQLDataLength ();
     virtual std::string toString () const;
     virtual void resolve ( SQLParserContext *context );
     virtual void walk ( SQLTreeWalker *walker );
-    virtual SQLObject *clone () const;
+    virtual SQLDataLength * clone () const;
 private:
     int length;
 };
 
 class SQLDataCollation : public SQLObject {
 public:
+    EMPTY_CONSTRUCTOR(SQLDataCollation)
     SQLDataCollation ( char *name );
     virtual ~SQLDataCollation ();
     virtual std::string toString () const;
     virtual void resolve ( SQLParserContext *context );
     virtual void walk ( SQLTreeWalker *walker );
-    virtual SQLObject *clone () const;
+    virtual SQLDataCollation * clone () const;
 private:
     std::string name;
 };

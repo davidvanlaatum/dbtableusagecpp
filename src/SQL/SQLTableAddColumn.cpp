@@ -13,7 +13,7 @@ SQLTableAddColumn::~SQLTableAddColumn () {
 }
 
 std::string SQLTableAddColumn::toString () const {
-  return "ADD COLUMN " + definition->toString ();
+  return "ADD COLUMN " + SQLObject::toString (definition);
 }
 
 void SQLTableAddColumn::resolve ( SQLParserContext *context ) {
@@ -24,7 +24,7 @@ void SQLTableAddColumn::walk ( SQLTreeWalker *walker ) {
 // TODO
 }
 
-SQLObject *SQLTableAddColumn::clone () const {
+SQLTableAddColumn *SQLTableAddColumn::clone () const {
   SQLTableAddColumn *rt = new SQLTableAddColumn(NULL);
   rt->definition = definition;
   return rt;

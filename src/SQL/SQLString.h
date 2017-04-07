@@ -8,6 +8,7 @@
 #include "SQLObject.h"
 class SQLString : public SQLObject {
 public:
+    EMPTY_CONSTRUCTOR(SQLString)
     SQLString ( const std::string &value );
     virtual std::string toString () const;
     virtual void resolve ( SQLParserContext *context );

@@ -12,6 +12,7 @@
 
 class SQLColumn : public SQLObject {
 public:
+    EMPTY_CONSTRUCTOR(SQLColumn)
     SQLColumn ( SQLTable *table, SQLIdentifier *name );
     SQLColumn ( SQLIdentifier *name );
     virtual std::string toString () const;

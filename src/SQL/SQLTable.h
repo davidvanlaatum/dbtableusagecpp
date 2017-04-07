@@ -11,6 +11,7 @@
 
 class SQLTable : public SQLObject {
 public:
+    EMPTY_CONSTRUCTOR(SQLTable)
     SQLTable ( SQLIdentifier *schema, SQLIdentifier *name );
     SQLTable ( SQLIdentifier *name );
     SQLTable ( const SQLTable &table );

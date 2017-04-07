@@ -9,6 +9,7 @@
 
 class SQLEquals : public SQLComparision {
 public:
+    EMPTY_CONSTRUCTOR(SQLEquals)
     SQLEquals ( SQLObject *left, SQLObject *right );
     virtual std::string toString () const;
     virtual SQLEquals *clone () const;

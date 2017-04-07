@@ -12,6 +12,7 @@
 
 class SQLFunction : public SQLExpression {
 public:
+    EMPTY_CONSTRUCTOR(SQLFunction)
     SQLFunction ( SQLIdentifier *name, SQLObjectList<> *args );
     virtual std::string toString () const;
     virtual void resolve ( SQLParserContext *context );

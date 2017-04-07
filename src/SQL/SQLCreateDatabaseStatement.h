@@ -8,13 +8,14 @@
 
 class SQLCreateDatabaseStatement : public SQLStatement {
 public:
+    EMPTY_CONSTRUCTOR(SQLCreateDatabaseStatement)
     SQLCreateDatabaseStatement ( SQLIdentifier *name );
     virtual ~SQLCreateDatabaseStatement ();
     virtual void getTables ( table_type &rt ) const;
     virtual std::string toString () const;
     virtual void resolve ( SQLParserContext *context );
     virtual void walk ( SQLTreeWalker *walker );
-    virtual SQLObject *clone () const;
+    virtual SQLCreateDatabaseStatement * clone () const;
 
 private:
     boost::shared_ptr<SQLIdentifier> name;

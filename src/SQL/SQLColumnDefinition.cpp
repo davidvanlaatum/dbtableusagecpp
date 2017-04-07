@@ -26,6 +26,6 @@ void SQLColumnDefinition::walk ( SQLTreeWalker *walker ) {
 // TODO
 }
 
-SQLObject *SQLColumnDefinition::clone () const {
+SQLColumnDefinition *SQLColumnDefinition::clone () const {
   return new SQLColumnDefinition ( NULL, NULL, NULL );// TODO
 }

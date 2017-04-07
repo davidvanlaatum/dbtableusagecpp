@@ -10,6 +10,7 @@
 
 class SQLOr : public SQLExpression {
 public:
+    EMPTY_CONSTRUCTOR(SQLOr)
     SQLOr ( SQLObject *left, SQLObject *right );
     virtual std::string toString () const;
     virtual void resolve ( SQLParserContext *context );

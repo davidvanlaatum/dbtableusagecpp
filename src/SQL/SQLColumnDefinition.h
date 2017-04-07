@@ -12,12 +12,13 @@ class SQLColumnAttributes;
 
 class SQLColumnDefinition : public SQLObject {
 public:
+    EMPTY_CONSTRUCTOR(SQLColumnDefinition)
     SQLColumnDefinition ( SQLIdentifier *name, SQLDataType *type, SQLColumnAttributes *attributes );
     virtual ~SQLColumnDefinition ();
     virtual std::string toString () const;
     virtual void resolve ( SQLParserContext *context );
     virtual void walk ( SQLTreeWalker *walker );
-    virtual SQLObject *clone () const;
+    virtual SQLColumnDefinition * clone () const;
 private:
     boost::shared_ptr<SQLIdentifier> name;
     boost::shared_ptr<SQLDataType> type;

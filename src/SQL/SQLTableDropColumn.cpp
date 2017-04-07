@@ -23,7 +23,7 @@ void SQLTableDropColumn::walk ( SQLTreeWalker *walker ) {
 // TODO
 }
 
-SQLObject *SQLTableDropColumn::clone () const {
+SQLTableDropColumn *SQLTableDropColumn::clone () const {
   SQLTableDropColumn *rt = new SQLTableDropColumn(NULL);
   rt->column = column;
   return rt;

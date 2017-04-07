@@ -11,6 +11,7 @@
 
 class SQLDeleteStatement : public SQLStatement {
 public:
+    EMPTY_CONSTRUCTOR(SQLDeleteStatement)
     SQLDeleteStatement ( SQLTable *table, SQLObject *where );
     virtual std::string toString () const;
     virtual void getTables ( table_type &rt ) const;

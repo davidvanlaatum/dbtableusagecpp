@@ -10,9 +10,13 @@
 #include <ostream>
 #include "SQLTreeWalker.h"
 
+#ifndef EMPTY_CONSTRUCTOR
+#define EMPTY_CONSTRUCTOR(type)
+#endif
+
 class SQLParserContext;
 
-class SQLObject {
+/*abstract*/ class SQLObject {
 public:
     virtual ~SQLObject ();
     virtual std::string toString () const = 0;

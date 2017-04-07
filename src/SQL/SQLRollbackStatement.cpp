@@ -20,7 +20,7 @@ void SQLRollbackStatement::walk ( SQLTreeWalker *walker ) {
 
 }
 
-SQLObject *SQLRollbackStatement::clone () const {
+SQLRollbackStatement *SQLRollbackStatement::clone () const {
   return new SQLRollbackStatement ();
 }
 

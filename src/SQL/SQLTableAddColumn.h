@@ -10,12 +10,13 @@ class SQLColumnDefinition;
 
 class SQLTableAddColumn : public SQLAlterTableColumnOperation {
 public:
+    EMPTY_CONSTRUCTOR(SQLTableAddColumn)
     SQLTableAddColumn (SQLColumnDefinition *p);
     virtual ~SQLTableAddColumn ();
     virtual std::string toString () const;
     virtual void resolve ( SQLParserContext *context );
     virtual void walk ( SQLTreeWalker *walker );
-    virtual SQLObject *clone () const;
+    virtual SQLTableAddColumn * clone () const;
 private:
     boost::shared_ptr<SQLColumnDefinition> definition;
 };

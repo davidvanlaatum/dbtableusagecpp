@@ -35,6 +35,6 @@ void SQLCreateTableStatement::walk ( SQLTreeWalker *walker ) {
 // TODO
 }
 
-SQLObject *SQLCreateTableStatement::clone () const {
+SQLCreateTableStatement *SQLCreateTableStatement::clone () const {
   return new SQLCreateTableStatement(false,false,NULL,NULL);// TODO
 }

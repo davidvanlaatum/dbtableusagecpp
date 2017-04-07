@@ -10,12 +10,13 @@
 
 class SQLAlterTableStatement : public SQLStatement {
 public:
+    EMPTY_CONSTRUCTOR(SQLAlterTableStatement)
     SQLAlterTableStatement ( SQLTable *table, SQLObjectList<> *opts );
     virtual ~SQLAlterTableStatement ();
     virtual std::string toString () const;
     virtual void resolve ( SQLParserContext *context );
     virtual void walk ( SQLTreeWalker *walker );
-    virtual SQLObject *clone () const;
+    virtual SQLAlterTableStatement *clone () const;
     virtual void getTables ( table_type &rt ) const;
 
 private:
@@ -23,7 +24,7 @@ private:
     SQLObjectList<> operations;
 };
 
-class SQLAlterTableColumnOperation : public SQLObject {
+/*abstract*/ class SQLAlterTableColumnOperation : public SQLObject {
 
 };
 

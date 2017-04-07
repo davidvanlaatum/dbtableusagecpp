@@ -7,7 +7,7 @@
 
 #include "SQLObject.h"
 
-class SQLExpression : public SQLObject {
+/*abstract*/ class SQLExpression : public SQLObject {
 
 };
 

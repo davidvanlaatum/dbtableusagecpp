@@ -9,6 +9,7 @@
 
 class SQLCommitStatement : public SQLStatement {
 public:
+    EMPTY_CONSTRUCTOR(SQLCommitStatement)
     virtual ~SQLCommitStatement ();
     virtual std::string toString () const;
     virtual void resolve ( SQLParserContext *context );

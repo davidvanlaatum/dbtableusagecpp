@@ -5,10 +5,12 @@
 #include "SQLAlterTableStatement.h"
 
 SQLAlterTableStatement::SQLAlterTableStatement ( SQLTable *table, SQLObjectList<> *opts ) : table ( table ) {
-  for ( SQLObjectList<>::iterator it = opts->begin (); it != opts->end (); ++it ) {
-    operations.push ( *it );
+  if (opts) {
+    for ( SQLObjectList<>::iterator it = opts->begin (); it != opts->end (); ++it ) {
+      operations.push ( *it );
+    }
+    opts->clear ();
   }
-  opts->clear ();
 }
 
 SQLAlterTableStatement::~SQLAlterTableStatement () {
@@ -31,7 +33,7 @@ void SQLAlterTableStatement::walk ( SQLTreeWalker *walker ) {
   }
 }
 
-SQLObject *SQLAlterTableStatement::clone () const {
+SQLAlterTableStatement *SQLAlterTableStatement::clone () const {
   SQLAlterTableStatement *statement = new SQLAlterTableStatement ( NULL, NULL );
   statement->table = table;
   return statement;

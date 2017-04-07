@@ -12,18 +12,18 @@ void SQLCreateDatabaseStatement::getTables ( SQLStatement::table_type &rt ) cons
 }
 
 std::string SQLCreateDatabaseStatement::toString () const {
-  return std::string ();
+  return "CREATE DATABASE " + SQLObject::toString ( name );
 }
 
 void SQLCreateDatabaseStatement::resolve ( SQLParserContext *context ) {
-
+// TODO
 }
 
 void SQLCreateDatabaseStatement::walk ( SQLTreeWalker *walker ) {
-
+// TODO
 }
 
-SQLObject *SQLCreateDatabaseStatement::clone () const {
+SQLCreateDatabaseStatement *SQLCreateDatabaseStatement::clone () const {
   SQLCreateDatabaseStatement *rt = new SQLCreateDatabaseStatement ( NULL );
   rt->name = name;
   return rt;

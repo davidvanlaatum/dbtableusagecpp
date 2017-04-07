@@ -6,7 +6,6 @@
 
 SQLDeleteStatement::SQLDeleteStatement ( SQLTable *table, SQLObject *where ) : table ( table ),
                                                                                where ( where ) {
-  assert ( table != where );
 }
 
 std::string SQLDeleteStatement::toString () const {

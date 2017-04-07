@@ -9,7 +9,7 @@
 #include "SQLObject.h"
 #include "SQLTable.h"
 
-class SQLStatement : public SQLObject {
+/*abstract*/ class SQLStatement : public SQLObject {
 public:
     enum TableFlags {
         READ = 1,

@@ -24,7 +24,7 @@ void SQLColumnAttributes::walk ( SQLTreeWalker *walker ) {
 // TODO
 }
 
-SQLObject *SQLColumnAttributes::clone () const {
+SQLColumnAttributes *SQLColumnAttributes::clone () const {
   return new SQLColumnAttributes (); // TODO
 }
 

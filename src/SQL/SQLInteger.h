@@ -9,6 +9,7 @@
 #include "SQLObject.h"
 class SQLInteger : public SQLObject {
 public:
+    EMPTY_CONSTRUCTOR(SQLInteger)
     SQLInteger ( int64_t value );
     virtual std::string toString () const;
     int64_t toInt () const;

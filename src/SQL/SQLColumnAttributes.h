@@ -14,7 +14,7 @@ public:
     virtual std::string toString () const;
     virtual void resolve ( SQLParserContext *context );
     virtual void walk ( SQLTreeWalker *walker );
-    virtual SQLObject *clone () const;
+    virtual SQLColumnAttributes *clone () const;
     virtual void notNull ();
     virtual void null ();
     virtual void addDefault ( char *value );

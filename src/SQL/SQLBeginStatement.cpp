@@ -23,7 +23,7 @@ void SQLBeginStatement::walk ( SQLTreeWalker *walker ) {
 
 }
 
-SQLObject *SQLBeginStatement::clone () const {
+SQLBeginStatement *SQLBeginStatement::clone () const {
   return new SQLBeginStatement ();
 }
 

@@ -836,8 +836,8 @@ opt_uz: /* nil */ { $$ = 0; }
    ;
 
 opt_csc: /* nil */ { $$ = NULL; }
-   | opt_csc CHAR SET STRING { $$ = new SQLDataCollation($4); }
-   | opt_csc COLLATE STRING { $$ = new SQLDataCollation($3); }
+   | opt_csc CHAR SET STRING { $$ = new SQLDataCollation($4); free($4); }
+   | opt_csc COLLATE STRING { $$ = new SQLDataCollation($3); free($3); }
    ;
 
 data_type:

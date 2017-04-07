@@ -18,8 +18,9 @@ enum SQLComparisionType {
     NULL_EQUALS = 12
 };
 
-class SQLComparision : public SQLExpression {
+/*abstract*/ class SQLComparision : public SQLExpression {
 public:
+    EMPTY_CONSTRUCTOR(SQLComparision)
     SQLComparision ( SQLObject *left, SQLObject *right );
 /*
     inline const SQLObject *getLeft () const {

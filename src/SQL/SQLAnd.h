@@ -10,6 +10,7 @@
 
 class SQLAnd : public SQLExpression {
 public:
+    EMPTY_CONSTRUCTOR(SQLAnd)
     SQLAnd ( SQLObject *left, SQLObject *right );
     virtual std::string toString () const;
     virtual void resolve ( SQLParserContext *context );
