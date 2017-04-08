@@ -8,8 +8,8 @@ SQLIdentifier::SQLIdentifier () {
 }
 
 SQLIdentifier::SQLIdentifier ( const std::string &id ) {
-  if ( id.empty () ) {
-  } else if ( id.at ( 0 ) == '`' || id.at ( 0 ) == '"' ) {
+  if ( !id.empty () && ( ( id.at ( 0 ) == '`' && *( --id.end () ) == '`' ) ||
+                         ( id.at ( 0 ) == '"' && *( --id.end () ) == '"' ) ) ) {
     this->id = id.substr ( 1, id.size () - 2 );
   } else {
     this->id = id;

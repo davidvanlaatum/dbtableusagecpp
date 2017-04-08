@@ -46,7 +46,9 @@ APPMain::APPMain () : options ( "options" ), config ( "config" ) {
           ( "storage.commit", po::value<unsigned> ()->default_value ( 10 ), "Commit to database interval" )
           ( "monitor.host", po::value<std::string> (), "hostname to connect to for logs" )
           ( "monitor.user", po::value<std::string> (), "Username to connect with" )
-          ( "monitor.password", po::value<std::string> ()->default_value ( "" ), "password to connect with" );
+          ( "monitor.password", po::value<std::string> ()->default_value ( "" ), "password to connect with" )
+          ( "monitor.ignoredb", po::value<std::vector<std::string> > ()->multitoken ()->composing (), "ignore "
+            "databases" );
   options.add ( config );
 }
 
@@ -143,6 +145,10 @@ void APPMain::setupDriver ( SQLParserContext &driver, const boost::program_optio
   }
   driver.setDebug ( vm["debug"].as<int> () );
   driver.setVerbose ( vm["verbose"].as<int> () );
+  std::vector<std::string> ignoredb = vm["monitor.ignoredb"].as<std::vector<std::string> > ();
+  for ( std::vector<std::string>::iterator it = ignoredb.begin (); it != ignoredb.end (); ++it ) {
+    driver.addIgnoreDB ( *it );
+  }
 }
 
 void APPMain::parseConfig ( boost::program_options::variables_map &vm ) {

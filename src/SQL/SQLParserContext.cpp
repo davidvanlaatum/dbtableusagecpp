@@ -79,28 +79,30 @@ void SQLParserContext::push ( yy::location &yylloc, SQLStatement *statement ) {
     throw SQLParserFailedException ( yylloc, "null statement" );
   }
   statement->resolve ( this );
-  if ( verbose && statement->showAtVerboseLevel () <= verbose ) {
-    out () << yylloc << " " << *statement << std::endl;
-  }
-
-  if ( SQLSetStatement *set = dynamic_cast<SQLSetStatement *>(statement) ) {
-    for ( SQLSetStatement::ArgsType::const_iterator it = set->getArgs ().begin (); it != set->getArgs ().end ();
-          ++it ) {
-      if ( ( *it )->getName () == "TIMESTAMP" ) {
-        if ( SQLInteger *t = dynamic_cast<SQLInteger *> (( *it )->getValue ()) ) {
-          updateTime ( t->toInt () );
-        } else {
-          error () << yylloc << " invalid value for timestamp " << ( *it )->getValue () << std::endl;
-        }
-      }
-    }
-  }
-
   if ( SQLUseDatabase *use = dynamic_cast<SQLUseDatabase *>(statement) ) {
     setCurrentDatabase ( use->getName () );
   }
 
-  callback->statement ( yylloc, statement, this );
+  if ( notIgnored ( statement ) ) {
+    if ( verbose && statement->showAtVerboseLevel () <= verbose ) {
+      out () << yylloc << " " << *statement << std::endl;
+    }
+
+    if ( SQLSetStatement *set = dynamic_cast<SQLSetStatement *>(statement) ) {
+      for ( SQLSetStatement::ArgsType::const_iterator it = set->getArgs ().begin (); it != set->getArgs ().end ();
+            ++it ) {
+        if ( ( *it )->getName () == "TIMESTAMP" ) {
+          if ( SQLInteger *t = dynamic_cast<SQLInteger *> (( *it )->getValue ()) ) {
+            updateTime ( t->toInt () );
+          } else {
+            error () << yylloc << " invalid value for timestamp " << ( *it )->getValue () << std::endl;
+          }
+        }
+      }
+    }
+
+    callback->statement ( yylloc, statement, this );
+  }
 }
 
 std::string &SQLParserContext::getFileName () {
@@ -398,6 +400,31 @@ std::ostream &SQLParserContext::debug () const {
 
 void SQLParserContext::setFileName ( const std::string &fileName ) {
   SQLParserContext::fileName = fileName;
+}
+
+void SQLParserContext::addIgnoreDB ( std::string db ) {
+  ignoreDBs.push_back ( db );
+}
+
+bool SQLParserContext::notIgnored ( SQLStatement *pStatement ) {
+  bool rt = true;
+
+  SQLStatement::table_type tables;
+  pStatement->getTables ( tables );
+  size_t ignored = 0;
+  for ( SQLStatement::table_type::iterator it = tables.begin (); it != tables.end (); ++it ) {
+    for ( IgnoreDBs::iterator it2 = ignoreDBs.begin (); it2 != ignoreDBs.end (); ++it2 ) {
+      if ( it->first->getSchema ()->getId () == *it2 ) {
+        ignored++;
+        break;
+      }
+    }
+  }
+  if ( ignored == tables.size () && !tables.empty () ) {
+    rt = false;
+  }
+
+  return rt;
 }
 
 void yyerror ( location *yylloc, SQLParserContext &ctx, const char *s, ... ) {

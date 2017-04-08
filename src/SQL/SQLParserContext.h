@@ -6,6 +6,7 @@
 #define DBTABLEUSAGECPP_SQLPARSERCONTEXT_H
 
 #include <vector>
+#include <list>
 #include "location.hh"
 #include "SQLParserFailedException.h"
 #include "MySQLEventParser.h"
@@ -49,13 +50,14 @@ public:
     void appendMultiLine ( const char *buffer );
     char *getMultiLineBuffer ();
     FILE *getMultiLineBufferFile ();
-    bool returnMultiLineBufferAsFile() const;
-    void newMultiLineBuffer();
+    bool returnMultiLineBufferAsFile () const;
+    void newMultiLineBuffer ();
     void parseFile ( std::string file ) throw ( SQLParserFailedException );
     void parseFileHandle ( FILE *handle, std::string file )
     throw ( SQLParserFailedException );
     void parseString ( std::string buffer ) throw ( SQLParserFailedException );
     void parseStdIn () throw ( SQLParserFailedException );
+    void addIgnoreDB ( std::string db );
 
     inline bool shouldExit () {
       return isShouldExit;
@@ -87,6 +89,8 @@ private:
     size_t lastLineLen;
     size_t lineNum;
     size_t readBytes;
+    typedef std::list<std::string> IgnoreDBs;
+    IgnoreDBs ignoreDBs;
 
     void setCurrentDatabase ( boost::shared_ptr<SQLIdentifier> shared_ptr );
     void parse ( std::string file ) throw ( SQLParserFailedException );
@@ -95,6 +99,7 @@ private:
     void flushLex ();
     void scanString ( const char *str );
     void destroyLex ();
+    bool notIgnored ( SQLStatement *pStatement );
 };
 
 
