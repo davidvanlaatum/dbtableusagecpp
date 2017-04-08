@@ -145,9 +145,11 @@ void APPMain::setupDriver ( SQLParserContext &driver, const boost::program_optio
   }
   driver.setDebug ( vm["debug"].as<int> () );
   driver.setVerbose ( vm["verbose"].as<int> () );
-  std::vector<std::string> ignoredb = vm["monitor.ignoredb"].as<std::vector<std::string> > ();
-  for ( std::vector<std::string>::iterator it = ignoredb.begin (); it != ignoredb.end (); ++it ) {
-    driver.addIgnoreDB ( *it );
+  if (vm.count ("monitor.ignoredb")) {
+    std::vector<std::string> ignoredb = vm["monitor.ignoredb"].as<std::vector<std::string> > ();
+    for ( std::vector<std::string>::iterator it = ignoredb.begin (); it != ignoredb.end (); ++it ) {
+      driver.addIgnoreDB ( *it );
+    }
   }
 }
 

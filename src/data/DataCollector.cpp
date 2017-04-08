@@ -30,6 +30,8 @@ DataCollector::DataCollector () {
   pStore = NULL;
   inTransaction = false;
   commitInterval = 10;
+  transactions = 0;
+  lastTransactions = 0;
 }
 
 std::string toString ( time_t t ) {
