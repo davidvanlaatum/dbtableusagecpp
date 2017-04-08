@@ -125,8 +125,8 @@ void DataCollector::statement ( yy::location &location, SQLStatement *statement,
 
       std::cerr << std::setprecision ( 4 );
       std::cerr << toString ( context->currentTime () )
-                << " statements: " << statements << "(" << statements - lastStatements << ")"
-                << " transactions: " << transactions << "(" << transactions - lastTransactions << ")"
+                << " stmts: " << statements << "(" << statements - lastStatements << ")"
+                << " trans: " << transactions << "(" << transactions - lastTransactions << ")"
                 << " speed: " << std::setw ( 7 ) << speed << units
                 << " " << bytesToString ( bspeed ) << "/s"
                 << " logpos: " << bytesToString ( context->getLogPos () ) << logPosExtra.str ();

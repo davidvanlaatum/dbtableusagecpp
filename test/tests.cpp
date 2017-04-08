@@ -29,7 +29,6 @@ TEST( ScanBuffer, Buffer ) {
     ) )
   ), _ ) );
   driver.parseString ( "SET TIMESTAMP=123;");
-  ASSERT_THAT ( output.str (), ContainsRegex ( "TIMESTAMP=123" ) );
 }
 
 TEST ( ErrorTests, UnclosedComment ) {
