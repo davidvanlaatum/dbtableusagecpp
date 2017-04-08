@@ -12,6 +12,7 @@ namespace SQL {
   class SQLDataCollation;
 
   enum DataTypes {
+      UNKNOWN,
       BIGINT,
       BINARY,
       BIT,
@@ -46,7 +47,7 @@ namespace SQL {
   typedef DataTypes datatype;
   class SQLDataType : public SQLObject {
   public:
-      EMPTY_CONSTRUCTOR( SQLDataType )
+      EMPTY_CONSTRUCTORI( SQLDataType, type(UNKNOWN) )
       SQLDataType ( datatype type );
       SQLDataType ( datatype type, SQLDataLength *length );
       SQLDataType ( datatype type, SQLDataLength *length, int flag );

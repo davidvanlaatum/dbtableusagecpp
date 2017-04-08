@@ -6,6 +6,7 @@
 
 
 const char *SQL::SQLDataType::typeStrings[] = {
+  "UNKNOWN",
   "BIGINT",
   "BINARY",
   "BIT",

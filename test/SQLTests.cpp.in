@@ -21,3 +21,4 @@ TEST(type ## Test,TestToString) {\
 }
 
 #define EMPTY_CONSTRUCTOR(type) type () { }
+#define EMPTY_CONSTRUCTORI(type,init) type () : init { }
