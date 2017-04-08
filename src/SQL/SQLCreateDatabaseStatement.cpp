@@ -1,34 +1,34 @@
 #include "SQLCreateDatabaseStatement.h"
 
-SQLCreateDatabaseStatement::SQLCreateDatabaseStatement ( SQLIdentifier *name ) : name ( name ) {
+SQL::SQLCreateDatabaseStatement::SQLCreateDatabaseStatement ( SQLIdentifier *name ) : name ( name ) {
 }
 
-SQLCreateDatabaseStatement::~SQLCreateDatabaseStatement () {
+SQL::SQLCreateDatabaseStatement::~SQLCreateDatabaseStatement () {
   name.reset ();
 }
 
-void SQLCreateDatabaseStatement::getTables ( SQLStatement::table_type &rt ) const {
+void SQL::SQLCreateDatabaseStatement::getTables ( SQLStatement::table_type &rt ) const {
 
 }
 
-std::string SQLCreateDatabaseStatement::toString () const {
+std::string SQL::SQLCreateDatabaseStatement::toString () const {
   return "CREATE DATABASE " + SQLObject::toString ( name );
 }
 
-void SQLCreateDatabaseStatement::resolve ( SQLParserContext *context ) {
+void SQL::SQLCreateDatabaseStatement::resolve ( SQLParserContext *context ) {
 // TODO
 }
 
-void SQLCreateDatabaseStatement::walk ( SQLTreeWalker *walker ) {
+void SQL::SQLCreateDatabaseStatement::walk ( SQLTreeWalker *walker ) {
 // TODO
 }
 
-SQLCreateDatabaseStatement *SQLCreateDatabaseStatement::clone () const {
+SQL::SQLCreateDatabaseStatement *SQL::SQLCreateDatabaseStatement::clone () const {
   SQLCreateDatabaseStatement *rt = new SQLCreateDatabaseStatement ( NULL );
   rt->name = name;
   return rt;
 }
 
-size_t SQLCreateDatabaseStatement::showAtVerboseLevel () const {
+size_t SQL::SQLCreateDatabaseStatement::showAtVerboseLevel () const {
   return 1;
 }

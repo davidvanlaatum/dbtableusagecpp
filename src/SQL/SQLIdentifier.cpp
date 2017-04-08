@@ -4,10 +4,10 @@
 
 #include "SQLIdentifier.h"
 
-SQLIdentifier::SQLIdentifier () {
+SQL::SQLIdentifier::SQLIdentifier () {
 }
 
-SQLIdentifier::SQLIdentifier ( const std::string &id ) {
+SQL::SQLIdentifier::SQLIdentifier ( const std::string &id ) {
   if ( !id.empty () && ( ( id.at ( 0 ) == '`' && *( --id.end () ) == '`' ) ||
                          ( id.at ( 0 ) == '"' && *( --id.end () ) == '"' ) ) ) {
     this->id = id.substr ( 1, id.size () - 2 );
@@ -16,22 +16,22 @@ SQLIdentifier::SQLIdentifier ( const std::string &id ) {
   }
 }
 
-std::string SQLIdentifier::toString () const {
+std::string SQL::SQLIdentifier::toString () const {
   return "`" + id + "`";
 }
 
-SQLIdentifier::operator std::string () const {
+SQL::SQLIdentifier::operator std::string () const {
   return id;
 }
 
-void SQLIdentifier::resolve ( SQLParserContext *context ) {
+void SQL::SQLIdentifier::resolve ( SQLParserContext *context ) {
 
 }
 
-void SQLIdentifier::walk ( SQLTreeWalker *walker ) {
+void SQL::SQLIdentifier::walk ( SQLTreeWalker *walker ) {
 
 }
 
-SQLIdentifier *SQLIdentifier::clone () const {
+SQL::SQLIdentifier *SQL::SQLIdentifier::clone () const {
   return new SQLIdentifier ( id );
 }

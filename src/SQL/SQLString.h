@@ -6,17 +6,19 @@
 #define DBTABLEUSAGECPP_SQLSTRING_H
 
 #include "SQLObject.h"
-class SQLString : public SQLObject {
-public:
-    EMPTY_CONSTRUCTOR(SQLString)
-    SQLString ( const std::string &value );
-    virtual std::string toString () const;
-    virtual void resolve ( SQLParserContext *context );
-    virtual void walk ( SQLTreeWalker *walker );
-    virtual SQLString *clone () const;
-private:
-    std::string value;
-};
+namespace SQL {
+  class SQLString : public SQLObject {
+  public:
+      EMPTY_CONSTRUCTOR( SQLString )
+      SQLString ( const std::string &value );
+      virtual std::string toString () const;
+      virtual void resolve ( SQLParserContext *context );
+      virtual void walk ( SQLTreeWalker *walker );
+      virtual SQLString *clone () const;
+  private:
+      std::string value;
+  };
+}
 
 
 #endif //DBTABLEUSAGECPP_SQLSTRING_H

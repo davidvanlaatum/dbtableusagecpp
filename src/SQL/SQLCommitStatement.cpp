@@ -4,30 +4,30 @@
 
 #include "SQLCommitStatement.h"
 
-SQLCommitStatement::~SQLCommitStatement () {
+SQL::SQLCommitStatement::~SQLCommitStatement () {
 
 }
 
-std::string SQLCommitStatement::toString () const {
+std::string SQL::SQLCommitStatement::toString () const {
   return "COMMIT";
 }
 
-void SQLCommitStatement::resolve ( SQLParserContext *context ) {
+void SQL::SQLCommitStatement::resolve ( SQLParserContext *context ) {
 
 }
 
-void SQLCommitStatement::walk ( SQLTreeWalker *walker ) {
+void SQL::SQLCommitStatement::walk ( SQLTreeWalker *walker ) {
 
 }
 
-SQLCommitStatement *SQLCommitStatement::clone () const {
+SQL::SQLCommitStatement *SQL::SQLCommitStatement::clone () const {
   return new SQLCommitStatement ();
 }
 
-void SQLCommitStatement::getTables ( SQLStatement::table_type &rt ) const {
+void SQL::SQLCommitStatement::getTables ( SQLStatement::table_type &rt ) const {
 
 }
 
-size_t SQLCommitStatement::showAtVerboseLevel () const {
+size_t SQL::SQLCommitStatement::showAtVerboseLevel () const {
   return 2;
 }

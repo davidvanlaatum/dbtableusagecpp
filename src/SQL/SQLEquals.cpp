@@ -4,13 +4,13 @@
 
 #include "SQLEquals.h"
 
-SQLEquals::SQLEquals ( SQLObject *left, SQLObject *right ) : SQLComparision ( left, right ) {
+SQL::SQLEquals::SQLEquals ( SQLObject *left, SQLObject *right ) : SQLComparision ( left, right ) {
 }
 
-std::string SQLEquals::toString () const {
+std::string SQL::SQLEquals::toString () const {
   return SQLObject::toString ( left ) + " = " + SQLObject::toString ( right );
 }
 
-SQLEquals *SQLEquals::clone () const {
+SQL::SQLEquals *SQL::SQLEquals::clone () const {
   return new SQLEquals ( left ? left->clone () : NULL, right ? right->clone () : NULL );
 }

@@ -6,10 +6,10 @@
 #define DBTABLEUSAGECPP_SQLEXPRESSION_H
 
 #include "SQLObject.h"
-
+namespace SQL {
 /*abstract*/ class SQLExpression : public SQLObject {
 
-};
-
+  };
+}
 
 #endif //DBTABLEUSAGECPP_SQLEXPRESSION_H

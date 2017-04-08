@@ -4,30 +4,30 @@
 
 #include "SQLRollbackStatement.h"
 
-SQLRollbackStatement::~SQLRollbackStatement () {
+SQL::SQLRollbackStatement::~SQLRollbackStatement () {
 
 }
 
-std::string SQLRollbackStatement::toString () const {
+std::string SQL::SQLRollbackStatement::toString () const {
   return "ROLLBACK";
 }
 
-void SQLRollbackStatement::resolve ( SQLParserContext *context ) {
+void SQL::SQLRollbackStatement::resolve ( SQLParserContext *context ) {
 
 }
 
-void SQLRollbackStatement::walk ( SQLTreeWalker *walker ) {
+void SQL::SQLRollbackStatement::walk ( SQLTreeWalker *walker ) {
 
 }
 
-SQLRollbackStatement *SQLRollbackStatement::clone () const {
+SQL::SQLRollbackStatement *SQL::SQLRollbackStatement::clone () const {
   return new SQLRollbackStatement ();
 }
 
-void SQLRollbackStatement::getTables ( SQLStatement::table_type &rt ) const {
+void SQL::SQLRollbackStatement::getTables ( SQLStatement::table_type &rt ) const {
 
 }
 
-size_t SQLRollbackStatement::showAtVerboseLevel () const {
+size_t SQL::SQLRollbackStatement::showAtVerboseLevel () const {
   return 2;
 }

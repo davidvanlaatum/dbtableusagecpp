@@ -4,7 +4,7 @@
 
 #include "MySQLBinLogDeleteRowsEvent.h"
 
-MySQLBinLogDeleteRowsEvent::MySQLBinLogDeleteRowsEvent ( mysql_event *pEvent, MySQLEventParser *pParser ) {
+SQL::MySQLBinLogDeleteRowsEvent::MySQLBinLogDeleteRowsEvent ( mysql_event *pEvent, MySQLEventParser *pParser ) {
   uint64_t id;
   pParser->extractTableID ( (char *) ( pEvent + 1 ), id, pParser->getHeaderLen ( pEvent->type ) );
   MySQLTableMapEntry *table = pParser->getTable ( id );
@@ -13,10 +13,10 @@ MySQLBinLogDeleteRowsEvent::MySQLBinLogDeleteRowsEvent ( mysql_event *pEvent, My
     = SQLStatement::WRITE | SQLStatement::DELETE;
 }
 
-MySQLBinLogDeleteRowsEvent::~MySQLBinLogDeleteRowsEvent () {
+SQL::MySQLBinLogDeleteRowsEvent::~MySQLBinLogDeleteRowsEvent () {
   tables.clear ();
 }
 
-SQLStatement::table_type MySQLBinLogDeleteRowsEvent::getTables () const {
+SQL::SQLStatement::table_type SQL::MySQLBinLogDeleteRowsEvent::getTables () const {
   return tables;
 }

@@ -4,7 +4,7 @@
 
 #include "SQLStatement.h"
 
-SQLStatement::~SQLStatement () {
+SQL::SQLStatement::~SQLStatement () {
 
 }
 

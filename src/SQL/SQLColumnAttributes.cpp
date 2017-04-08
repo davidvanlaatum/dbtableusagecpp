@@ -4,58 +4,58 @@
 
 #include "SQLColumnAttributes.h"
 
-SQLColumnAttributes::SQLColumnAttributes () {
+SQL::SQLColumnAttributes::SQLColumnAttributes () {
   isNull = true;
 }
 
-SQLColumnAttributes::~SQLColumnAttributes () {
+SQL::SQLColumnAttributes::~SQLColumnAttributes () {
 
 }
 
-std::string SQLColumnAttributes::toString () const {
+std::string SQL::SQLColumnAttributes::toString () const {
   return "COLUMN ATTRIBUTES"; // TODO
 }
 
-void SQLColumnAttributes::resolve ( SQLParserContext *context ) {
+void SQL::SQLColumnAttributes::resolve ( SQLParserContext *context ) {
 // TODO
 }
 
-void SQLColumnAttributes::walk ( SQLTreeWalker *walker ) {
+void SQL::SQLColumnAttributes::walk ( SQLTreeWalker *walker ) {
 // TODO
 }
 
-SQLColumnAttributes *SQLColumnAttributes::clone () const {
+SQL::SQLColumnAttributes *SQL::SQLColumnAttributes::clone () const {
   return new SQLColumnAttributes (); // TODO
 }
 
-void SQLColumnAttributes::notNull () {
+void SQL::SQLColumnAttributes::notNull () {
   isNull = false;
 }
 
-void SQLColumnAttributes::null () {
+void SQL::SQLColumnAttributes::null () {
   isNull = true;
 }
 
-void SQLColumnAttributes::addDefault ( char *value ) {
+void SQL::SQLColumnAttributes::addDefault ( char *value ) {
   defaultString = value;
 }
 
-void SQLColumnAttributes::addDefault ( int value ) {
+void SQL::SQLColumnAttributes::addDefault ( int value ) {
   defaultInt = value;
 }
 
-void SQLColumnAttributes::addDefault ( double value ) {
+void SQL::SQLColumnAttributes::addDefault ( double value ) {
   defaultDouble = value;
 }
 
-void SQLColumnAttributes::addDefault ( bool value ) {
+void SQL::SQLColumnAttributes::addDefault ( bool value ) {
   defaultBool = value;
 }
 
-void SQLColumnAttributes::autoIncrement () {
+void SQL::SQLColumnAttributes::autoIncrement () {
   isAutoIncrement = true;
 }
 
-void SQLColumnAttributes::addComment ( char *value ) {
+void SQL::SQLColumnAttributes::addComment ( char *value ) {
   comment = value;
 }

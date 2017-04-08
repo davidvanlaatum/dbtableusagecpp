@@ -4,7 +4,7 @@
 
 #include "MySQLBinLogUpdateRowsEvent.h"
 
-MySQLBinLogUpdateRowsEvent::MySQLBinLogUpdateRowsEvent ( mysql_event *pEvent, MySQLEventParser *pParser ) {
+SQL::MySQLBinLogUpdateRowsEvent::MySQLBinLogUpdateRowsEvent ( mysql_event *pEvent, MySQLEventParser *pParser ) {
   uint64_t id;
   pParser->extractTableID ( (char *) ( pEvent + 1 ), id, pParser->getHeaderLen ( pEvent->type ) );
   MySQLTableMapEntry *table = pParser->getTable ( id );
@@ -13,10 +13,10 @@ MySQLBinLogUpdateRowsEvent::MySQLBinLogUpdateRowsEvent ( mysql_event *pEvent, My
     = SQLStatement::WRITE | SQLStatement::UPDATE;
 }
 
-MySQLBinLogUpdateRowsEvent::~MySQLBinLogUpdateRowsEvent () {
+SQL::MySQLBinLogUpdateRowsEvent::~MySQLBinLogUpdateRowsEvent () {
   tables.clear ();
 }
 
-SQLStatement::table_type MySQLBinLogUpdateRowsEvent::getTables () const {
+SQL::SQLStatement::table_type SQL::MySQLBinLogUpdateRowsEvent::getTables () const {
   return tables;
 }

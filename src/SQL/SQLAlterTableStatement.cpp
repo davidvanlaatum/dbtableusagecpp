@@ -4,7 +4,7 @@
 
 #include "SQLAlterTableStatement.h"
 
-SQLAlterTableStatement::SQLAlterTableStatement ( SQLTable *table, SQLObjectList<> *opts ) : table ( table ) {
+SQL::SQLAlterTableStatement::SQLAlterTableStatement ( SQLTable *table, SQLObjectList<> *opts ) : table ( table ) {
   if (opts) {
     for ( SQLObjectList<>::iterator it = opts->begin (); it != opts->end (); ++it ) {
       operations.push ( *it );
@@ -13,38 +13,38 @@ SQLAlterTableStatement::SQLAlterTableStatement ( SQLTable *table, SQLObjectList<
   }
 }
 
-SQLAlterTableStatement::~SQLAlterTableStatement () {
+SQL::SQLAlterTableStatement::~SQLAlterTableStatement () {
 
 }
 
-std::string SQLAlterTableStatement::toString () const {
+std::string SQL::SQLAlterTableStatement::toString () const {
   return "ALTER TABLE " + operations.toString ();
 }
 
-void SQLAlterTableStatement::resolve ( SQLParserContext *context ) {
+void SQL::SQLAlterTableStatement::resolve ( SQLParserContext *context ) {
   if ( table ) {
     table->resolve ( context );
   }
 }
 
-void SQLAlterTableStatement::walk ( SQLTreeWalker *walker ) {
+void SQL::SQLAlterTableStatement::walk ( SQLTreeWalker *walker ) {
   if ( table ) {
     walker->walk ( table.get () );
   }
 }
 
-SQLAlterTableStatement *SQLAlterTableStatement::clone () const {
+SQL::SQLAlterTableStatement *SQL::SQLAlterTableStatement::clone () const {
   SQLAlterTableStatement *statement = new SQLAlterTableStatement ( NULL, NULL );
   statement->table = table;
   return statement;
 }
 
-void SQLAlterTableStatement::getTables ( SQLStatement::table_type &rt ) const {
+void SQL::SQLAlterTableStatement::getTables ( SQLStatement::table_type &rt ) const {
   if ( table ) {
     rt[table] = ALTER;
   }
 }
 
-size_t SQLAlterTableStatement::showAtVerboseLevel () const {
+size_t SQL::SQLAlterTableStatement::showAtVerboseLevel () const {
   return 1;
 }

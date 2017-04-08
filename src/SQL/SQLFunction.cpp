@@ -4,25 +4,25 @@
 #include <boost/algorithm/string.hpp>
 #include "SQLFunction.h"
 
-SQLFunction::SQLFunction ( SQLIdentifier *identifier, SQLObjectList<> *args ) : name ( identifier ), args ( args ) {
+SQL::SQLFunction::SQLFunction ( SQLIdentifier *identifier, SQLObjectList<> *args ) : name ( identifier ), args ( args ) {
 
 }
 
-std::string SQLFunction::toString () const {
-  return SQLObject::toString ( name ) + SQLObject::toString ( args );
+std::string SQL::SQLFunction::toString () const {
+  return SQL::SQLObject::toString ( name ) + SQLObject::toString ( args );
 }
 
-void SQLFunction::resolve ( SQLParserContext *context ) {
+void SQL::SQLFunction::resolve ( SQLParserContext *context ) {
   args->resolve ( context );
 }
 
-void SQLFunction::walk ( SQLTreeWalker *walker ) {
+void SQL::SQLFunction::walk ( SQLTreeWalker *walker ) {
   if ( name ) {
     walker->walk ( name.get () );
   }
   walker->walk ( args.get () );
 }
 
-SQLFunction *SQLFunction::clone () const {
+SQL::SQLFunction *SQL::SQLFunction::clone () const {
   return new SQLFunction ( name ? name->clone () : NULL, args ? args->clone () : NULL );
 }

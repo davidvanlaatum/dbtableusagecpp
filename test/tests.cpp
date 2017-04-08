@@ -12,6 +12,7 @@
 #include <SQLParserCallback.h>
 
 using namespace testing;
+using namespace SQL;
 
 MATCHER_P2 ( HasVariableWithIntValue, name, value, "" ) {
   SQLInteger *valueptr = dynamic_cast<SQLInteger *> ( arg->getValue ());

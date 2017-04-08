@@ -5,6 +5,7 @@
 %define parser_class_name "SQLParser"
 %debug
 %error-verbose
+%token-table
 %{
 #include <stdlib.h>
 #include <stdarg.h>
@@ -45,6 +46,7 @@ std::string format(const char *s, ... );
 #include "SQLAnd.h"
 #include "SQLOr.h"
 #include "SQLEquals.h"
+namespace SQL {
 class SQLStatement;
 class SQLIdentifier;
 class SQLTable;
@@ -55,9 +57,10 @@ class SQLDataCollation;
 class SQLColumnAttributes;
 class SQLColumnDefinition;
 }
+}
 
-%parse-param { SQLParserContext &ctx }
-%lex-param   { SQLParserContext &ctx }
+%parse-param { SQL::SQLParserContext &ctx }
+%lex-param   { SQL::SQLParserContext &ctx }
 
 %union {
   int intval;
@@ -65,25 +68,25 @@ class SQLColumnDefinition;
   char *strval;
   int subtok;
   bool flag;
-  SQLObject *sqlval;
-  SQLObjectList<> *listval;
-  SQLStatement *statement;
-  SQLIdentifier *id;
-  SQLTable *table;
-  SQLColumn *column;
-  SQLComparisionType comparisionType;
+  SQL::SQLObject *sqlval;
+  SQL::SQLObjectList<> *listval;
+  SQL::SQLStatement *statement;
+  SQL::SQLIdentifier *id;
+  SQL::SQLTable *table;
+  SQL::SQLColumn *column;
+  SQL::SQLComparisionType comparisionType;
   FILE *file;
-  SQLDataType *dataType;
-  SQLDataLength *dataLength;
-  SQLDataCollation *dataCollation;
-  SQLColumnAttributes *collumnAttributes;
-  SQLColumnDefinition *columnDefinition;
+  SQL::SQLDataType *dataType;
+  SQL::SQLDataLength *dataLength;
+  SQL::SQLDataCollation *dataCollation;
+  SQL::SQLColumnAttributes *collumnAttributes;
+  SQL::SQLColumnDefinition *columnDefinition;
 }
 
 %{
   extern int yylex(yy::SQLParser::semantic_type *yylval,
        yy::SQLParser::location_type* yylloc,
-       SQLParserContext &ctx);
+       SQL::SQLParserContext &ctx);
   extern char *yytext;
 %}
 
@@ -356,6 +359,8 @@ class SQLColumnDefinition;
 %token <file>MLSTRING
 %token MODIFY
 %token ENCRYPTION
+%token JSON
+%token NUMERIC
 
  /* functions with special syntax */
 %token FSUBSTRING
@@ -380,8 +385,8 @@ class SQLColumnDefinition;
 %type <statement> set_stmt select_stmt delete_stmt insert_stmt replace_stmt update_stmt create_database_stmt
 %type <statement> create_table_stmt use_stmt binlog_stmt alter_table_stmt
 %type <listval> set_list opt_groupby opt_orderby opt_into_list insert_vals_list opt_val_list val_list insert_vals
-%type <listval> create_col_list alter_table_opts enum_list
-%type <sqlval> expr set_expr opt_where opt_having opt_limit set_value alter_table_op
+%type <listval> create_col_list alter_table_opts enum_list table_options
+%type <sqlval> expr set_expr opt_where opt_having opt_limit set_value alter_table_op table_option
 %type <id> opt_as_alias identifier
 %type <table> table_name
 %type <column> column_name
@@ -424,21 +429,21 @@ stmt: savepoint_stmt;
 opt_column: | COLUMN;
 
 alter_table_stmt: ALTER TABLE table_name alter_table_opts {
-  $$ = new SQLAlterTableStatement($3,$4);
+  $$ = new SQL::SQLAlterTableStatement($3,$4);
   delete $4;
 };
 
 alter_table_opts: alter_table_op {
-  $$ = new SQLObjectList<>();
+  $$ = new SQL::SQLObjectList<>();
   $$->push($1);
 } | alter_table_opts ',' alter_table_op {
   $$ = $1;
   $1->push ( $3 );
 };
 
-alter_table_op: ADD opt_column create_definition { $$ = new SQLTableAddColumn($3); };
-alter_table_op: DROP opt_column column_name { $$ = new SQLTableDropColumn($3); };
-alter_table_op: MODIFY opt_column create_definition { $$ = new SQLTableModifyColumn($3); };
+alter_table_op: ADD opt_column create_definition { $$ = new SQL::SQLTableAddColumn($3); };
+alter_table_op: DROP opt_column column_name { $$ = new SQL::SQLTableDropColumn($3); };
+alter_table_op: MODIFY opt_column create_definition { $$ = new SQL::SQLTableModifyColumn($3); };
 
 stmt: alter_table_stmt {
   ctx.push(@$,$1);
@@ -605,22 +610,22 @@ stmt: delete_stmt { ctx.push(@$,$1); }
    ;
 
 table_name: identifier {
-    $$ = new SQLTable($1);
+    $$ = new SQL::SQLTable($1);
 } | identifier '.' identifier {
-    $$ = new SQLTable($1,$3);
+    $$ = new SQL::SQLTable($1,$3);
 };
 
 column_name: identifier {
-    $$ = new SQLColumn($1);
+    $$ = new SQL::SQLColumn($1);
 } | identifier '.' identifier {
-    $$ = new SQLColumn(new SQLTable($1),$3);
+    $$ = new SQL::SQLColumn(new SQL::SQLTable($1),$3);
 } | identifier '.' identifier '.' identifier {
-    $$ = new SQLColumn(new SQLTable($1,$3),$5);
+    $$ = new SQL::SQLColumn(new SQL::SQLTable($1,$3),$5);
 };
 
 delete_stmt: DELETE delete_opts FROM table_name
     opt_where opt_orderby opt_limit {
-      $$ = new SQLDeleteStatement($4,$5);
+      $$ = new SQL::SQLDeleteStatement($4,$5);
 };
 
 delete_opts: delete_opts LOW_PRIORITY { $$ = $1 + 01; }
@@ -680,10 +685,10 @@ insert_vals_list: '(' insert_vals ')' { $$ = $2; }
    | insert_vals_list ',' '(' insert_vals ')' { $$ = NULL; emit("VALUES %d", $4); }
 
 insert_vals:
-     expr { $$ = new SQLObjectList<>(); $$->push($1); }
-   | DEFAULT { $$ = new SQLObjectList<>(); $$->push(new SQLDefault()); }
+     expr { $$ = new SQL::SQLObjectList<>(); $$->push($1); }
+   | DEFAULT { $$ = new SQL::SQLObjectList<>(); $$->push(new SQL::SQLDefault()); }
    | insert_vals ',' expr { $$->push($3); }
-   | insert_vals ',' DEFAULT { $$->push(new SQLDefault()); }
+   | insert_vals ',' DEFAULT { $$->push(new SQL::SQLDefault()); }
    ;
 
 insert_stmt: INSERT insert_opts opt_into NAME
@@ -699,16 +704,16 @@ insert_stmt: INSERT insert_opts opt_into NAME opt_col_names
 
 insert_asgn_list:
      NAME COMPARISON expr
-     { if ($2 != EQUALTO) error(@$,format("bad insert assignment to %s", $1));
+     { if ($2 != SQL::EQUALTO) error(@$,format("bad insert assignment to %s", $1));
        $$ = NULL; emit("ASSIGN %s", $1); free($1); $$ = 1; }
    | NAME COMPARISON DEFAULT
-               { if ($2 != EQUALTO) error(@$,format("bad insert assignment to %s", $1));
+               { if ($2 != SQL::EQUALTO) error(@$,format("bad insert assignment to %s", $1));
                  $$ = NULL; emit("DEFAULT"); $$ = NULL; emit("ASSIGN %s", $1); free($1); $$ = 1; }
    | insert_asgn_list ',' NAME COMPARISON expr
-               { if ($4 != EQUALTO) error(@$,format("bad insert assignment to %s", $1));
+               { if ($4 != SQL::EQUALTO) error(@$,format("bad insert assignment to %s", $1));
                  $$ = NULL; emit("ASSIGN %s", $3); free($3); $$ = $1 + 1; }
    | insert_asgn_list ',' NAME COMPARISON DEFAULT
-               { if ($4 != EQUALTO) error(@$,format("bad insert assignment to %s", $1));
+               { if ($4 != SQL::EQUALTO) error(@$,format("bad insert assignment to %s", $1));
                  $$ = NULL; emit("DEFAULT"); $$ = NULL; emit("ASSIGN %s", $3); free($3); $$ = $1 + 1; }
    ;
 
@@ -718,7 +723,7 @@ stmt: replace_stmt { ctx.push(@$,$1); };
 replace_stmt: REPLACE insert_opts opt_into table_name
      opt_col_names
      VALUES insert_vals_list
-     opt_ondupupdate { $$ = new SQLReplaceIntoStatement($4,$7); }
+     opt_ondupupdate { $$ = new SQL::SQLReplaceIntoStatement($4,$7); }
    ;
 
 replace_stmt: REPLACE insert_opts opt_into NAME
@@ -748,16 +753,16 @@ update_opts: /* nil */ { $$ = 0; }
 
 update_asgn_list:
      NAME COMPARISON expr
-       { if ($2 != EQUALTO) error(@$,format("bad insert assignment to %s", $1));
+       { if ($2 != SQL::EQUALTO) error(@$,format("bad insert assignment to %s", $1));
    $$ = NULL; emit("ASSIGN %s", $1); free($1); $$ = 1; }
    | NAME '.' NAME COMPARISON expr
-       { if ($4 != EQUALTO) error(@$,format("bad insert assignment to %s", $1));
+       { if ($4 != SQL::EQUALTO) error(@$,format("bad insert assignment to %s", $1));
    $$ = NULL; emit("ASSIGN %s.%s", $1, $3); free($1); free($3); $$ = 1; }
    | update_asgn_list ',' NAME COMPARISON expr
-       { if ($4 != EQUALTO) error(@$,format("bad insert assignment to %s", $3));
+       { if ($4 != SQL::EQUALTO) error(@$,format("bad insert assignment to %s", $3));
    $$ = NULL; emit("ASSIGN %s.%s", $3); free($3); $$ = $1 + 1; }
    | update_asgn_list ',' NAME '.' NAME COMPARISON expr
-       { if ($6 != EQUALTO) error(@$,format("bad insert assignment to %s.$s", $3, $5));
+       { if ($6 != SQL::EQUALTO) error(@$,format("bad insert assignment to %s.$s", $3, $5));
    $$ = NULL; emit("ASSIGN %s.%s", $3, $5); free($3); free($5); $$ = 1; }
    ;
 
@@ -768,8 +773,8 @@ stmt: create_database_stmt { ctx.push(@$,$1); }
    ;
 
 create_database_stmt:
-     CREATE DATABASE opt_if_not_exists identifier { $$ = new SQLCreateDatabaseStatement($4); }
-   | CREATE SCHEMA opt_if_not_exists identifier { $$ = new SQLCreateDatabaseStatement($4); }
+     CREATE DATABASE opt_if_not_exists identifier { $$ = new SQL::SQLCreateDatabaseStatement($4); }
+   | CREATE SCHEMA opt_if_not_exists identifier { $$ = new SQL::SQLCreateDatabaseStatement($4); }
    ;
 
 opt_if_not_exists:  /* nil */ { $$ = false; }
@@ -781,9 +786,10 @@ opt_if_not_exists:  /* nil */ { $$ = false; }
    /** create table **/
 stmt: create_table_stmt { ctx.push(@$,$1); };
 
-create_table_stmt: CREATE opt_temporary TABLE opt_if_not_exists table_name '(' create_col_list ')' {
-  $$ = new SQLCreateTableStatement($2, $4, $5, $7);
+create_table_stmt: CREATE opt_temporary TABLE opt_if_not_exists table_name '(' create_col_list ')' table_options {
+  $$ = new SQL::SQLCreateTableStatement($2, $4, $5, $7, $9);
   delete $7;
+  if( $9 ) delete $9;
 };
 
 create_table_stmt: CREATE opt_temporary TABLE opt_if_not_exists table_name '(' create_col_list ')'
@@ -793,12 +799,12 @@ create_select_statement { $$ = NULL; emit("CREATESELECT %d %d %d %s", $2, $4, $7
 create_table_stmt: CREATE opt_temporary TABLE opt_if_not_exists table_name create_select_statement { $$ = NULL; emit("CREATESELECT %d %d 0 %s", $2, $4, $5); free($5); }
     ;
 
-create_col_list: create_definition { $$ = new SQLObjectList<>(); $$->push($1); }
+create_col_list: create_definition { $$ = new SQL::SQLObjectList<>(); $$->push($1); }
     | create_col_list ',' create_definition { $$ = $1; $$->push($3); }
     ;
 
 create_definition: identifier data_type column_atts
-                   { $$ = new SQLColumnDefinition($1,$2,$3); }
+                   { $$ = new SQL::SQLColumnDefinition($1,$2,$3); }
 
     | PRIMARY KEY '(' column_list ')'    { $$ = NULL; emit("PRIKEY %d", $4); }
     | KEY '(' column_list ')'            { $$ = NULL; emit("KEY %d", $3); }
@@ -807,7 +813,20 @@ create_definition: identifier data_type column_atts
     | FULLTEXT KEY '(' column_list ')'   { $$ = NULL; emit("TEXTINDEX %d", $4); }
     ;
 
-column_atts: /* nil */ { $$ = new SQLColumnAttributes(); }
+table_options: { $$ = NULL; } | table_option {
+  $$ = new SQL::SQLObjectList<>();
+  $$->push($1);
+} | table_options ',' table_option {
+  $$ = $1;
+  $$->push ( $3 );
+};
+
+table_option: ENCRYPTION COMPARISON STRING {
+  $$ = new SQL::SQLSetPair("ENCRYPTION",new SQL::SQLString($3));
+  free($3);
+};
+
+column_atts: /* nil */ { $$ = new SQL::SQLColumnAttributes(); }
     | column_atts NOT NULLX             { $$ = $1; $$->notNull(); }
     | column_atts NULLX                 { $$ = $1; $$->null(); }
     | column_atts DEFAULT STRING        { $$ = $1; $$->addDefault($3); free($3); }
@@ -823,8 +842,8 @@ column_atts: /* nil */ { $$ = new SQLColumnAttributes(); }
     ;
 
 opt_length: /* nil */ { $$ = NULL; }
-   | '(' INTNUM ')' { $$ = new SQLDataLength($2); }
-   | '(' INTNUM ',' INTNUM ')' { $$ = new SQLDataLength($2,$4); }
+   | '(' INTNUM ')' { $$ = new SQL::SQLDataLength($2); }
+   | '(' INTNUM ',' INTNUM ')' { $$ = new SQL::SQLDataLength($2,$4); }
    ;
 
 opt_binary: /* nil */ { $$ = 0; }
@@ -837,45 +856,47 @@ opt_uz: /* nil */ { $$ = 0; }
    ;
 
 opt_csc: /* nil */ { $$ = NULL; }
-   | opt_csc CHAR SET STRING { $$ = new SQLDataCollation($4); free($4); }
-   | opt_csc COLLATE STRING { $$ = new SQLDataCollation($3); free($3); }
+   | opt_csc CHAR SET STRING { $$ = new SQL::SQLDataCollation($4); free($4); }
+   | opt_csc COLLATE STRING { $$ = new SQL::SQLDataCollation($3); free($3); }
    ;
 
 data_type:
-     BIT opt_length { $$ = new SQLDataType(token::BIT); }
-   | TINYINT opt_length opt_uz { $$ = new SQLDataType(token::TINYINT,$2,$3); }
-   | SMALLINT opt_length opt_uz { $$ = new SQLDataType(token::SMALLINT,$2,$3); }
-   | MEDIUMINT opt_length opt_uz { $$ = new SQLDataType(token::MEDIUMINT,$2,$3); }
-   | INT opt_length opt_uz { $$ = new SQLDataType(token::INT,$2,$3); }
-   | INTEGER opt_length opt_uz { $$ = new SQLDataType(token::INTEGER,$2,$3); }
-   | BIGINT opt_length opt_uz { $$ = new SQLDataType(token::BIGINT,$2,$3); }
-   | REAL opt_length opt_uz { $$ = new SQLDataType(token::REAL,$2,$3); }
-   | DOUBLE opt_length opt_uz { $$ = new SQLDataType(token::DOUBLE,$2,$3); }
-   | FLOAT opt_length opt_uz { $$ = new SQLDataType(token::FLOAT,$2,$3); }
-   | DECIMAL opt_length opt_uz { $$ = new SQLDataType(token::DECIMAL,$2,$3); }
-   | DATE { $$ = new SQLDataType(token::DATE); }
-   | TIME { $$ = new SQLDataType(token::TIME); }
-   | TIMESTAMP { $$ = new SQLDataType(token::TIMESTAMP); }
-   | DATETIME  { $$ = new SQLDataType(token::DATETIME); }
-   | YEAR { $$ = new SQLDataType(token::YEAR); }
-   | CHAR opt_length opt_csc { $$ = new SQLDataType(token::CHAR,$2,$3); }
-   | VARCHAR '(' INTNUM ')' opt_csc { $$ = new SQLDataType(token::VARCHAR,new SQLDataLength($3),$5); }
-   | BINARY opt_length { $$ = new SQLDataType(token::BINARY,$2); }
-   | VARBINARY '(' INTNUM ')' { $$ = new SQLDataType(token::VARBINARY,new SQLDataLength($3)); }
-   | TINYBLOB { $$ = new SQLDataType(token::TINYBLOB); }
-   | BLOB { $$ = new SQLDataType(token::BLOB); }
-   | MEDIUMBLOB { $$ = new SQLDataType(token::MEDIUMBLOB); }
-   | LONGBLOB { $$ = new SQLDataType(token::LONGBLOB); }
-   | TINYTEXT opt_binary opt_csc { $$ = new SQLDataType(token::TINYTEXT,$3,$2); }
-   | TEXT opt_binary opt_csc { $$ = new SQLDataType(token::TEXT,$3,$2); }
-   | MEDIUMTEXT opt_binary opt_csc { $$ = new SQLDataType(token::MEDIUMTEXT,$3,$2); }
-   | LONGTEXT opt_binary opt_csc { $$ = new SQLDataType(token::LONGTEXT,$3,$2); }
-   | ENUM '(' enum_list ')' opt_csc { $$ = new SQLDataType(token::ENUM,$3,$5); }
-   | SET '(' enum_list ')' opt_csc { $$ = new SQLDataType(token::ENUM,$3,$5); }
+     BIT opt_length { $$ = new SQL::SQLDataType(SQL::BIT); }
+   | TINYINT opt_length opt_uz { $$ = new SQL::SQLDataType(SQL::TINYINT,$2,$3); }
+   | SMALLINT opt_length opt_uz { $$ = new SQL::SQLDataType(SQL::SMALLINT,$2,$3); }
+   | MEDIUMINT opt_length opt_uz { $$ = new SQL::SQLDataType(SQL::MEDIUMINT,$2,$3); }
+   | INT opt_length opt_uz { $$ = new SQL::SQLDataType(SQL::INTEGER,$2,$3); }
+   | INTEGER opt_length opt_uz { $$ = new SQL::SQLDataType(SQL::INTEGER,$2,$3); }
+   | BIGINT opt_length opt_uz { $$ = new SQL::SQLDataType(SQL::BIGINT,$2,$3); }
+   | REAL opt_length opt_uz { $$ = new SQL::SQLDataType(SQL::REAL,$2,$3); }
+   | DOUBLE opt_length opt_uz { $$ = new SQL::SQLDataType(SQL::DOUBLE,$2,$3); }
+   | FLOAT opt_length opt_uz { $$ = new SQL::SQLDataType(SQL::FLOAT,$2,$3); }
+   | DECIMAL opt_length opt_uz { $$ = new SQL::SQLDataType(SQL::DECIMAL,$2,$3); }
+   | NUMERIC opt_length opt_uz { $$ = new SQL::SQLDataType(SQL::DECIMAL,$2,$3); }
+   | DATE { $$ = new SQL::SQLDataType(SQL::DATE); }
+   | TIME { $$ = new SQL::SQLDataType(SQL::TIME); }
+   | TIMESTAMP { $$ = new SQL::SQLDataType(SQL::TIMESTAMP); }
+   | DATETIME  { $$ = new SQL::SQLDataType(SQL::DATETIME); }
+   | YEAR { $$ = new SQL::SQLDataType(SQL::YEAR); }
+   | CHAR opt_length opt_csc { $$ = new SQL::SQLDataType(SQL::CHAR,$2,$3); }
+   | VARCHAR '(' INTNUM ')' opt_csc { $$ = new SQL::SQLDataType(SQL::VARCHAR,new SQL::SQLDataLength($3),$5); }
+   | BINARY opt_length { $$ = new SQL::SQLDataType(SQL::BINARY,$2); }
+   | VARBINARY '(' INTNUM ')' { $$ = new SQL::SQLDataType(SQL::VARBINARY,new SQL::SQLDataLength($3)); }
+   | TINYBLOB { $$ = new SQL::SQLDataType(SQL::TINYBLOB); }
+   | BLOB { $$ = new SQL::SQLDataType(SQL::BLOB); }
+   | MEDIUMBLOB { $$ = new SQL::SQLDataType(SQL::MEDIUMBLOB); }
+   | LONGBLOB { $$ = new SQL::SQLDataType(SQL::LONGBLOB); }
+   | TINYTEXT opt_binary opt_csc { $$ = new SQL::SQLDataType(SQL::TINYTEXT,$3,$2); }
+   | TEXT opt_binary opt_csc { $$ = new SQL::SQLDataType(SQL::TEXT,$3,$2); }
+   | MEDIUMTEXT opt_binary opt_csc { $$ = new SQL::SQLDataType(SQL::MEDIUMTEXT,$3,$2); }
+   | LONGTEXT opt_binary opt_csc { $$ = new SQL::SQLDataType(SQL::LONGTEXT,$3,$2); }
+   | ENUM '(' enum_list ')' opt_csc { $$ = new SQL::SQLDataType(SQL::ENUM,$3,$5); }
+   | SET '(' enum_list ')' opt_csc { $$ = new SQL::SQLDataType(SQL::ENUM,$3,$5); }
+   | JSON { $$ = new SQL::SQLDataType(SQL::JSON); }
    ;
 
-enum_list: STRING { $$ = new SQLObjectList<>(); $$->push(new SQLString($1)); free($1); }
-   | enum_list ',' STRING { $$ = $1; $$->push(new SQLString($3)); free($3);}
+enum_list: STRING { $$ = new SQL::SQLObjectList<>(); $$->push(new SQL::SQLString($1)); free($1); }
+   | enum_list ',' STRING { $$ = $1; $$->push(new SQL::SQLString($3)); free($3);}
    ;
 
 create_select_statement: opt_ignore_replace opt_as select_stmt { $$ = NULL; emit("CREATESELECT %d", $1); }
@@ -896,12 +917,12 @@ stmt: set_stmt { ctx.push(@1,$1); }
    ;
 
 set_stmt: SET set_list {
-  $$ = new SQLSetStatement($2);
+  $$ = new SQL::SQLSetStatement($2);
   delete $2;
 };
 
 set_list: set_expr {
-  $$ = new SQLObjectList<>();
+  $$ = new SQL::SQLObjectList<>();
   $$->push($1);
 } | set_list ',' set_expr {
   $$ = $1;
@@ -912,30 +933,30 @@ varaible_name: USERVAR | TIMESTAMP { $$ = strdup("TIMESTAMP"); };
 
 set_expr:
       varaible_name COMPARISON set_value {
-        if ($2 != EQUALTO) {
+        if ($2 != SQL::EQUALTO) {
           error(@$,format("bad set to @%s", $1));
           $$ = NULL;
         } else {
-          $$ = new SQLSetPair($1,$3);
+          $$ = new SQL::SQLSetPair($1,$3);
         }
         free($1);
       }
     | varaible_name ASSIGN set_value {
-      $$ = new SQLSetPair($1,$3);
+      $$ = new SQL::SQLSetPair($1,$3);
       free($1);
     }
     ;
 
 set_value: expr    { $$ = $1; }
-   | DEFAULT       { $$ = new SQLDefault(); };
+   | DEFAULT       { $$ = new SQL::SQLDefault(); };
 
    /**** expressions ****/
-expr: INTRODUCER STRING COLLATE STRING { $$ = new SQLString($2); free($1); free($2); free($4); };
+expr: INTRODUCER STRING COLLATE STRING { $$ = new SQL::SQLString($2); free($1); free($2); free($4); };
 
 expr: column_name          { $$ = $1; }
    | USERVAR         { $$ = NULL; emit("USERVAR %s", $1); free($1); }
-   | STRING        { $$ = new SQLString($1); free($1); }
-   | INTNUM        { $$ = new SQLInteger($1); }
+   | STRING        { $$ = new SQL::SQLString($1); free($1); }
+   | INTNUM        { $$ = new SQL::SQLInteger($1); }
    | APPROXNUM     { $$ = NULL; emit("FLOAT %g", $1); }
    | BOOL          { $$ = NULL; emit("BOOL %d", $1); }
    ;
@@ -948,11 +969,11 @@ expr: expr '+' expr { $$ = NULL; emit("ADD"); }
    | expr '%' expr { $$ = NULL; emit("MOD"); }
    | expr MOD expr { $$ = NULL; emit("MOD"); }
    | '-' expr %prec UMINUS { $$ = NULL; emit("NEG"); }
-   | expr ANDOP expr { $$ = new SQLAnd($1,$3); }
-   | expr OR expr { $$ = new SQLOr($1,$3); }
+   | expr ANDOP expr { $$ = new SQL::SQLAnd($1,$3); }
+   | expr OR expr { $$ = new SQL::SQLOr($1,$3); }
    | expr XOR expr { $$ = NULL; emit("XOR"); }
-   | expr COMPARISON expr { $$ = SQLComparision::construct($2,$1,$3); }
-   | expr COMPARISON '(' select_stmt ')' { $$ = SQLComparision::construct($2,$1,$4); }
+   | expr COMPARISON expr { $$ = SQL::SQLComparision::construct($2,$1,$3); }
+   | expr COMPARISON '(' select_stmt ')' { $$ = SQL::SQLComparision::construct($2,$1,$4); }
    | expr COMPARISON ANY '(' select_stmt ')' { $$ = NULL; emit("CMPANYSELECT %d", $2); }
    | expr COMPARISON SOME '(' select_stmt ')' { $$ = NULL; emit("CMPANYSELECT %d", $2); }
    | expr COMPARISON ALL '(' select_stmt ')' { $$ = NULL; emit("CMPALLSELECT %d", $2); }
@@ -975,7 +996,7 @@ expr: expr BETWEEN expr AND expr %prec BETWEEN { $$ = NULL; emit("BETWEEN"); }
    ;
 
 
-val_list: expr { $$ = new SQLObjectList<>(); $$->push($1); }
+val_list: expr { $$ = new SQL::SQLObjectList<>(); $$->push($1); }
    | expr ',' val_list { $3->push_front($1); $$ = $3; };
 
 opt_val_list: /* nil */ { $$ = NULL; }
@@ -988,7 +1009,7 @@ expr: expr IN '(' val_list ')'       { $$ = NULL; emit("ISIN %d", $4); }
    | EXISTS '(' select_stmt ')'      { $$ = NULL; emit("EXISTS"); if($1)$$ = NULL; emit("NOT"); }
    ;
 
-expr: identifier '(' opt_val_list ')' {  $$ = new SQLFunction($1,$3); }
+expr: identifier '(' opt_val_list ')' {  $$ = new SQL::SQLFunction($1,$3); }
    ;
 
   /* functions with special syntax */
@@ -1053,17 +1074,17 @@ expr: BINARY expr %prec UMINUS { $$ = NULL; emit("STRTOBIN"); }
 /*** misc ***/
 
 stmt: DELIMITER;
-stmt: TBEGIN { ctx.push(@$, new SQLBeginStatement()); }
-stmt: COMMIT { ctx.push(@$, new SQLCommitStatement()); }
-stmt: ROLLBACK { ctx.push(@$, new SQLRollbackStatement()); }
+stmt: TBEGIN { ctx.push(@$, new SQL::SQLBeginStatement()); }
+stmt: COMMIT { ctx.push(@$, new SQL::SQLCommitStatement()); }
+stmt: ROLLBACK { ctx.push(@$, new SQL::SQLRollbackStatement()); }
 stmt: binlog_stmt {
   ctx.push(@$,$1);
 }
 
 binlog_stmt: BINLOG MLSTRING {
-  $$ = new SQLBinLogStatement(@$,$2,ctx.getEventParser());
+  $$ = new SQL::SQLBinLogStatement(@$,$2,ctx.getEventParser());
 } | BINLOG STRING {
-  $$ = new SQLBinLogStatement(@$,$2,ctx.getEventParser());
+  $$ = new SQL::SQLBinLogStatement(@$,$2,ctx.getEventParser());
   free($2);
 };
 
@@ -1072,12 +1093,12 @@ stmt: use_stmt {
 };
 
 identifier: NAME {
-  $$ = new SQLIdentifier($1);
+  $$ = new SQL::SQLIdentifier($1);
   free($1);
 };
 
 use_stmt: USE identifier {
-  $$ = new SQLUseDatabase($2);
+  $$ = new SQL::SQLUseDatabase($2);
 };
 
 %%

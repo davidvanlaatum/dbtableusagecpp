@@ -6,13 +6,15 @@
 #define DBTABLEUSAGECPP_SQLDEFAULT_H
 
 #include "SQLObject.h"
-class SQLDefault : public SQLObject {
-public:
-    virtual std::string toString () const;
-    virtual void resolve ( SQLParserContext *context );
-    virtual void walk ( SQLTreeWalker *walker );
-    virtual SQLDefault *clone () const;
-};
+namespace SQL {
+  class SQLDefault : public SQLObject {
+  public:
+      virtual std::string toString () const;
+      virtual void resolve ( SQLParserContext *context );
+      virtual void walk ( SQLTreeWalker *walker );
+      virtual SQLDefault *clone () const;
+  };
+}
 
 
 #endif //DBTABLEUSAGECPP_SQLDEFAULT_H

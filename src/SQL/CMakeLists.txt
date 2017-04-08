@@ -3,7 +3,7 @@ bison_target(SQLPARSER sql-parser.ypp ${CMAKE_CURRENT_BINARY_DIR}/sql-parser.cpp
 flex_target(SQLSCANNER sql-lexer.l ${CMAKE_CURRENT_BINARY_DIR}/sql-lexer.cpp) # COMPILE_FLAGS --noline)
 ADD_FLEX_BISON_DEPENDENCY(SQLSCANNER SQLPARSER)
 
-add_library(sqlParser
+add_library(sqlParser OBJECT
         sql-parser.ypp sql-lexer.l
         ${BISON_SQLPARSER_OUTPUTS} ${FLEX_SQLSCANNER_OUTPUTS}
         SQLParserContext.cpp SQLParserContext.h
@@ -51,9 +51,7 @@ add_library(sqlParser
         SQLDataType.cpp SQLDataType.h
         SQLColumnAttributes.cpp SQLColumnAttributes.h
         )
-target_link_libraries(sqlParser ${GLib_LIBRARY} Boost::boost)
-target_include_directories(sqlParser
-        PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}
-        PRIVATE ${GLib_INCLUDE_DIRS}
-        )
+target_include_directories(sqlParser PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
+target_include_directories(sqlParser SYSTEM PRIVATE ${GLib_INCLUDE_DIRS}
+        $<TARGET_PROPERTY:Boost::boost,INTERFACE_INCLUDE_DIRECTORIES>)
 set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES position.hh location.hh stack.hh)

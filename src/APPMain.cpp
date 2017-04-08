@@ -5,11 +5,9 @@
 #include <boost/filesystem.hpp>
 #include "appversion.h"
 #include <iostream>
-#include <stdio.h>
 #include <DataStore.h>
 #include "APPMain.h"
-#include "SQL/SQLParserContext.h"
-#include "data/DataCollector.h"
+#include "DataCollector.h"
 #include "LogFileFetcher.h"
 namespace po = boost::program_options;
 namespace fs = boost::filesystem;
@@ -79,7 +77,7 @@ int APPMain::main ( int argc, char *argv[] ) {
         DataCollector collector;
         collector.setCommitInterval ( vm["storage.commit"].as<unsigned> () );
         if ( vm.count ( "input" ) ) {
-          SQLParserContext context ( &collector );
+          SQL::SQLParserContext context ( &collector );
           setupDriver ( context, vm );
           std::string file = vm["input"].as<std::string> ();
           if ( file == "-" ) {
@@ -108,8 +106,7 @@ int APPMain::main ( int argc, char *argv[] ) {
             while ( exit == 0 && fetcher.hasMoreLogs () ) {
               collector.setCurrentFileSize ( fetcher.currentLogFileSize () );
               FILE *handle = fetcher.fileHandle ();
-              SQLParserContext context ( &collector );
-              context.setFileName ( fetcher.currentLogFile () );
+              SQL::SQLParserContext context ( &collector );
               setupDriver ( context, vm );
               context.parseFileHandle ( handle, fetcher.currentLogFile () );
               int rt = pclose ( handle );
@@ -139,7 +136,7 @@ int APPMain::main ( int argc, char *argv[] ) {
   return exit;
 }
 
-void APPMain::setupDriver ( SQLParserContext &driver, const boost::program_options::variables_map &vm ) const {
+void APPMain::setupDriver ( SQL::SQLParserContext &driver, const boost::program_options::variables_map &vm ) const {
   if ( vm["debug"].as<int> () ) {
     driver.setDebugStream ( &std::cout );
   }

@@ -9,22 +9,22 @@
 #include <string>
 #include <ostream>
 #include <stdint.h>
+namespace SQL {
+  class MySQLTableMapEntry {
+  public:
+      MySQLTableMapEntry ( uint64_t id, std::string schema, std::string name );
+      MySQLTableMapEntry ();
 
-class MySQLTableMapEntry {
-public:
-    MySQLTableMapEntry ( uint64_t id, std::string schema, std::string name );
-    MySQLTableMapEntry ();
-
-    const std::string &getSchema () const;
-    const std::string &getName () const;
-    bool operator== ( const MySQLTableMapEntry &rhs ) const;
-    bool operator!= ( const MySQLTableMapEntry &rhs ) const;
-    friend std::ostream &operator<< ( std::ostream &os, const MySQLTableMapEntry &entry );
-private:
-    uint64_t id;
-    std::string schema;
-    std::string name;
-};
-
+      const std::string &getSchema () const;
+      const std::string &getName () const;
+      bool operator== ( const MySQLTableMapEntry &rhs ) const;
+      bool operator!= ( const MySQLTableMapEntry &rhs ) const;
+      friend std::ostream &operator<< ( std::ostream &os, const MySQLTableMapEntry &entry );
+  private:
+      uint64_t id;
+      std::string schema;
+      std::string name;
+  };
+}
 
 #endif //DBTABLEUSAGECPP_MYSQLTABLEMAPENTRY_H

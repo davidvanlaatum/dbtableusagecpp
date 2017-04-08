@@ -4,15 +4,15 @@
 
 #include "SQLAnd.h"
 
-SQLAnd::SQLAnd ( SQLObject *left, SQLObject *right ) : left ( left ), right ( right ) {
+SQL::SQLAnd::SQLAnd ( SQLObject *left, SQLObject *right ) : left ( left ), right ( right ) {
 
 }
 
-std::string SQLAnd::toString () const {
+std::string SQL::SQLAnd::toString () const {
   return "(" + SQLObject::toString ( left ) + " AND " + SQLObject::toString ( right ) + ")";
 }
 
-void SQLAnd::resolve ( SQLParserContext *context ) {
+void SQL::SQLAnd::resolve ( SQLParserContext *context ) {
   if ( left ) {
     left->resolve ( context );
   }
@@ -21,7 +21,7 @@ void SQLAnd::resolve ( SQLParserContext *context ) {
   }
 }
 
-void SQLAnd::walk ( SQLTreeWalker *walker ) {
+void SQL::SQLAnd::walk ( SQLTreeWalker *walker ) {
   if ( left ) {
     walker->walk ( left.get () );
   }
@@ -30,6 +30,6 @@ void SQLAnd::walk ( SQLTreeWalker *walker ) {
   }
 }
 
-SQLAnd *SQLAnd::clone () const {
+SQL::SQLAnd *SQL::SQLAnd::clone () const {
   return new SQLAnd ( left ? left->clone () : NULL, right ? right->clone () : NULL );
 }

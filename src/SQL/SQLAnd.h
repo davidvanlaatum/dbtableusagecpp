@@ -7,19 +7,19 @@
 
 #include <boost/scoped_ptr.hpp>
 #include "SQLExpression.h"
-
-class SQLAnd : public SQLExpression {
-public:
-    EMPTY_CONSTRUCTOR(SQLAnd)
-    SQLAnd ( SQLObject *left, SQLObject *right );
-    virtual std::string toString () const;
-    virtual void resolve ( SQLParserContext *context );
-    virtual void walk ( SQLTreeWalker *walker );
-    virtual SQLAnd *clone () const;
-private:
-    boost::scoped_ptr<SQLObject> left;
-    boost::scoped_ptr<SQLObject> right;
-};
-
+namespace SQL {
+  class SQLAnd : public SQLExpression {
+  public:
+      EMPTY_CONSTRUCTOR( SQLAnd )
+      SQLAnd ( SQLObject *left, SQLObject *right );
+      virtual std::string toString () const;
+      virtual void resolve ( SQLParserContext *context );
+      virtual void walk ( SQLTreeWalker *walker );
+      virtual SQLAnd *clone () const;
+  private:
+      boost::scoped_ptr<SQLObject> left;
+      boost::scoped_ptr<SQLObject> right;
+  };
+}
 
 #endif //DBTABLEUSAGECPP_SQLAND_H

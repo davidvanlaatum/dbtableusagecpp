@@ -4,26 +4,26 @@
 
 #include "SQLTableDropColumn.h"
 
-SQLTableDropColumn::SQLTableDropColumn ( SQLColumn *column ) : column ( column ) {
+SQL::SQLTableDropColumn::SQLTableDropColumn ( SQLColumn *column ) : column ( column ) {
 }
 
-SQLTableDropColumn::~SQLTableDropColumn () {
+SQL::SQLTableDropColumn::~SQLTableDropColumn () {
 
 }
 
-std::string SQLTableDropColumn::toString () const {
+std::string SQL::SQLTableDropColumn::toString () const {
   return "DROP COLUMN " + SQLObject::toString ( column );
 }
 
-void SQLTableDropColumn::resolve ( SQLParserContext *context ) {
+void SQL::SQLTableDropColumn::resolve ( SQLParserContext *context ) {
 // TODO
 }
 
-void SQLTableDropColumn::walk ( SQLTreeWalker *walker ) {
+void SQL::SQLTableDropColumn::walk ( SQLTreeWalker *walker ) {
 // TODO
 }
 
-SQLTableDropColumn *SQLTableDropColumn::clone () const {
+SQL::SQLTableDropColumn *SQL::SQLTableDropColumn::clone () const {
   SQLTableDropColumn *rt = new SQLTableDropColumn(NULL);
   rt->column = column;
   return rt;

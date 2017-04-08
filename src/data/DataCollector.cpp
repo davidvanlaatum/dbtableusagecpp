@@ -20,18 +20,14 @@ typedef boost::date_time::c_local_adjustor<ptime> local_adj;
 
 DataCollector::DataCollector () {
   host = boost::shared_ptr<Host> ( new Host () );
-  statements = 0;
   bzero ( &lastUpdate, sizeof ( lastUpdate ) );
   bzero ( &start, sizeof ( start ) );
-  lastStatements = 0;
-  lastTime = 0;
-  firstStatement = 0;
+  bzero ( &now, sizeof ( now ) );
+  bzero ( &last, sizeof ( last ) );
   currentFileSize = 0;
   pStore = NULL;
   inTransaction = false;
   commitInterval = 10;
-  transactions = 0;
-  lastTransactions = 0;
 }
 
 std::string toString ( time_t t ) {
@@ -63,47 +59,49 @@ std::string bytesToString ( double value ) {
   return s.str ();
 }
 
-typedef SQLSetStatement::ArgsType SetArgs;
+typedef SQL::SQLSetStatement::ArgsType SetArgs;
 
-void DataCollector::statement ( yy::location &location, SQLStatement *statement, SQLParserContext *context ) {
-  if ( SQLSetStatement *set = dynamic_cast<SQLSetStatement *> (statement) ) {
+void DataCollector::statement ( yy::location &location, SQL::SQLStatement *statement, SQL::SQLParserContext *context ) {
+  if ( SQL::SQLSetStatement *set = dynamic_cast<SQL::SQLSetStatement *> (statement) ) {
     for ( SetArgs::const_iterator it = set->getArgs ().begin (); it != set->getArgs ().end (); ++it ) {
-      variables[( *it )->getName ()] = boost::shared_ptr<SQLObject> ( ( *it )->getValue ()->clone () );
+      variables[( *it )->getName ()] = boost::shared_ptr<SQL::SQLObject> ( ( *it )->getValue ()->clone () );
     }
   }
 
-  statements++;
+  now.statements++;
 
-  if ( dynamic_cast<SQLBeginStatement *> ( statement) ) {
+  if ( dynamic_cast<SQL::SQLBeginStatement *> ( statement) ) {
     inTransaction = true;
-    transactions++;
-  } else if ( dynamic_cast<SQLCommitStatement * > (statement) || dynamic_cast<SQLRollbackStatement *>(statement) ) {
+    now.transactions++;
+  } else if ( dynamic_cast<SQL::SQLCommitStatement * > (statement) || dynamic_cast<SQL::SQLRollbackStatement *>(statement) ) {
     inTransaction = false;
   }
 
+  now.time = context->currentTime ();
+  now.logPos = context->getLogPos ();
 
   Walker walker ( host, context );
   walker.walk ( statement );
-  timeval now;
-  gettimeofday ( &now, NULL );
+  timeval currentTime;
+  gettimeofday ( &currentTime, NULL );
 
-  if ( firstStatement == 0 && context->currentTime () != 0 ) {
-    firstStatement = context->currentTime ();
-    start = now;
+  if ( start.statement == 0 && context->currentTime () != 0 ) {
+    start.statement = context->currentTime ();
+    start.time = currentTime;
   }
 
   host->setLastLogPos ( (int) context->getLogPos () );
 
-  if ( lastUpdate.tv_sec < now.tv_sec - commitInterval && !inTransaction ) {
+  if ( lastUpdate.tv_sec < currentTime.tv_sec - commitInterval && !inTransaction ) {
     host->setLastLogFile ( *location.begin.filename );
-    time_t diff = context->currentTime () - firstStatement;
+    time_t diff = context->currentTime () - start.statement;
     timeval timeDiff;
-    timersub ( &now, &start, &timeDiff );
+    timersub ( &currentTime, &start.time, &timeDiff );
 
     double speed = diff / ( timeDiff.tv_sec + ( timeDiff.tv_usec / 1000000.0f ) );
     double bspeed = 0;
 
-    if ( lastTime != 0 ) {
+    if ( last.time != 0 ) {
       std::string units = "s/s";
       if ( speed > 60 ) {
         speed /= 60.0f;
@@ -115,18 +113,18 @@ void DataCollector::statement ( yy::location &location, SQLStatement *statement,
                     << ( ( context->getLogPos () / (double) currentFileSize ) * 100 ) << "%";
       }
 
-      if ( lastLogPos > 0 ) {
-        if ( lastLogPos > context->getLogPos () ) {
-          lastLogPos = 0;
+      if ( last.logPos > 0 ) {
+        if ( last.logPos > context->getLogPos () ) {
+          last.logPos = 0;
         }
-        uint64_t bdiff = context->getLogPos () - lastLogPos;
+        uint64_t bdiff = context->getLogPos () - last.logPos;
         bspeed = bdiff / ( timeDiff.tv_sec + ( timeDiff.tv_usec / 1000000.0f ) );
       }
 
       std::cerr << std::setprecision ( 4 );
       std::cerr << toString ( context->currentTime () )
-                << " stmts: " << statements << "(" << statements - lastStatements << ")"
-                << " trans: " << transactions << "(" << transactions - lastTransactions << ")"
+                << " stmts: " << now.statements << "(" << now.statements - last.statements << ")"
+                << " trans: " << now.transactions << "(" << now.transactions - last.transactions << ")"
                 << " speed: " << std::setw ( 7 ) << speed << units
                 << " " << bytesToString ( bspeed ) << "/s"
                 << " logpos: " << bytesToString ( context->getLogPos () ) << logPosExtra.str ();
@@ -137,12 +135,9 @@ void DataCollector::statement ( yy::location &location, SQLStatement *statement,
       }
 
       std::cerr << " " << location << "\n";
-      lastUpdate = now;
+      lastUpdate = currentTime;
     }
-    lastTime = context->currentTime ();
-    lastStatements = statements;
-    lastLogPos = context->getLogPos ();
-    lastTransactions = transactions;
+    last = now;
   }
 }
 
@@ -212,40 +207,40 @@ void DataCollector::setCommitInterval ( size_t interval ) {
   this->commitInterval = interval;
 }
 
-DataCollector::Walker::Walker ( boost::shared_ptr<Host> &host, SQLParserContext *context ) : host ( host ),
+DataCollector::Walker::Walker ( boost::shared_ptr<Host> &host, SQL::SQLParserContext *context ) : host ( host ),
                                                                                              ctx ( context ) {
 }
 
-void DataCollector::Walker::walk ( SQLObject *object ) {
+void DataCollector::Walker::walk ( SQL::SQLObject *object ) {
   time_t now = ctx->currentTime ();
-  if ( SQLStatement *statement = dynamic_cast<SQLStatement *> ( object ) ) {
-    SQLStatement::table_type tables;
+  if ( SQL::SQLStatement *statement = dynamic_cast<SQL::SQLStatement *> ( object ) ) {
+    SQL::SQLStatement::table_type tables;
     statement->getTables ( tables );
-    for ( SQLStatement::table_type::iterator it = tables.begin (); it != tables.end (); it++ ) {
+    for ( SQL::SQLStatement::table_type::iterator it = tables.begin (); it != tables.end (); it++ ) {
       if ( it->first ) {
         if ( !it->first->getSchema () ) {
           ctx->error () << "No schema on " << it->first << std::endl;
         } else {
-          SQLIdentifier *schema = it->first->getSchema ().get ();
+          SQL::SQLIdentifier *schema = it->first->getSchema ().get ();
           std::string schemaName = schema->getId ();
           DB *db = host->getDB ( schemaName );
           Table *table = db->getTable ( it->first->getName ()->getId () );
-          if ( it->second & SQLStatement::WRITE ) {
+          if ( it->second & SQL::SQLStatement::WRITE ) {
             table->updateWrite ( now );
           }
-          if ( it->second & SQLStatement::READ ) {
+          if ( it->second & SQL::SQLStatement::READ ) {
             table->updateRead ( now );
           }
-          if ( it->second & SQLStatement::INSERT ) {
+          if ( it->second & SQL::SQLStatement::INSERT ) {
             table->updateInsert ( now );
           }
-          if ( it->second & SQLStatement::UPDATE ) {
+          if ( it->second & SQL::SQLStatement::UPDATE ) {
             table->updateUpdate ( now );
           }
-          if ( it->second & SQLStatement::DELETE ) {
+          if ( it->second & SQL::SQLStatement::DELETE ) {
             table->updateDelete ( now );
           }
-          if ( it->second & SQLStatement::ALTER ) {
+          if ( it->second & SQL::SQLStatement::ALTER ) {
             table->updateAlter ( now );
           }
         }

@@ -4,16 +4,16 @@
 
 #include "SQLObject.h"
 
-std::ostream &operator<< ( std::ostream &os, const SQLObject &statement ) {
+std::ostream &SQL::operator<< ( std::ostream &os, const SQL::SQLObject &statement ) {
   os << statement.toString ();
   return os;
 }
 
-SQLObject::~SQLObject () {
+SQL::SQLObject::~SQLObject () {
 
 }
 
-std::ostream &operator<< ( std::ostream &os, const SQLObject *statement ) {
+std::ostream &SQL::operator<< ( std::ostream &os, const SQL::SQLObject *statement ) {
   if ( statement ) {
     os << statement->toString ();
   } else {
@@ -22,6 +22,6 @@ std::ostream &operator<< ( std::ostream &os, const SQLObject *statement ) {
   return os;
 }
 
-std::string SQLObject::toString ( const SQLObject *const object ) {
+std::string SQL::SQLObject::toString ( const SQL::SQLObject *const object ) {
   return object ? object->toString () : "(null)";
 }

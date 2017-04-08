@@ -6,12 +6,12 @@
 #define DBTABLEUSAGECPP_MYSQLBINLOGEVENT_H
 
 #include "SQLStatement.h"
-
-class MySQLBinLogEvent {
-public:
-    virtual SQLStatement::table_type getTables () const = 0;
-    virtual ~MySQLBinLogEvent ();
-};
-
+namespace SQL {
+  class MySQLBinLogEvent {
+  public:
+      virtual SQLStatement::table_type getTables () const = 0;
+      virtual ~MySQLBinLogEvent ();
+  };
+}
 
 #endif //DBTABLEUSAGECPP_MYSQLBINLOGEVENT_H

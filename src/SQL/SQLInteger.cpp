@@ -5,31 +5,31 @@
 #include <sstream>
 #include "SQLInteger.h"
 
-std::string SQLInteger::toString () const {
+std::string SQL::SQLInteger::toString () const {
   std::stringstream buf;
   buf << value;
   return buf.str ();
 }
 
-SQLInteger::SQLInteger ( int64_t value ) : value ( value ) {
+SQL::SQLInteger::SQLInteger ( int64_t value ) : value ( value ) {
 }
 
-int64_t SQLInteger::toInt () const {
+int64_t SQL::SQLInteger::toInt () const {
   return value;
 }
 
-void SQLInteger::resolve ( SQLParserContext *context ) {
+void SQL::SQLInteger::resolve ( SQLParserContext *context ) {
 
 }
 
-void SQLInteger::walk ( SQLTreeWalker *walker ) {
+void SQL::SQLInteger::walk ( SQLTreeWalker *walker ) {
 
 }
 
-bool SQLInteger::operator== ( int64_t rhs ) const {
+bool SQL::SQLInteger::operator== ( int64_t rhs ) const {
   return value == rhs;
 }
 
-SQLInteger *SQLInteger::clone () const {
+SQL::SQLInteger *SQL::SQLInteger::clone () const {
   return new SQLInteger ( value );
 }

@@ -5,37 +5,37 @@
 #include "SQLSetPair.h"
 #include "SQLString.h"
 
-std::string SQLSetPair::toString () const {
-  return name + "=" + ( value ? SQLObject::toString ( value ) : "" );
+std::string SQL::SQLSetPair::toString () const {
+  return name + "=" + SQLObject::toString ( value );
 }
 
-SQLSetPair::SQLSetPair ( const std::string &name, SQLObject *value ) : name ( name ), value ( value ) {
+SQL::SQLSetPair::SQLSetPair ( const std::string &name, SQLObject *value ) : name ( name ), value ( value ) {
 }
 
-SQLSetPair::~SQLSetPair () {
+SQL::SQLSetPair::~SQLSetPair () {
 }
 
-const std::string &SQLSetPair::getName () const {
+const std::string &SQL::SQLSetPair::getName () const {
   return name;
 }
 
-SQLObject *SQLSetPair::getValue () {
+SQL::SQLObject *SQL::SQLSetPair::getValue () {
   return value.get ();
 }
 
-void SQLSetPair::resolve ( SQLParserContext *context ) {
+void SQL::SQLSetPair::resolve ( SQLParserContext *context ) {
   if ( value ) {
     value->resolve ( context );
   }
 }
 
-void SQLSetPair::walk ( SQLTreeWalker *walker ) {
+void SQL::SQLSetPair::walk ( SQLTreeWalker *walker ) {
   if ( value ) {
     walker->walk ( value.get () );
   }
 }
 
-SQLSetPair *SQLSetPair::clone () const {
+SQL::SQLSetPair *SQL::SQLSetPair::clone () const {
   return new SQLSetPair ( name, value ? value->clone () : NULL );
 }
 

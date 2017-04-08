@@ -7,13 +7,14 @@
 
 #include <stdexcept>
 #include <location.hh>
-
-class SQLParserFailedException : public std::runtime_error {
-public:
-    SQLParserFailedException ( const std::string &msg );
-    SQLParserFailedException ( const char *msg );
-    SQLParserFailedException ( const yy::location &loc, const std::string &msg );
-    SQLParserFailedException ( const yy::location &loc, const char *msg );
-};
+namespace SQL {
+  class SQLParserFailedException : public std::runtime_error {
+  public:
+      SQLParserFailedException ( const std::string &msg );
+      SQLParserFailedException ( const char *msg );
+      SQLParserFailedException ( const yy::location &loc, const std::string &msg );
+      SQLParserFailedException ( const yy::location &loc, const char *msg );
+  };
+}
 
 #endif //DBTABLEUSAGECPP_SQLPARSERFAILEDEXCEPTION_H

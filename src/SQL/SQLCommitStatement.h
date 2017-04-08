@@ -6,18 +6,18 @@
 #define DBTABLEUSAGECPP_SQLCOMMITSTATEMENT_H
 
 #include "SQLStatement.h"
-
-class SQLCommitStatement : public SQLStatement {
-public:
-    EMPTY_CONSTRUCTOR(SQLCommitStatement)
-    virtual ~SQLCommitStatement ();
-    virtual std::string toString () const;
-    virtual void resolve ( SQLParserContext *context );
-    virtual void walk ( SQLTreeWalker *walker );
-    virtual SQLCommitStatement *clone () const;
-    virtual void getTables ( table_type &rt ) const;
-    virtual size_t showAtVerboseLevel () const;
-};
-
+namespace SQL {
+  class SQLCommitStatement : public SQLStatement {
+  public:
+      EMPTY_CONSTRUCTOR( SQLCommitStatement )
+      virtual ~SQLCommitStatement ();
+      virtual std::string toString () const;
+      virtual void resolve ( SQLParserContext *context );
+      virtual void walk ( SQLTreeWalker *walker );
+      virtual SQLCommitStatement *clone () const;
+      virtual void getTables ( table_type &rt ) const;
+      virtual size_t showAtVerboseLevel () const;
+  };
+}
 
 #endif //DBTABLEUSAGECPP_SQLCOMMITSTATEMENT_H

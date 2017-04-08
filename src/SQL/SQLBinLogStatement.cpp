@@ -9,10 +9,10 @@
 #include "SQLBinLogStatement.h"
 #include "MySQLBinLogEvent.h"
 
-SQLBinLogStatement::SQLBinLogStatement ( const SQLStatement::table_type &tables ) : tables ( tables ) {
+SQL::SQLBinLogStatement::SQLBinLogStatement ( const SQLStatement::table_type &tables ) : tables ( tables ) {
 }
 
-SQLBinLogStatement::SQLBinLogStatement ( yy::location location, const char *base64, MySQLEventParser *parser ) {
+SQL::SQLBinLogStatement::SQLBinLogStatement ( yy::location location, const char *base64, MySQLEventParser *parser ) {
   if ( base64 && base64[0] ) {
     gsize len;
     guchar *data = g_base64_decode ( base64, &len );
@@ -21,7 +21,7 @@ SQLBinLogStatement::SQLBinLogStatement ( yy::location location, const char *base
   }
 }
 
-SQLBinLogStatement::SQLBinLogStatement ( yy::location location, FILE *file, MySQLEventParser *parser ) {
+SQL::SQLBinLogStatement::SQLBinLogStatement ( yy::location location, FILE *file, MySQLEventParser *parser ) {
   int fd = fileno ( file );
   long len = ftell ( file );
   char *buffer = (char *) mmap ( NULL, (size_t) len, PROT_READ, MAP_SHARED, fd, 0 );
@@ -30,11 +30,11 @@ SQLBinLogStatement::SQLBinLogStatement ( yy::location location, FILE *file, MySQ
   munmap ( buffer, (size_t) len );
 }
 
-SQLBinLogStatement::~SQLBinLogStatement () {
+SQL::SQLBinLogStatement::~SQLBinLogStatement () {
 
 }
 
-std::string SQLBinLogStatement::toString () const {
+std::string SQL::SQLBinLogStatement::toString () const {
   std::stringstream s;
   s << "BINLOG";
   if ( !tables.empty () ) {
@@ -51,24 +51,24 @@ std::string SQLBinLogStatement::toString () const {
   return s.str ();
 }
 
-void SQLBinLogStatement::getTables ( table_type &rt ) const {
+void SQL::SQLBinLogStatement::getTables ( table_type &rt ) const {
   rt = tables;
 }
 
-void SQLBinLogStatement::resolve ( SQLParserContext *context ) {
+void SQL::SQLBinLogStatement::resolve ( SQLParserContext *context ) {
 
 }
 
-void SQLBinLogStatement::walk ( SQLTreeWalker *walker ) {
+void SQL::SQLBinLogStatement::walk ( SQLTreeWalker *walker ) {
 
 }
 
 
-SQLBinLogStatement *SQLBinLogStatement::clone () const {
+SQL::SQLBinLogStatement *SQL::SQLBinLogStatement::clone () const {
   return new SQLBinLogStatement ( tables );
 }
 
-void SQLBinLogStatement::event ( MySQLBinLogEvent *event, MySQLEventParser *parser ) {
+void SQL::SQLBinLogStatement::event ( MySQLBinLogEvent *event, MySQLEventParser *parser ) {
   table_type t = event->getTables ();
 
   for ( table_type::iterator it = t.begin (); it != t.end (); ++it ) {
@@ -78,7 +78,7 @@ void SQLBinLogStatement::event ( MySQLBinLogEvent *event, MySQLEventParser *pars
   delete event;
 }
 
-size_t SQLBinLogStatement::showAtVerboseLevel () const {
+size_t SQL::SQLBinLogStatement::showAtVerboseLevel () const {
   return 1;
 }
 

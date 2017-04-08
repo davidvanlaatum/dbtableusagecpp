@@ -6,20 +6,21 @@
 #define DBTABLEUSAGECPP_SQLTABLEADDCOLUMN_H
 #include "SQLAlterTableStatement.h"
 
-class SQLColumnDefinition;
-
-class SQLTableAddColumn : public SQLAlterTableColumnOperation {
-public:
-    EMPTY_CONSTRUCTOR(SQLTableAddColumn)
-    SQLTableAddColumn (SQLColumnDefinition *p);
-    virtual ~SQLTableAddColumn ();
-    virtual std::string toString () const;
-    virtual void resolve ( SQLParserContext *context );
-    virtual void walk ( SQLTreeWalker *walker );
-    virtual SQLTableAddColumn * clone () const;
-private:
-    boost::shared_ptr<SQLColumnDefinition> definition;
-};
+namespace SQL {
+  class SQLColumnDefinition;
+  class SQLTableAddColumn : public SQLAlterTableColumnOperation {
+  public:
+      EMPTY_CONSTRUCTOR( SQLTableAddColumn )
+      SQLTableAddColumn ( SQLColumnDefinition *p );
+      virtual ~SQLTableAddColumn ();
+      virtual std::string toString () const;
+      virtual void resolve ( SQLParserContext *context );
+      virtual void walk ( SQLTreeWalker *walker );
+      virtual SQLTableAddColumn *clone () const;
+  private:
+      boost::shared_ptr<SQLColumnDefinition> definition;
+  };
+}
 
 
 #endif //DBTABLEUSAGECPP_SQLTABLEADDCOLUMN_H

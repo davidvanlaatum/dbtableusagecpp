@@ -4,11 +4,11 @@
 #include "SQLComparision.h"
 #include "SQLEquals.h"
 
-SQLComparision::SQLComparision ( SQLObject *left, SQLObject *right ) : left ( left ), right ( right ) {
+SQL::SQLComparision::SQLComparision ( SQLObject *left, SQLObject *right ) : left ( left ), right ( right ) {
 
 }
 
-SQLComparision *SQLComparision::construct ( SQLComparisionType type, SQLObject *left, SQLObject *right ) {
+SQL::SQLComparision *SQL::SQLComparision::construct ( SQLComparisionType type, SQLObject *left, SQLObject *right ) {
   SQLComparision *rt = NULL;
   switch ( type ) {
     case EQUALTO:
@@ -30,7 +30,7 @@ SQLComparision *SQLComparision::construct ( SQLComparisionType type, SQLObject *
   return rt;
 }
 
-void SQLComparision::resolve ( SQLParserContext *context ) {
+void SQL::SQLComparision::resolve ( SQLParserContext *context ) {
   if ( left ) {
     left->resolve ( context );
   }
@@ -39,7 +39,7 @@ void SQLComparision::resolve ( SQLParserContext *context ) {
   }
 }
 
-void SQLComparision::walk ( SQLTreeWalker *walker ) {
+void SQL::SQLComparision::walk ( SQLTreeWalker *walker ) {
   if ( left ) {
     walker->walk ( left.get () );
   }

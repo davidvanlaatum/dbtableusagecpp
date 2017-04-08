@@ -7,26 +7,27 @@
 
 #include "SQLStatement.h"
 #include "SQLObjectList.h"
-
-class SQLAlterTableStatement : public SQLStatement {
-public:
-    EMPTY_CONSTRUCTOR(SQLAlterTableStatement)
-    SQLAlterTableStatement ( SQLTable *table, SQLObjectList<> *opts );
-    virtual ~SQLAlterTableStatement ();
-    virtual std::string toString () const;
-    virtual void resolve ( SQLParserContext *context );
-    virtual void walk ( SQLTreeWalker *walker );
-    virtual SQLAlterTableStatement *clone () const;
-    virtual void getTables ( table_type &rt ) const;
-    virtual size_t showAtVerboseLevel () const;
-private:
-    boost::shared_ptr<SQLTable> table;
-    SQLObjectList<> operations;
-};
+namespace SQL {
+  class SQLAlterTableStatement : public SQLStatement {
+  public:
+      EMPTY_CONSTRUCTOR( SQLAlterTableStatement )
+      SQLAlterTableStatement ( SQLTable *table, SQLObjectList<> *opts );
+      virtual ~SQLAlterTableStatement ();
+      virtual std::string toString () const;
+      virtual void resolve ( SQLParserContext *context );
+      virtual void walk ( SQLTreeWalker *walker );
+      virtual SQLAlterTableStatement *clone () const;
+      virtual void getTables ( table_type &rt ) const;
+      virtual size_t showAtVerboseLevel () const;
+  private:
+      boost::shared_ptr<SQLTable> table;
+      SQLObjectList<> operations;
+  };
 
 /*abstract*/ class SQLAlterTableColumnOperation : public SQLObject {
 
-};
+  };
+}
 
 
 #endif //DBTABLEUSAGECPP_SQLALTERTABLE_H

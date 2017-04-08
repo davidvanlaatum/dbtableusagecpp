@@ -4,18 +4,18 @@
 
 #include "SQLDefault.h"
 
-std::string SQLDefault::toString () const {
+std::string SQL::SQLDefault::toString () const {
   return "DEFAULT";
 }
 
-void SQLDefault::resolve ( SQLParserContext *context ) {
+void SQL::SQLDefault::resolve ( SQLParserContext *context ) {
 
 }
 
-void SQLDefault::walk ( SQLTreeWalker *walker ) {
+void SQL::SQLDefault::walk ( SQLTreeWalker *walker ) {
 
 }
 
-SQLDefault *SQLDefault::clone () const {
+SQL::SQLDefault *SQL::SQLDefault::clone () const {
   return new SQLDefault ();
 }

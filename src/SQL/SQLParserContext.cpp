@@ -19,7 +19,7 @@
 #include "SQLParserCallback.h"
 
 extern FILE *yyin;
-SQLParserContext *currentContext;
+SQL::SQLParserContext *currentContext;
 std::string bytesToString ( uint64_t bytes );
 
 void signalHandler ( int sig ) {
@@ -39,7 +39,7 @@ bool hasLF ( const char *line ) {
   return line[i] == '\n';
 }
 
-SQLParserContext::SQLParserContext ( SQLParserCallback *callback, std::ostream *output, std::ostream *error,
+SQL::SQLParserContext::SQLParserContext ( SQLParserCallback *callback, std::ostream *output, std::ostream *error,
                                      std::ostream *debug ) :
   eventParser ( this ), callback ( callback ), outStream ( output ), errorStream ( error ), debugStream ( debug ) {
   bzero ( lineBuffers, sizeof ( lineBuffers ) );
@@ -61,7 +61,7 @@ SQLParserContext::SQLParserContext ( SQLParserCallback *callback, std::ostream *
   readBytes = 0;
 }
 
-SQLParserContext::~SQLParserContext () {
+SQL::SQLParserContext::~SQLParserContext () {
   readBytes = 0;
   for ( int i = 0; i < LINE_BUFFER_COUNT; i++ ) {
     if ( lineBuffers[i] ) {
@@ -73,7 +73,7 @@ SQLParserContext::~SQLParserContext () {
   }
 }
 
-void SQLParserContext::push ( yy::location &yylloc, SQLStatement *statement ) {
+void SQL::SQLParserContext::push ( yy::location &yylloc, SQLStatement *statement ) {
   boost::scoped_ptr<SQLStatement> autodelete ( statement );
   if ( statement == NULL ) {
     throw SQLParserFailedException ( yylloc, "null statement" );
@@ -105,49 +105,49 @@ void SQLParserContext::push ( yy::location &yylloc, SQLStatement *statement ) {
   }
 }
 
-std::string &SQLParserContext::getFileName () {
+std::string &SQL::SQLParserContext::getFileName () {
   return fileName;
 }
 
-void SQLParserContext::print () {
+void SQL::SQLParserContext::print () {
   eventParser.dump ();
 }
 
-MySQLEventParser *SQLParserContext::getEventParser () {
+SQL::MySQLEventParser *SQL::SQLParserContext::getEventParser () {
   return &eventParser;
 }
 
-void SQLParserContext::parseComment ( const char *comment ) {
+void SQL::SQLParserContext::parseComment ( const char *comment ) {
   if ( strncasecmp ( comment, "# at ", 5 ) == 0 ) {
     logPos = strtoull ( comment + 5, NULL, 10 );
   }
 }
 
-void SQLParserContext::updateTime ( time_t timestamp ) {
+void SQL::SQLParserContext::updateTime ( time_t timestamp ) {
   this->timestamp = timestamp;
 }
 
-void SQLParserContext::setErrorStream ( std::ostream *stream ) {
+void SQL::SQLParserContext::setErrorStream ( std::ostream *stream ) {
   errorStream = stream;
 }
 
-std::ostream &SQLParserContext::error () const {
+std::ostream &SQL::SQLParserContext::error () const {
   return *errorStream;
 }
 
-void SQLParserContext::setOutStream ( std::ostream *ostream ) {
+void SQL::SQLParserContext::setOutStream ( std::ostream *ostream ) {
   outStream = ostream;
 }
 
-void SQLParserContext::setDebugStream ( std::ostream *debugStream ) {
+void SQL::SQLParserContext::setDebugStream ( std::ostream *debugStream ) {
   SQLParserContext::debugStream = debugStream;
 }
 
-std::ostream &SQLParserContext::out () const {
+std::ostream &SQL::SQLParserContext::out () const {
   return *outStream;
 }
 
-void SQLParserContext::error ( location location, std::string msg ) {
+void SQL::SQLParserContext::error ( location location, std::string msg ) {
   std::stringstream error;
   bool lineContinue = false;
   error << location << ": " << msg << std::endl;
@@ -204,7 +204,7 @@ void SQLParserContext::error ( location location, std::string msg ) {
   *errorStream << error.str ();
 }
 
-void SQLParserContext::parseFile ( std::string file )  throw ( SQLParserFailedException ) {
+void SQL::SQLParserContext::parseFile ( std::string file )  throw ( SQLParserFailedException ) {
   FILE *in = NULL;
   if ( ( in = fopen ( file.data (), "r" ) ) != NULL ) {
     try {
@@ -219,7 +219,7 @@ void SQLParserContext::parseFile ( std::string file )  throw ( SQLParserFailedEx
   }
 }
 
-void SQLParserContext::parseFileHandle ( FILE *handle, std::string file ) throw ( SQLParserFailedException ) {
+void SQL::SQLParserContext::parseFileHandle ( FILE *handle, std::string file ) throw ( SQLParserFailedException ) {
   flushLex ();
   errno = 0;
   yyin = handle;
@@ -227,18 +227,18 @@ void SQLParserContext::parseFileHandle ( FILE *handle, std::string file ) throw 
 }
 
 void
-SQLParserContext::parseString ( std::string buffer ) throw ( SQLParserFailedException ) {
+SQL::SQLParserContext::parseString ( std::string buffer ) throw ( SQLParserFailedException ) {
   flushLex ();
   scanString ( buffer.data () );
   parse ( "buffer" );
 }
 
-void SQLParserContext::parseStdIn ()  throw ( SQLParserFailedException ) {
+void SQL::SQLParserContext::parseStdIn ()  throw ( SQLParserFailedException ) {
   flushLex ();
   parse ( "stdin" );
 }
 
-void SQLParserContext::setupSignalHandler () {
+void SQL::SQLParserContext::setupSignalHandler () {
   struct sigaction s;
   bzero ( &s, sizeof ( s ) );
   s.sa_handler = signalHandler;
@@ -248,14 +248,15 @@ void SQLParserContext::setupSignalHandler () {
   sigaction ( SIGHUP, &s, NULL );
 }
 
-void SQLParserContext::clearSignalHandler () {
+void SQL::SQLParserContext::clearSignalHandler () {
 
 }
 
-void SQLParserContext::parse ( std::string file )  throw ( SQLParserFailedException ) {
+void SQL::SQLParserContext::parse ( std::string file )  throw ( SQLParserFailedException ) {
   if ( callback == NULL ) {
     throw SQLParserFailedException ( "Callback must not be null" );
   }
+  fileName = file;
   ::yy::SQLParser parser ( *this );
   if ( debugStream ) {
     parser.set_debug_stream ( *debugStream );
@@ -278,39 +279,39 @@ void SQLParserContext::parse ( std::string file )  throw ( SQLParserFailedExcept
   }
 }
 
-boost::shared_ptr<SQLIdentifier> SQLParserContext::getCurrentDatabase () {
+boost::shared_ptr<SQL::SQLIdentifier> SQL::SQLParserContext::getCurrentDatabase () {
   return currentDatabase;
 }
 
-void SQLParserContext::setCurrentDatabase ( boost::shared_ptr<SQLIdentifier> name ) {
+void SQL::SQLParserContext::setCurrentDatabase ( boost::shared_ptr<SQLIdentifier> name ) {
   currentDatabase = name;
 }
 
-time_t SQLParserContext::currentTime () {
+time_t SQL::SQLParserContext::currentTime () {
   return timestamp;
 }
 
-void SQLParserContext::setVerbose ( int verbose ) {
+void SQL::SQLParserContext::setVerbose ( int verbose ) {
   this->verbose = verbose;
 }
 
-int SQLParserContext::getVerbose () const {
+int SQL::SQLParserContext::getVerbose () const {
   return verbose;
 }
 
-void SQLParserContext::setDebug ( int debug ) {
+void SQL::SQLParserContext::setDebug ( int debug ) {
   this->debugLevel = debug;
 }
 
-int SQLParserContext::getDebug () const {
+int SQL::SQLParserContext::getDebug () const {
   return debugLevel;
 }
 
-uint64_t SQLParserContext::getLogPos () const {
+uint64_t SQL::SQLParserContext::getLogPos () const {
   return logPos;
 }
 
-void SQLParserContext::newMultiLineBuffer () {
+void SQL::SQLParserContext::newMultiLineBuffer () {
   if ( multiLineBuffer ) {
     fclose ( multiLineBuffer );
   }
@@ -318,7 +319,7 @@ void SQLParserContext::newMultiLineBuffer () {
   multiLineBufferString.clear ();
 }
 
-void SQLParserContext::appendMultiLine ( const char *buffer ) {
+void SQL::SQLParserContext::appendMultiLine ( const char *buffer ) {
   size_t len = strlen ( buffer );
   if ( multiLineBuffer ) {
     guchar *data = g_base64_decode ( buffer, &len );
@@ -341,28 +342,28 @@ void SQLParserContext::appendMultiLine ( const char *buffer ) {
   }
 }
 
-char *SQLParserContext::getMultiLineBuffer () {
+char *SQL::SQLParserContext::getMultiLineBuffer () {
   char *rt = strdup ( multiLineBufferString.c_str () );
   multiLineBufferString.clear ();
   return rt;
 }
 
-FILE *SQLParserContext::getMultiLineBufferFile () {
+FILE *SQL::SQLParserContext::getMultiLineBufferFile () {
   FILE *tmp = multiLineBuffer;
   multiLineBuffer = NULL;
   return tmp;
 }
 
-bool SQLParserContext::returnMultiLineBufferAsFile () const {
+bool SQL::SQLParserContext::returnMultiLineBufferAsFile () const {
   return multiLineBuffer != NULL;
 }
 
 
-void SQLParserContext::setExit () {
+void SQL::SQLParserContext::setExit () {
   isShouldExit = true;
 }
 
-int SQLParserContext::getNextInput ( char *buf, int max_size ) {
+int SQL::SQLParserContext::getNextInput ( char *buf, int max_size ) {
   int rt = 0;
   if ( !feof ( yyin ) ) {
     if ( lastLineOffset >= lastLineLen ) {
@@ -394,19 +395,15 @@ int SQLParserContext::getNextInput ( char *buf, int max_size ) {
   return rt;
 }
 
-std::ostream &SQLParserContext::debug () const {
+std::ostream &SQL::SQLParserContext::debug () const {
   return *debugStream;
 }
 
-void SQLParserContext::setFileName ( const std::string &fileName ) {
-  SQLParserContext::fileName = fileName;
-}
-
-void SQLParserContext::addIgnoreDB ( std::string db ) {
+void SQL::SQLParserContext::addIgnoreDB ( std::string db ) {
   ignoreDBs.push_back ( db );
 }
 
-bool SQLParserContext::notIgnored ( SQLStatement *pStatement ) {
+bool SQL::SQLParserContext::notIgnored ( SQLStatement *pStatement ) {
   bool rt = true;
 
   SQLStatement::table_type tables;
@@ -427,7 +424,7 @@ bool SQLParserContext::notIgnored ( SQLStatement *pStatement ) {
   return rt;
 }
 
-void yyerror ( location *yylloc, SQLParserContext &ctx, const char *s, ... ) {
+void yyerror ( location *yylloc, SQL::SQLParserContext &ctx, const char *s, ... ) {
   va_list ap;
   va_start( ap, s );
   char *msg = NULL;

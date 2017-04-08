@@ -6,6 +6,7 @@
 #include "SQLIdentifier.h"
 
 using namespace testing;
+using namespace SQL;
 
 TEST( SQLIdentifierTest, Test1 ) {
   SQLIdentifier id ( "`id`" );

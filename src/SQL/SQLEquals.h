@@ -6,14 +6,14 @@
 #define DBTABLEUSAGECPP_SQLEQUALS_H
 
 #include "SQLComparision.h"
-
-class SQLEquals : public SQLComparision {
-public:
-    EMPTY_CONSTRUCTOR(SQLEquals)
-    SQLEquals ( SQLObject *left, SQLObject *right );
-    virtual std::string toString () const;
-    virtual SQLEquals *clone () const;
-};
-
+namespace SQL {
+  class SQLEquals : public SQLComparision {
+  public:
+      EMPTY_CONSTRUCTOR( SQLEquals )
+      SQLEquals ( SQLObject *left, SQLObject *right );
+      virtual std::string toString () const;
+      virtual SQLEquals *clone () const;
+  };
+}
 
 #endif //DBTABLEUSAGECPP_SQLEQUALS_H

@@ -4,7 +4,7 @@
 
 #include "MySQLBinLogWriteRowsEvent.h"
 
-MySQLBinLogWriteRowsEvent::MySQLBinLogWriteRowsEvent ( mysql_event *pEvent, MySQLEventParser *pParser ) {
+SQL::MySQLBinLogWriteRowsEvent::MySQLBinLogWriteRowsEvent ( mysql_event *pEvent, MySQLEventParser *pParser ) {
   uint64_t id;
   pParser->extractTableID ( (char *) ( pEvent + 1 ), id, pParser->getHeaderLen ( pEvent->type ) );
   MySQLTableMapEntry *table = pParser->getTable ( id );
@@ -13,10 +13,10 @@ MySQLBinLogWriteRowsEvent::MySQLBinLogWriteRowsEvent ( mysql_event *pEvent, MySQ
     = SQLStatement::WRITE | SQLStatement::INSERT;
 }
 
-MySQLBinLogWriteRowsEvent::~MySQLBinLogWriteRowsEvent () {
+SQL::MySQLBinLogWriteRowsEvent::~MySQLBinLogWriteRowsEvent () {
   tables.clear ();
 }
 
-SQLStatement::table_type MySQLBinLogWriteRowsEvent::getTables () const {
+SQL::SQLStatement::table_type SQL::MySQLBinLogWriteRowsEvent::getTables () const {
   return tables;
 }

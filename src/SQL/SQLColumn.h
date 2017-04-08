@@ -9,20 +9,20 @@
 #include "SQLObject.h"
 #include "SQLTable.h"
 #include "SQLIdentifier.h"
-
-class SQLColumn : public SQLObject {
-public:
-    EMPTY_CONSTRUCTOR(SQLColumn)
-    SQLColumn ( SQLTable *table, SQLIdentifier *name );
-    SQLColumn ( SQLIdentifier *name );
-    virtual std::string toString () const;
-    virtual void resolve ( SQLParserContext *context );
-    virtual void walk ( SQLTreeWalker *walker );
-    virtual SQLColumn *clone () const;
-private:
-    boost::scoped_ptr<SQLTable> table;
-    boost::scoped_ptr<SQLIdentifier> name;
-};
-
+namespace SQL {
+  class SQLColumn : public SQLObject {
+  public:
+      EMPTY_CONSTRUCTOR( SQLColumn )
+      SQLColumn ( SQLTable *table, SQLIdentifier *name );
+      SQLColumn ( SQLIdentifier *name );
+      virtual std::string toString () const;
+      virtual void resolve ( SQLParserContext *context );
+      virtual void walk ( SQLTreeWalker *walker );
+      virtual SQLColumn *clone () const;
+  private:
+      boost::scoped_ptr<SQLTable> table;
+      boost::scoped_ptr<SQLIdentifier> name;
+  };
+}
 
 #endif //DBTABLEUSAGECPP_SQLCOLUMN_H

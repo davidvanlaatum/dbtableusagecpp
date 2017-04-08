@@ -5,26 +5,26 @@
 #include "SQLColumnDefinition.h"
 #include "SQLTableAddColumn.h"
 
-SQLTableAddColumn::SQLTableAddColumn ( SQLColumnDefinition *p ) : definition ( p ) {
+SQL::SQLTableAddColumn::SQLTableAddColumn ( SQLColumnDefinition *p ) : definition ( p ) {
 }
 
-SQLTableAddColumn::~SQLTableAddColumn () {
+SQL::SQLTableAddColumn::~SQLTableAddColumn () {
 
 }
 
-std::string SQLTableAddColumn::toString () const {
+std::string SQL::SQLTableAddColumn::toString () const {
   return "ADD COLUMN " + SQLObject::toString (definition);
 }
 
-void SQLTableAddColumn::resolve ( SQLParserContext *context ) {
+void SQL::SQLTableAddColumn::resolve ( SQLParserContext *context ) {
 // TODO
 }
 
-void SQLTableAddColumn::walk ( SQLTreeWalker *walker ) {
+void SQL::SQLTableAddColumn::walk ( SQLTreeWalker *walker ) {
 // TODO
 }
 
-SQLTableAddColumn *SQLTableAddColumn::clone () const {
+SQL::SQLTableAddColumn *SQL::SQLTableAddColumn::clone () const {
   SQLTableAddColumn *rt = new SQLTableAddColumn(NULL);
   rt->definition = definition;
   return rt;

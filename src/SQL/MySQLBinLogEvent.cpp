@@ -4,6 +4,6 @@
 
 #include "MySQLBinLogEvent.h"
 
-MySQLBinLogEvent::~MySQLBinLogEvent () {
+SQL::MySQLBinLogEvent::~MySQLBinLogEvent () {
 
 }

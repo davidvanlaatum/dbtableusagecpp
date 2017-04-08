@@ -4,33 +4,33 @@
 
 #include "SQLBeginStatement.h"
 
-SQLBeginStatement::SQLBeginStatement () {
+SQL::SQLBeginStatement::SQLBeginStatement () {
 }
 
-SQLBeginStatement::~SQLBeginStatement () {
+SQL::SQLBeginStatement::~SQLBeginStatement () {
 
 }
 
-std::string SQLBeginStatement::toString () const {
+std::string SQL::SQLBeginStatement::toString () const {
   return "BEGIN";
 }
 
-void SQLBeginStatement::resolve ( SQLParserContext *context ) {
+void SQL::SQLBeginStatement::resolve ( SQLParserContext *context ) {
 
 }
 
-void SQLBeginStatement::walk ( SQLTreeWalker *walker ) {
+void SQL::SQLBeginStatement::walk ( SQLTreeWalker *walker ) {
 
 }
 
-SQLBeginStatement *SQLBeginStatement::clone () const {
+SQL::SQLBeginStatement *SQL::SQLBeginStatement::clone () const {
   return new SQLBeginStatement ();
 }
 
-void SQLBeginStatement::getTables ( SQLStatement::table_type &rt ) const {
+void SQL::SQLBeginStatement::getTables ( SQLStatement::table_type &rt ) const {
 
 }
 
-size_t SQLBeginStatement::showAtVerboseLevel () const {
+size_t SQL::SQLBeginStatement::showAtVerboseLevel () const {
   return 2;
 }

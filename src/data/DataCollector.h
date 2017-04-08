@@ -10,13 +10,12 @@
 #include "SQLParserCallback.h"
 #include "SQLObject.h"
 #include "Host.h"
-#include "LogFileFetcher.h"
 #include "DataStore.h"
 
-class DataCollector : public SQLParserCallback {
+class DataCollector : public SQL::SQLParserCallback {
 public:
     DataCollector ();
-    virtual void statement ( location &location, SQLStatement *statement, SQLParserContext *context );
+    virtual void statement ( yy::location &location, SQL::SQLStatement *statement, SQL::SQLParserContext *context );
     void dump ();
     void setCurrentFileSize ( uint64_t currentFileSize );
     void setDataStore ( DataStore *pStore );
@@ -24,30 +23,32 @@ public:
     const Host *getHost () const;
     void setCommitInterval ( size_t interval );
 private:
-    typedef std::map<std::string, boost::shared_ptr<SQLObject> > variables_type;
+    typedef std::map<std::string, boost::shared_ptr<SQL::SQLObject> > variables_type;
     variables_type variables;
     boost::shared_ptr<Host> host;
-    int statements;
+    struct {
+        time_t time;
+        size_t statements;
+        size_t transactions;
+        uint64_t logPos;
+    } now, last;
+    struct {
+        timeval time;
+        time_t statement;
+    } start;
     timeval lastUpdate;
-    timeval start;
-    time_t lastTime;
-    int lastStatements;
-    size_t transactions;
-    size_t lastTransactions;
-    uint64_t lastLogPos;
-    time_t firstStatement;
     uint64_t currentFileSize;
+    size_t commitInterval;
     bool inTransaction;
     DataStore *pStore;
-    size_t commitInterval;
 
-    class Walker : public SQLTreeWalker {
+    class Walker : public SQL::SQLTreeWalker {
     public:
-        Walker ( boost::shared_ptr<Host> &host, SQLParserContext *context );
-        virtual void walk ( SQLObject *object );
+        Walker ( boost::shared_ptr<Host> &host, SQL::SQLParserContext *context );
+        virtual void walk ( SQL::SQLObject *object );
     private:
         boost::shared_ptr<Host> host;
-        SQLParserContext *ctx;
+        SQL::SQLParserContext *ctx;
     };
 };
 

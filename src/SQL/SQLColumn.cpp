@@ -4,32 +4,32 @@
 
 #include "SQLColumn.h"
 
-SQLColumn::SQLColumn ( SQLTable *table, SQLIdentifier *name ) : table ( table ), name ( name ) {
+SQL::SQLColumn::SQLColumn ( SQLTable *table, SQLIdentifier *name ) : table ( table ), name ( name ) {
 }
 
-SQLColumn::SQLColumn ( SQLIdentifier *name ) : name ( name ) {
+SQL::SQLColumn::SQLColumn ( SQLIdentifier *name ) : name ( name ) {
 }
 
-std::string SQLColumn::toString () const {
+std::string SQL::SQLColumn::toString () const {
   if ( !table ) {
-    return SQLObject::toString ( name );
+    return SQL::SQLObject::toString ( name );
   } else {
     return SQLObject::toString ( table ) + "." + SQLObject::toString ( name );
   }
 }
 
-void SQLColumn::resolve ( SQLParserContext *context ) {
+void SQL::SQLColumn::resolve ( SQLParserContext *context ) {
   if ( table != NULL ) {
     table->resolve ( context );
   }
 }
 
-void SQLColumn::walk ( SQLTreeWalker *walker ) {
+void SQL::SQLColumn::walk ( SQLTreeWalker *walker ) {
   if ( table != NULL ) {
     walker->walk ( table.get () );
   }
 }
 
-SQLColumn *SQLColumn::clone () const {
+SQL::SQLColumn *SQL::SQLColumn::clone () const {
   return new SQLColumn ( table ? table->clone () : NULL, name ? name->clone () : NULL );
 }

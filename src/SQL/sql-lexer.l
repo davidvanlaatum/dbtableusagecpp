@@ -9,12 +9,12 @@
 #include <stdarg.h>
 #include <string.h>
 using namespace yy;
-void yyerror(yy::SQLParser::location_type* yylloc, SQLParserContext &ctx, const char *s, ...);
+void yyerror(yy::SQLParser::location_type* yylloc, SQL::SQLParserContext &ctx, const char *s, ...);
 void adjustLines(yy::SQLParser::location_type *location, char *text);
 int getNextInput(char *buf, int max_size);
 
 #define YY_DECL int yylex(yy::SQLParser::semantic_type *yylval, \
-    yy::SQLParser::location_type *yylloc, SQLParserContext &ctx)
+    yy::SQLParser::location_type *yylloc, SQL::SQLParserContext &ctx)
 
 # define YY_USER_ACTION  yylloc->columns (yyleng); if(ctx.shouldExit()) return 0;
 #define YY_INPUT(buf,result,max_size)  {\
@@ -270,6 +270,8 @@ COMMIT { return token::COMMIT; }
 SAVEPOINT { return token::SAVEPOINT; }
 MODIFY { return token::MODIFY; }
 ENCRYPTION { return token::ENCRYPTION; }
+JSON { return token::JSON; }
+NUMERIC { return token::NUMERIC; }
 
    /* numbers */
 
@@ -326,14 +328,14 @@ B'[01]+'     { yylval->strval = strdup(yytext); return token::STRING; }
 "&&"  { return token::ANDOP; }
 "||"            { return token::OR; }
 
-"=" { yylval->subtok = EQUALTO; return token::COMPARISON; }
-"<=>" { yylval->subtok = NULL_EQUALS; return token::COMPARISON; }
-">=" { yylval->subtok = GREATERTHAN_OR_EQUALTO; return token::COMPARISON; }
-">" { yylval->subtok = GREATERTHAN; return token::COMPARISON; }
-"<=" { yylval->subtok = LESSTHAN_OR_EQUALTO; return token::COMPARISON; }
-"<" { yylval->subtok = LESSTHAN; return token::COMPARISON; }
+"=" { yylval->subtok = SQL::EQUALTO; return token::COMPARISON; }
+"<=>" { yylval->subtok = SQL::NULL_EQUALS; return token::COMPARISON; }
+">=" { yylval->subtok = SQL::GREATERTHAN_OR_EQUALTO; return token::COMPARISON; }
+">" { yylval->subtok = SQL::GREATERTHAN; return token::COMPARISON; }
+"<=" { yylval->subtok = SQL::LESSTHAN_OR_EQUALTO; return token::COMPARISON; }
+"<" { yylval->subtok = SQL::LESSTHAN; return token::COMPARISON; }
 "!=" |
-"<>" { yylval->subtok = NOTEQUALTO; return token::COMPARISON; }
+"<>" { yylval->subtok = SQL::NOTEQUALTO; return token::COMPARISON; }
 
 "<<" { yylval->subtok = 1; return token::SHIFT; }
 ">>" { yylval->subtok = 2; return token::SHIFT; }
@@ -391,14 +393,14 @@ _[A-Za-z][A-Za-z0-9_]+ { yylval->strval = strdup(yytext);
 .               { yyerror(yylloc,ctx,"mystery character '%c'", *yytext); }
 
 %%
-void SQLParserContext::flushLex() {
+void SQL::SQLParserContext::flushLex() {
   YY_FLUSH_BUFFER;
 }
 
-void SQLParserContext::scanString(const char *str ) {
+void SQL::SQLParserContext::scanString(const char *str ) {
   yy_scan_string(str);
 }
 
-void SQLParserContext::destroyLex() {
+void SQL::SQLParserContext::destroyLex() {
   yylex_destroy ();
 }

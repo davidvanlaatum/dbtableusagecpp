@@ -4,13 +4,13 @@
 
 #ifndef DBTABLEUSAGECPP_SQLTREEWALKER_H
 #define DBTABLEUSAGECPP_SQLTREEWALKER_H
+namespace SQL {
+  class SQLObject;
 
-class SQLObject;
-
-class SQLTreeWalker {
-public:
-    virtual void walk ( SQLObject *object ) = 0;
-};
-
+  class SQLTreeWalker {
+  public:
+      virtual void walk ( SQLObject *object ) = 0;
+  };
+}
 
 #endif //DBTABLEUSAGECPP_SQLTREEWALKER_H

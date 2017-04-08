@@ -20,7 +20,7 @@ public:
 private:
     po::options_description options;
     po::options_description config;
-    void setupDriver ( SQLParserContext &driver, const boost::program_options::variables_map &vm ) const;
+    void setupDriver ( SQL::SQLParserContext &driver, const boost::program_options::variables_map &vm ) const;
 };
 
 

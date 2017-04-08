@@ -4,9 +4,9 @@
 
 #include "SQLCreateTableStatement.h"
 
-SQLCreateTableStatement::SQLCreateTableStatement ( bool temporary, bool notExists, SQLTable *table,
-                                                   SQLObjectList<> *columns ) : table ( table ), temporary ( temporary ),
-                                                                                notExists ( notExists ) {
+SQL::SQLCreateTableStatement::SQLCreateTableStatement ( bool temporary, bool notExists, SQLTable *table,
+                                                   SQLObjectList<> *columns, SQLObjectList<> *attributes ) :
+  table ( table ), temporary ( temporary ), notExists ( notExists ) {
   if ( columns ) {
     for ( SQLObjectList<>::iterator it = columns->begin (); it != columns->end (); ++it ) {
       this->columns.push ( *it );
@@ -15,30 +15,30 @@ SQLCreateTableStatement::SQLCreateTableStatement ( bool temporary, bool notExist
   }
 }
 
-SQLCreateTableStatement::~SQLCreateTableStatement () {
+SQL::SQLCreateTableStatement::~SQLCreateTableStatement () {
 
 }
 
-void SQLCreateTableStatement::getTables ( SQLStatement::table_type &rt ) const {
+void SQL::SQLCreateTableStatement::getTables ( SQLStatement::table_type &rt ) const {
 // TODO
 }
 
-std::string SQLCreateTableStatement::toString () const {
-  return "CREATE TABLE ";// TODO
+std::string SQL::SQLCreateTableStatement::toString () const {
+  return "CREATE TABLE " + columns.toString ();// TODO
 }
 
-void SQLCreateTableStatement::resolve ( SQLParserContext *context ) {
+void SQL::SQLCreateTableStatement::resolve ( SQLParserContext *context ) {
 // TODO
 }
 
-void SQLCreateTableStatement::walk ( SQLTreeWalker *walker ) {
+void SQL::SQLCreateTableStatement::walk ( SQLTreeWalker *walker ) {
 // TODO
 }
 
-SQLCreateTableStatement *SQLCreateTableStatement::clone () const {
-  return new SQLCreateTableStatement(false,false,NULL,NULL);// TODO
+SQL::SQLCreateTableStatement *SQL::SQLCreateTableStatement::clone () const {
+  return new SQLCreateTableStatement ( false, false, NULL, NULL, NULL );// TODO
 }
 
-size_t SQLCreateTableStatement::showAtVerboseLevel () const {
+size_t SQL::SQLCreateTableStatement::showAtVerboseLevel () const {
   return 1;
 }

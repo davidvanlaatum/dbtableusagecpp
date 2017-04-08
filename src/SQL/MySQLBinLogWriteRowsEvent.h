@@ -8,16 +8,16 @@
 #include "MySQLBinLogEvent.h"
 #include "MySQLEvents.h"
 #include "MySQLEventParser.h"
+namespace SQL {
+  class MySQLBinLogWriteRowsEvent : public MySQLBinLogEvent {
+  public:
+      MySQLBinLogWriteRowsEvent ( mysql_event *pEvent, MySQLEventParser *pParser );
+      virtual ~MySQLBinLogWriteRowsEvent ();
+      virtual SQLStatement::table_type getTables () const;
 
-class MySQLBinLogWriteRowsEvent : public MySQLBinLogEvent {
-public:
-    MySQLBinLogWriteRowsEvent ( mysql_event *pEvent, MySQLEventParser *pParser );
-    virtual ~MySQLBinLogWriteRowsEvent ();
-    virtual SQLStatement::table_type getTables () const;
-
-protected:
-    SQLStatement::table_type tables;
-};
-
+  protected:
+      SQLStatement::table_type tables;
+  };
+}
 
 #endif //DBTABLEUSAGECPP_MYSQLROWWRITEEVENT_H

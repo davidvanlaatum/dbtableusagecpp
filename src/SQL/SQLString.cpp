@@ -4,11 +4,11 @@
 
 #include "SQLString.h"
 
-std::string SQLString::toString () const {
+std::string SQL::SQLString::toString () const {
   return "'" + value + "'";
 }
 
-SQLString::SQLString ( const std::string &value ) {
+SQL::SQLString::SQLString ( const std::string &value ) {
   if ( !value.empty () && ( ( value.at ( 0 ) == '\'' && *( --value.end () ) == '\'' ) ||
                             ( value.at ( 0 ) == '"' && *( --value.end () ) == '"' ) ) ) {
     this->value = value.substr ( 1, value.size () - 2 );
@@ -17,14 +17,14 @@ SQLString::SQLString ( const std::string &value ) {
   }
 }
 
-void SQLString::resolve ( SQLParserContext *context ) {
+void SQL::SQLString::resolve ( SQLParserContext *context ) {
 
 }
 
-void SQLString::walk ( SQLTreeWalker *walker ) {
+void SQL::SQLString::walk ( SQLTreeWalker *walker ) {
 
 }
 
-SQLString *SQLString::clone () const {
+SQL::SQLString *SQL::SQLString::clone () const {
   return new SQLString ( value );
 }

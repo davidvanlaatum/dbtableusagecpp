@@ -8,22 +8,23 @@
 #include <map>
 #include "SQLObject.h"
 #include "SQLTable.h"
-
+namespace SQL {
 /*abstract*/ class SQLStatement : public SQLObject {
-public:
-    enum TableFlags {
-        READ = 1,
-        WRITE = 2,
-        INSERT = 4,
-        UPDATE = 8,
-        DELETE = 16,
-        ALTER = 32
-    };
-    typedef std::map<boost::shared_ptr<SQLTable>, int> table_type;
-    virtual ~SQLStatement ();
-    virtual void getTables ( table_type &rt ) const = 0;
-    virtual size_t showAtVerboseLevel() const = 0;
-};
+  public:
+      enum TableFlags {
+          READ = 1,
+          WRITE = 2,
+          INSERT = 4,
+          UPDATE = 8,
+          DELETE = 16,
+          ALTER = 32
+      };
+      typedef std::map<boost::shared_ptr<SQLTable>, int> table_type;
+      virtual ~SQLStatement ();
+      virtual void getTables ( table_type &rt ) const = 0;
+      virtual size_t showAtVerboseLevel () const = 0;
+  };
+}
 
 
 #endif //DBTABLEUSAGECPP_SQLSTATEMENT_H

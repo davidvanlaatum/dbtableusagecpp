@@ -4,7 +4,7 @@
 
 #include "SQLSetStatement.h"
 
-SQLSetStatement::SQLSetStatement ( SQLObjectList<> *args ) {
+SQL::SQLSetStatement::SQLSetStatement ( SQL::SQLObjectList<> *args ) {
   if ( args ) {
     for ( SQLObjectList<>::iterator it = args->begin (); it != args->end (); ++it ) {
       if ( SQLSetPair *setPair = dynamic_cast<class SQLSetPair *>(*it) ) {
@@ -14,45 +14,45 @@ SQLSetStatement::SQLSetStatement ( SQLObjectList<> *args ) {
   }
 }
 
-SQLSetStatement::~SQLSetStatement () {
+SQL::SQLSetStatement::~SQLSetStatement () {
   for ( ArgsType::iterator it = args.begin (); it != args.end (); ++it ) {
     delete *it;
   }
   args.clear ();
 }
 
-std::string SQLSetStatement::toString () const {
+std::string SQL::SQLSetStatement::toString () const {
   return std::string ( "Set " ) + args.toString ();
 }
 
-const SQLSetStatement::ArgsType &SQLSetStatement::getArgs () const {
+const SQL::SQLSetStatement::ArgsType &SQL::SQLSetStatement::getArgs () const {
   return args;
 }
 
-SQLSetStatement::SQLSetStatement () {
+SQL::SQLSetStatement::SQLSetStatement () {
 
 }
 
-void SQLSetStatement::getTables ( table_type &rt ) const {
+void SQL::SQLSetStatement::getTables ( table_type &rt ) const {
 
 }
 
-void SQLSetStatement::resolve ( SQLParserContext *context ) {
+void SQL::SQLSetStatement::resolve ( SQLParserContext *context ) {
   for ( ArgsType::iterator it = args.begin (); it != args.end (); ++it ) {
     ( *it )->resolve ( context );
   }
 }
 
-void SQLSetStatement::walk ( SQLTreeWalker *walker ) {
+void SQL::SQLSetStatement::walk ( SQLTreeWalker *walker ) {
   for ( ArgsType::iterator it = args.begin (); it != args.end (); ++it ) {
     walker->walk ( *it );
   }
 }
 
-SQLSetStatement *SQLSetStatement::clone () const {
+SQL::SQLSetStatement *SQL::SQLSetStatement::clone () const {
   return new SQLSetStatement ( (SQLObjectList<> *) &args );
 }
 
-size_t SQLSetStatement::showAtVerboseLevel () const {
+size_t SQL::SQLSetStatement::showAtVerboseLevel () const {
   return 2;
 }

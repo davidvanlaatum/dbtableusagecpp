@@ -6,26 +6,26 @@
 #include "SQLColumnAttributes.h"
 #include "SQLColumnDefinition.h"
 
-SQLColumnDefinition::SQLColumnDefinition ( SQLIdentifier *name, SQLDataType *type, SQLColumnAttributes *attributes )
+SQL::SQLColumnDefinition::SQLColumnDefinition ( SQLIdentifier *name, SQLDataType *type, SQLColumnAttributes *attributes )
   : name ( name ), type ( type ), attributes ( attributes ) {
 }
 
-SQLColumnDefinition::~SQLColumnDefinition () {
+SQL::SQLColumnDefinition::~SQLColumnDefinition () {
 
 }
 
-std::string SQLColumnDefinition::toString () const {
-  return "BLA";// TODO
+std::string SQL::SQLColumnDefinition::toString () const {
+  return SQLObject::toString ( name ) + " " + SQLObject::toString ( type ) + " " + SQLObject::toString ( attributes );
 }
 
-void SQLColumnDefinition::resolve ( SQLParserContext *context ) {
+void SQL::SQLColumnDefinition::resolve ( SQLParserContext *context ) {
 // TODO
 }
 
-void SQLColumnDefinition::walk ( SQLTreeWalker *walker ) {
+void SQL::SQLColumnDefinition::walk ( SQLTreeWalker *walker ) {
 // TODO
 }
 
-SQLColumnDefinition *SQLColumnDefinition::clone () const {
+SQL::SQLColumnDefinition *SQL::SQLColumnDefinition::clone () const {
   return new SQLColumnDefinition ( NULL, NULL, NULL );// TODO
 }

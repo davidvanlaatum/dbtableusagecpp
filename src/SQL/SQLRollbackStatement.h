@@ -6,17 +6,17 @@
 #define DBTABLEUSAGECPP_SQLROLLBACKSTATEMENT_H
 
 #include "SQLStatement.h"
-
-class SQLRollbackStatement : public SQLStatement {
-public:
-    virtual ~SQLRollbackStatement ();
-    virtual std::string toString () const;
-    virtual void resolve ( SQLParserContext *context );
-    virtual void walk ( SQLTreeWalker *walker );
-    virtual SQLRollbackStatement * clone () const;
-    virtual void getTables ( table_type &rt ) const;
-    virtual size_t showAtVerboseLevel () const;
-};
-
+namespace SQL {
+  class SQLRollbackStatement : public SQLStatement {
+  public:
+      virtual ~SQLRollbackStatement ();
+      virtual std::string toString () const;
+      virtual void resolve ( SQLParserContext *context );
+      virtual void walk ( SQLTreeWalker *walker );
+      virtual SQLRollbackStatement *clone () const;
+      virtual void getTables ( table_type &rt ) const;
+      virtual size_t showAtVerboseLevel () const;
+  };
+}
 
 #endif //DBTABLEUSAGECPP_SQLROLLBACKSTATEMENT_H

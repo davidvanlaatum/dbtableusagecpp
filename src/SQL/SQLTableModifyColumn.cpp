@@ -4,26 +4,26 @@
 #include "SQLColumnDefinition.h"
 #include "SQLTableModifyColumn.h"
 
-SQLTableModifyColumn::SQLTableModifyColumn ( SQLColumnDefinition *p ) : definition ( p ) {
+SQL::SQLTableModifyColumn::SQLTableModifyColumn ( SQLColumnDefinition *p ) : definition ( p ) {
 }
 
-SQLTableModifyColumn::~SQLTableModifyColumn () {
+SQL::SQLTableModifyColumn::~SQLTableModifyColumn () {
 
 }
 
-std::string SQLTableModifyColumn::toString () const {
+std::string SQL::SQLTableModifyColumn::toString () const {
   return "MODIFY COLUMN" + SQLObject::toString ( definition );
 }
 
-void SQLTableModifyColumn::resolve ( SQLParserContext *context ) {
+void SQL::SQLTableModifyColumn::resolve ( SQLParserContext *context ) {
 // TODO
 }
 
-void SQLTableModifyColumn::walk ( SQLTreeWalker *walker ) {
+void SQL::SQLTableModifyColumn::walk ( SQLTreeWalker *walker ) {
 // TODO
 }
 
-SQLTableModifyColumn *SQLTableModifyColumn::clone () const {
+SQL::SQLTableModifyColumn *SQL::SQLTableModifyColumn::clone () const {
   SQLTableModifyColumn *rt = new SQLTableModifyColumn ( NULL );
   rt->definition = definition;
   return rt;

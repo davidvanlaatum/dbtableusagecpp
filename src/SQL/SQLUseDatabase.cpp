@@ -4,29 +4,29 @@
 
 #include "SQLUseDatabase.h"
 
-SQLUseDatabase::SQLUseDatabase ( SQLIdentifier *name ) : name ( name ) {
+SQL::SQLUseDatabase::SQLUseDatabase ( SQLIdentifier *name ) : name ( name ) {
 
 }
 
-std::string SQLUseDatabase::toString () const {
+std::string SQL::SQLUseDatabase::toString () const {
   return "Use " + SQLObject::toString ( name );
 }
 
-void SQLUseDatabase::getTables ( table_type &rt ) const {
+void SQL::SQLUseDatabase::getTables ( table_type &rt ) const {
 }
 
-void SQLUseDatabase::resolve ( SQLParserContext *context ) {
-
-}
-
-void SQLUseDatabase::walk ( SQLTreeWalker *walker ) {
+void SQL::SQLUseDatabase::resolve ( SQLParserContext *context ) {
 
 }
 
-SQLUseDatabase *SQLUseDatabase::clone () const {
+void SQL::SQLUseDatabase::walk ( SQLTreeWalker *walker ) {
+
+}
+
+SQL::SQLUseDatabase *SQL::SQLUseDatabase::clone () const {
   return new SQLUseDatabase ( name ? name->clone () : NULL );
 }
 
-size_t SQLUseDatabase::showAtVerboseLevel () const {
+size_t SQL::SQLUseDatabase::showAtVerboseLevel () const {
   return 2;
 }
