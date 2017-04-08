@@ -22,6 +22,7 @@ public:
     void setDataStore ( DataStore *pStore );
     void setMonitoredHost ( const std::string &host );
     const Host *getHost () const;
+    void setCommitInterval ( size_t interval );
 private:
     typedef std::map<std::string, boost::shared_ptr<SQLObject> > variables_type;
     variables_type variables;
@@ -31,11 +32,14 @@ private:
     timeval start;
     time_t lastTime;
     int lastStatements;
+    size_t transactions;
+    size_t lastTransactions;
     uint64_t lastLogPos;
     time_t firstStatement;
     uint64_t currentFileSize;
     bool inTransaction;
     DataStore *pStore;
+    size_t commitInterval;
 
     class Walker : public SQLTreeWalker {
     public:

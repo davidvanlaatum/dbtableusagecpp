@@ -70,8 +70,26 @@ Vagrant.configure(2) do |config|
   #   sudo apt-get install -y apache2
   # SHELL
   config.vm.provision "shell", inline: <<-SHELL
+    yum install -y yum-utils yum-plugin-auto-update-debug-info
     yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-    yum install -y cmake3 gcc gcc-c++ bison flex glib2-devel lcov http://dl.fedoraproject.org/pub/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/g/gcovr-3.3-4.fc27.noarch.rpm
+    yum install -y cmake3 gcc gcc-c++ bison flex glib2-devel lcov soci-devel soci-mysql boost-\* valgrind nano lsof
+    yum install -y http://dl.fedoraproject.org/pub/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/g/gcovr-3.3-4.fc27.noarch.rpm
+    yum install -y https://dev.mysql.com/get/mysql57-community-release-el7-9.noarch.rpm
+    yum install -y mysql-community-server
+    debuginfo-install -y glib2 soci soci-mysql boost\* mysql-community-server
+    grep -q includedir /etc/my.cnf || echo '!includedir /etc/my.cnf.d' >> /etc/my.cnf
+    cat > /etc/my.cnf.d/binlog.cnf <<EOF
+[mysqld]
+server-id = 1
+log-bin		= /var/lib/mysql/mysql-bin.log
+log-bin-index 	= /var/lib/mysql/mysql-bin.index
+expire-logs-days        = 30
+max_binlog_size         = 104857600
+EOF
+    [ -f /var/lib/mysql/auto.cnf ] || mysqld --initialize-insecure --user=mysql
+    systemctl enable mysqld
+    systemctl restart mysqld
+    exit 0
   SHELL
   config.vm.provision "shell", privileged: false, inline: <<-SHELL
     mkdir -p build

@@ -49,7 +49,7 @@ private:
 class SQLDataCollation : public SQLObject {
 public:
     EMPTY_CONSTRUCTOR(SQLDataCollation)
-    SQLDataCollation ( char *name );
+    SQLDataCollation ( const char *name );
     virtual ~SQLDataCollation ();
     virtual std::string toString () const;
     virtual void resolve ( SQLParserContext *context );

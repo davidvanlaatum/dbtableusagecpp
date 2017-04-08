@@ -22,6 +22,7 @@ public:
     typedef std::map<boost::shared_ptr<SQLTable>, int> table_type;
     virtual ~SQLStatement ();
     virtual void getTables ( table_type &rt ) const = 0;
+    virtual size_t showAtVerboseLevel() const = 0;
 };
 
 

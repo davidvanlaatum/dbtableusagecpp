@@ -290,11 +290,20 @@ FALSE { yylval->intval = 0; return token::BOOL; }
 '(\\.|''|[^'\n])*' |
 \"(\\.|\"\"|[^"\n])*\"  { yylval->strval = strdup(yytext); adjustLines(yylloc,yytext); return token::STRING; }
 
-" "'$ { oldstate = YY_START; BEGIN MULTILINESTRING; }
+" "'$ { oldstate = YY_START; BEGIN MULTILINESTRING; ctx.newMultiLineBuffer(); }
 <MULTILINESTRING>[a-zA-Z0-9=/+]+ { ctx.appendMultiLine(yytext); }
-<MULTILINESTRING>\n { yylloc->lines(1); }
+<MULTILINESTRING>\n { yylloc->lines(1); yylloc->step(); }
 <MULTILINESTRING><<EOF>> { yyerror(yylloc,ctx,"unclosed multi-line string"); return 0;};
-<MULTILINESTRING>' { BEGIN oldstate; yylval->file = ctx.getMultiLineBufferFile(); return token::MLSTRING; }
+<MULTILINESTRING>' { BEGIN oldstate;
+   yylloc->step();
+   if(ctx.returnMultiLineBufferAsFile()) {
+    yylval->file = ctx.getMultiLineBufferFile();
+    return token::MLSTRING;
+   } else {
+    yylval->strval = ctx.getMultiLineBuffer();
+    return token::STRING;
+   }
+  }
 <MULTILINESTRING>.               { yyerror(yylloc,ctx,"mystery character in multi-line string '%c'", *yytext);}
 
 '(\\.|[^'])*$         { yyerror(yylloc,ctx,"Unterminated string %s", yytext); }
@@ -381,6 +390,14 @@ _[A-Za-z][A-Za-z0-9_]+ { yylval->strval = strdup(yytext);
 .               { yyerror(yylloc,ctx,"mystery character '%c'", *yytext); }
 
 %%
-extern "C" void flushLex() {
+void SQLParserContext::flushLex() {
   YY_FLUSH_BUFFER;
+}
+
+void SQLParserContext::scanString(const char *str ) {
+  yy_scan_string(str);
+}
+
+void SQLParserContext::destroyLex() {
+  yylex_destroy ();
 }

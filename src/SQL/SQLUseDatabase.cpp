@@ -26,3 +26,7 @@ void SQLUseDatabase::walk ( SQLTreeWalker *walker ) {
 SQLUseDatabase *SQLUseDatabase::clone () const {
   return new SQLUseDatabase ( name ? name->clone () : NULL );
 }
+
+size_t SQLUseDatabase::showAtVerboseLevel () const {
+  return 2;
+}

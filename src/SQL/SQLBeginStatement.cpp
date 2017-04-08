@@ -30,3 +30,7 @@ SQLBeginStatement *SQLBeginStatement::clone () const {
 void SQLBeginStatement::getTables ( SQLStatement::table_type &rt ) const {
 
 }
+
+size_t SQLBeginStatement::showAtVerboseLevel () const {
+  return 2;
+}

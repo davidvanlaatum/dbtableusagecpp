@@ -19,8 +19,10 @@ public:
     void save ( Host &host );
     void save ( DB &db, int host );
     void save ( Table &table, int db );
+    size_t getSaveCount () const;
 
 private:
+    size_t saveCount;
     std::string url;
     session sql;
 };

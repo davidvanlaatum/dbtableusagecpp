@@ -39,3 +39,7 @@ void SQLReplaceIntoStatement::walk ( SQLTreeWalker *walker ) {
 SQLReplaceIntoStatement *SQLReplaceIntoStatement::clone () const {
   return new SQLReplaceIntoStatement ( table ? table->clone () : NULL, values ? values->clone () : NULL );
 }
+
+size_t SQLReplaceIntoStatement::showAtVerboseLevel () const {
+  return 1;
+}

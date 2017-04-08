@@ -48,8 +48,10 @@ bool DataStore::load ( Host &host, std::string name ) {
 }
 
 void DataStore::save ( Host &host ) {
+  saveCount = 0;
   transaction tr ( sql );
   if ( host.hasChanged () ) {
+    saveCount++;
     if ( host.getId () != 0 ) {
       sql << "update host set name = :NAME, last_log_file = :LAST_LOG_FILE, last_log_pos = :LAST_LOG_POS where id = "
         ":ID", use ( host );
@@ -79,6 +81,7 @@ void DataStore::save ( Host &host ) {
 
 void DataStore::save ( Table &table, int db ) {
   if ( table.hasChanged () ) {
+    saveCount++;
     table.setDatabase ( db );
     if ( table.getId () != 0 ) {
       sql
@@ -106,6 +109,7 @@ void DataStore::save ( Table &table, int db ) {
 
 void DataStore::save ( DB &db, int host ) {
   if ( db.hasChanged () ) {
+    saveCount++;
     db.setHost ( host );
     if ( db.getId () != 0 ) {
       sql << "update db set name = :NAME where id = :ID", use ( db );
@@ -129,4 +133,8 @@ void DataStore::save ( DB &db, int host ) {
     save ( **it, db.getId () );
   }
   db.clearChanged ();
+}
+
+size_t DataStore::getSaveCount () const {
+  return saveCount;
 }

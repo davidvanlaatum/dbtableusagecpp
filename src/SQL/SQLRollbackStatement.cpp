@@ -27,3 +27,7 @@ SQLRollbackStatement *SQLRollbackStatement::clone () const {
 void SQLRollbackStatement::getTables ( SQLStatement::table_type &rt ) const {
 
 }
+
+size_t SQLRollbackStatement::showAtVerboseLevel () const {
+  return 2;
+}

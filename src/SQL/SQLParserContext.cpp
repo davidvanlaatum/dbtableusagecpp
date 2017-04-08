@@ -10,23 +10,23 @@
 #include <string.h>
 #include <boost/scoped_ptr.hpp>
 #include <iomanip>
+#include <sql-parser.hpp>
 #include "SQLParserContext.h"
-#include "SQLParserFailedException.h"
 #include "SQLStatement.h"
 #include "SQLSetStatement.h"
 #include "SQLInteger.h"
 #include "SQLUseDatabase.h"
+#include "SQLParserCallback.h"
 
 extern FILE *yyin;
-#define LINE_BUFFER_LEN 100
-#define LINE_BUFFER_COUNT 100
-char *lineBuffers[LINE_BUFFER_COUNT] = { 0 };
-size_t lineNumbers[LINE_BUFFER_COUNT] = { 0 };
-size_t lineBufferIndex = 0;
-size_t lastLineOffset = 0;
-size_t lastLineLen = 0;
-size_t lineNum = 0;
-size_t readBytes = 0;
+SQLParserContext *currentContext;
+std::string bytesToString ( uint64_t bytes );
+
+void signalHandler ( int sig ) {
+  if ( currentContext ) {
+    currentContext->setExit ();
+  }
+}
 
 bool hasLF ( const char *line ) {
   if ( line == NULL ) {
@@ -39,34 +39,38 @@ bool hasLF ( const char *line ) {
   return line[i] == '\n';
 }
 
-SQLParserContext::SQLParserContext ( std::string fileName, SQLParserCallback *callback ) : fileName ( fileName ),
-                                                                                           eventParser ( this ),
-                                                                                           callback ( callback ) {
-  errorStream = &std::cerr;
-  outStream = &std::cout;
+SQLParserContext::SQLParserContext ( SQLParserCallback *callback, std::ostream *output, std::ostream *error,
+                                     std::ostream *debug ) :
+  eventParser ( this ), callback ( callback ), outStream ( output ), errorStream ( error ), debugStream ( debug ) {
+  bzero ( lineBuffers, sizeof ( lineBuffers ) );
+  bzero ( lineNumbers, sizeof ( lineNumbers ) );
+  if ( !errorStream ) {
+    errorStream = &std::cerr;
+  }
+  if ( !outStream ) {
+    outStream = &std::cout;
+  }
+  debugStream = NULL;
   timestamp = 0;
-  initBuffers ();
   multiLineBuffer = NULL;
   isShouldExit = false;
+  lineNum = 1;
+  lineBufferIndex = 0;
+  lastLineOffset = 0;
+  lastLineLen = 0;
+  readBytes = 0;
 }
 
 SQLParserContext::~SQLParserContext () {
-  initBuffers ();
-  if ( multiLineBuffer ) {
-    fclose ( multiLineBuffer );
-  }
-}
-
-void SQLParserContext::initBuffers () const {
   readBytes = 0;
   for ( int i = 0; i < LINE_BUFFER_COUNT; i++ ) {
     if ( lineBuffers[i] ) {
       free ( lineBuffers[i] );
     }
   }
-  bzero ( lineNumbers, sizeof ( lineNumbers ) );
-  bzero ( lineBuffers, sizeof ( lineBuffers ) );
-  lineNum = 1;
+  if ( multiLineBuffer ) {
+    fclose ( multiLineBuffer );
+  }
 }
 
 void SQLParserContext::push ( yy::location &yylloc, SQLStatement *statement ) {
@@ -75,7 +79,7 @@ void SQLParserContext::push ( yy::location &yylloc, SQLStatement *statement ) {
     throw SQLParserFailedException ( yylloc, "null statement" );
   }
   statement->resolve ( this );
-  if ( verbose ) {
+  if ( verbose && statement->showAtVerboseLevel () <= verbose ) {
     out () << yylloc << " " << *statement << std::endl;
   }
 
@@ -131,6 +135,10 @@ std::ostream &SQLParserContext::error () const {
 
 void SQLParserContext::setOutStream ( std::ostream *ostream ) {
   outStream = ostream;
+}
+
+void SQLParserContext::setDebugStream ( std::ostream *debugStream ) {
+  SQLParserContext::debugStream = debugStream;
 }
 
 std::ostream &SQLParserContext::out () const {
@@ -194,6 +202,80 @@ void SQLParserContext::error ( location location, std::string msg ) {
   *errorStream << error.str ();
 }
 
+void SQLParserContext::parseFile ( std::string file )  throw ( SQLParserFailedException ) {
+  FILE *in = NULL;
+  if ( ( in = fopen ( file.data (), "r" ) ) != NULL ) {
+    try {
+      parseFileHandle ( in, file );
+      fclose ( in );
+    } catch ( ... ) {
+      fclose ( in );
+      throw;
+    }
+  } else {
+    throw SQLParserFailedException ( "failed to open " + file + ": " + strerror ( errno ) );
+  }
+}
+
+void SQLParserContext::parseFileHandle ( FILE *handle, std::string file ) throw ( SQLParserFailedException ) {
+  flushLex ();
+  errno = 0;
+  yyin = handle;
+  parse ( file );
+}
+
+void
+SQLParserContext::parseString ( std::string buffer ) throw ( SQLParserFailedException ) {
+  flushLex ();
+  scanString ( buffer.data () );
+  parse ( "buffer" );
+}
+
+void SQLParserContext::parseStdIn ()  throw ( SQLParserFailedException ) {
+  flushLex ();
+  parse ( "stdin" );
+}
+
+void SQLParserContext::setupSignalHandler () {
+  struct sigaction s;
+  bzero ( &s, sizeof ( s ) );
+  s.sa_handler = signalHandler;
+  s.sa_flags = SA_RESETHAND | SA_RESTART;
+  sigaction ( SIGTERM, &s, NULL );
+  sigaction ( SIGINT, &s, NULL );
+  sigaction ( SIGHUP, &s, NULL );
+}
+
+void SQLParserContext::clearSignalHandler () {
+
+}
+
+void SQLParserContext::parse ( std::string file )  throw ( SQLParserFailedException ) {
+  if ( callback == NULL ) {
+    throw SQLParserFailedException ( "Callback must not be null" );
+  }
+  ::yy::SQLParser parser ( *this );
+  if ( debugStream ) {
+    parser.set_debug_stream ( *debugStream );
+    if ( debugLevel > 2 ) {
+      parser.set_debug_level ( debugLevel - 2 );
+    }
+  }
+  try {
+    currentContext = this;
+    setupSignalHandler ();
+    parser.parse ();
+    clearSignalHandler ();
+    currentContext = NULL;
+    destroyLex ();
+  } catch ( ... ) {
+    clearSignalHandler ();
+    currentContext = NULL;
+    destroyLex ();
+    throw;
+  }
+}
+
 boost::shared_ptr<SQLIdentifier> SQLParserContext::getCurrentDatabase () {
   return currentDatabase;
 }
@@ -215,46 +297,51 @@ int SQLParserContext::getVerbose () const {
 }
 
 void SQLParserContext::setDebug ( int debug ) {
-  this->debug = debug;
+  this->debugLevel = debug;
 }
 
 int SQLParserContext::getDebug () const {
-  return debug;
+  return debugLevel;
 }
 
 uint64_t SQLParserContext::getLogPos () const {
   return logPos;
 }
 
-void SQLParserContext::appendMultiLine ( const char *buffer ) {
-  if ( !multiLineBuffer ) {
-    multiLineBuffer = tmpfile ();
+void SQLParserContext::newMultiLineBuffer () {
+  if ( multiLineBuffer ) {
+    fclose ( multiLineBuffer );
   }
+  multiLineBuffer = NULL;
+  multiLineBufferString.clear ();
+}
+
+void SQLParserContext::appendMultiLine ( const char *buffer ) {
   size_t len = strlen ( buffer );
-  guchar *data = g_base64_decode ( buffer, &len );
-  fwrite ( data, len, 1, multiLineBuffer );
-  g_free ( data );
+  if ( multiLineBuffer ) {
+    guchar *data = g_base64_decode ( buffer, &len );
+    fwrite ( data, len, 1, multiLineBuffer );
+    g_free ( data );
+  } else if ( multiLineBufferString.size () + len > MULTILINE_TMPFILE_LIMIT ) {
+    errno = 0;
+    multiLineBuffer = tmpfile ();
+    if ( !multiLineBuffer ) {
+      throw SQLParserFailedException ( std::string ( "Failed to create temporary file for multi-line buffer: " ) +
+                                       strerror ( errno ) );
+    }
+    if ( !multiLineBufferString.empty () ) {
+      appendMultiLine ( multiLineBufferString.c_str () );
+      multiLineBufferString.clear ();
+    }
+    appendMultiLine ( buffer );
+  } else {
+    multiLineBufferString.append ( buffer );
+  }
 }
 
 char *SQLParserContext::getMultiLineBuffer () {
-  char *rt = NULL;
-  if ( multiLineBuffer ) {
-    errno = 0;
-    size_t len = (size_t) ftell ( multiLineBuffer );
-    if ( errno != 0 ) {
-      throw std::runtime_error ( strerror ( errno ) );
-    }
-    if ( len > 1024 * 1024 ) {
-      *errorStream << "Truncating buffer of length " << len << std::endl;
-      len = 4096;
-    }
-    rt = (char *) malloc ( len + 1 );
-    rt[len] = 0;
-    rewind ( multiLineBuffer );
-    fread ( rt, 1, len, multiLineBuffer );
-    fclose ( multiLineBuffer );
-    multiLineBuffer = NULL;
-  }
+  char *rt = strdup ( multiLineBufferString.c_str () );
+  multiLineBufferString.clear ();
   return rt;
 }
 
@@ -264,8 +351,53 @@ FILE *SQLParserContext::getMultiLineBufferFile () {
   return tmp;
 }
 
+bool SQLParserContext::returnMultiLineBufferAsFile () const {
+  return multiLineBuffer != NULL;
+}
+
+
 void SQLParserContext::setExit () {
   isShouldExit = true;
+}
+
+int SQLParserContext::getNextInput ( char *buf, int max_size ) {
+  int rt = 0;
+  if ( !feof ( yyin ) ) {
+    if ( lastLineOffset >= lastLineLen ) {
+      if ( hasLF ( lineBuffers[lineBufferIndex] ) ) { // if the last line buffer ends in \n we are now on a new line
+        lineNum++;
+      }
+      lineBufferIndex++;
+      if ( lineBufferIndex >= LINE_BUFFER_COUNT ) {
+        lineBufferIndex = 0;
+      }
+      if ( !lineBuffers[lineBufferIndex] ) {
+        lineBuffers[lineBufferIndex] = (char *) malloc ( LINE_BUFFER_LEN );
+      }
+      if ( !fgets ( lineBuffers[lineBufferIndex], LINE_BUFFER_LEN, yyin ) ) {
+        lineBuffers[lineBufferIndex][0] = 0;
+      } else if ( currentContext->getDebug () ) {
+        currentContext->debug () << "Read '" << lineBuffers[lineBufferIndex] << "'" << std::endl;
+      }
+      lastLineLen = strlen ( lineBuffers[lineBufferIndex] );
+      readBytes += lastLineLen;
+      lastLineOffset = 0;
+      lineNumbers[lineBufferIndex] = lineNum;
+    }
+    if ( lastLineOffset < lastLineLen ) {
+      buf[0] = lineBuffers[lineBufferIndex][lastLineOffset++];
+      return 1;
+    }
+  }
+  return rt;
+}
+
+std::ostream &SQLParserContext::debug () const {
+  return *debugStream;
+}
+
+void SQLParserContext::setFileName ( const std::string &fileName ) {
+  SQLParserContext::fileName = fileName;
 }
 
 void yyerror ( location *yylloc, SQLParserContext &ctx, const char *s, ... ) {
@@ -290,34 +422,6 @@ void adjustLines ( location *location, char *text ) {
   }
 }
 
-std::string bytesToString ( uint64_t bytes );
-
 int getNextInput ( char *buf, int max_size ) {
-  int rt = 0;
-  if ( !feof ( yyin ) ) {
-    if ( lastLineOffset >= lastLineLen ) {
-      if ( hasLF ( lineBuffers[lineBufferIndex] ) ) { // if the last line buffer ends in \n we are now on a new line
-        lineNum++;
-      }
-      lineBufferIndex++;
-      if ( lineBufferIndex >= LINE_BUFFER_COUNT ) {
-        lineBufferIndex = 0;
-      }
-      if ( !lineBuffers[lineBufferIndex] ) {
-        lineBuffers[lineBufferIndex] = (char *) malloc ( LINE_BUFFER_LEN );
-      }
-      if ( !fgets ( lineBuffers[lineBufferIndex], LINE_BUFFER_LEN, yyin ) ) {
-        lineBuffers[lineBufferIndex][0] = 0;
-      }
-      lastLineLen = strlen ( lineBuffers[lineBufferIndex] );
-      readBytes += lastLineLen;
-      lastLineOffset = 0;
-      lineNumbers[lineBufferIndex] = lineNum;
-    }
-    if ( lastLineOffset < lastLineLen ) {
-      buf[0] = lineBuffers[lineBufferIndex][lastLineOffset++];
-      return 1;
-    }
-  }
-  return rt;
+  return currentContext->getNextInput ( buf, max_size );
 }

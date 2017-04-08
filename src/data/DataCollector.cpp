@@ -29,6 +29,7 @@ DataCollector::DataCollector () {
   currentFileSize = 0;
   pStore = NULL;
   inTransaction = false;
+  commitInterval = 10;
 }
 
 std::string toString ( time_t t ) {
@@ -73,6 +74,7 @@ void DataCollector::statement ( yy::location &location, SQLStatement *statement,
 
   if ( dynamic_cast<SQLBeginStatement *> ( statement) ) {
     inTransaction = true;
+    transactions++;
   } else if ( dynamic_cast<SQLCommitStatement * > (statement) || dynamic_cast<SQLRollbackStatement *>(statement) ) {
     inTransaction = false;
   }
@@ -90,7 +92,7 @@ void DataCollector::statement ( yy::location &location, SQLStatement *statement,
 
   host->setLastLogPos ( (int) context->getLogPos () );
 
-  if ( lastUpdate.tv_sec < now.tv_sec - 1 && !inTransaction ) {
+  if ( lastUpdate.tv_sec < now.tv_sec - commitInterval && !inTransaction ) {
     host->setLastLogFile ( *location.begin.filename );
     time_t diff = context->currentTime () - firstStatement;
     timeval timeDiff;
@@ -105,12 +107,10 @@ void DataCollector::statement ( yy::location &location, SQLStatement *statement,
         speed /= 60.0f;
         units = "m/s";
       }
-      std::string logPosExtra;
+      std::stringstream logPosExtra;
       if ( currentFileSize > 0 ) {
-        std::stringstream s;
-        s << std::setprecision ( 3 ) << "/" << bytesToString ( currentFileSize ) << " "
-          << ( ( context->getLogPos () / (double) currentFileSize ) * 100 ) << "%";
-        logPosExtra = s.str ();
+        logPosExtra << std::setprecision ( 3 ) << "/" << bytesToString ( currentFileSize ) << " "
+                    << ( ( context->getLogPos () / (double) currentFileSize ) * 100 ) << "%";
       }
 
       if ( lastLogPos > 0 ) {
@@ -123,19 +123,24 @@ void DataCollector::statement ( yy::location &location, SQLStatement *statement,
 
       std::cerr << std::setprecision ( 4 );
       std::cerr << toString ( context->currentTime () )
-                << " statements: " << statements
+                << " statements: " << statements << "(" << statements - lastStatements << ")"
+                << " transactions: " << transactions << "(" << transactions - lastTransactions << ")"
                 << " speed: " << std::setw ( 7 ) << speed << units
                 << " " << bytesToString ( bspeed ) << "/s"
-                << " logpos: " << bytesToString ( context->getLogPos () ) << logPosExtra
-                << " " << location << "\n";
-      lastUpdate = now;
+                << " logpos: " << bytesToString ( context->getLogPos () ) << logPosExtra.str ();
+
       if ( pStore ) {
         pStore->save ( *host );
+        std::cerr << " Saved: " << pStore->getSaveCount ();
       }
+
+      std::cerr << " " << location << "\n";
+      lastUpdate = now;
     }
     lastTime = context->currentTime ();
     lastStatements = statements;
     lastLogPos = context->getLogPos ();
+    lastTransactions = transactions;
   }
 }
 
@@ -199,6 +204,10 @@ void DataCollector::setDataStore ( DataStore *pStore ) {
 
 const Host *DataCollector::getHost () const {
   return host.get ();
+}
+
+void DataCollector::setCommitInterval ( size_t interval ) {
+  this->commitInterval = interval;
 }
 
 DataCollector::Walker::Walker ( boost::shared_ptr<Host> &host, SQLParserContext *context ) : host ( host ),

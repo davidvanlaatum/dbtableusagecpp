@@ -16,7 +16,7 @@ public:
     virtual void resolve ( SQLParserContext *context );
     virtual void walk ( SQLTreeWalker *walker );
     virtual SQLCreateDatabaseStatement * clone () const;
-
+    virtual size_t showAtVerboseLevel () const;
 private:
     boost::shared_ptr<SQLIdentifier> name;
 };

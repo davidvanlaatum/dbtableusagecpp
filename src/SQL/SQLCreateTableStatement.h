@@ -18,6 +18,7 @@ public:
     virtual void resolve ( SQLParserContext *context );
     virtual void walk ( SQLTreeWalker *walker );
     virtual SQLCreateTableStatement * clone () const;
+    virtual size_t showAtVerboseLevel () const;
 private:
     bool temporary;
     bool notExists;

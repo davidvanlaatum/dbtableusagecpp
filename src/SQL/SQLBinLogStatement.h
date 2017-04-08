@@ -22,6 +22,7 @@ public:
     virtual void walk ( SQLTreeWalker *walker );
     virtual SQLBinLogStatement *clone () const;
     virtual void event ( MySQLBinLogEvent *event, MySQLEventParser *parser );
+    virtual size_t showAtVerboseLevel () const;
 private:
     table_type tables;
 };

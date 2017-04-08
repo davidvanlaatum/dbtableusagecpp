@@ -38,3 +38,7 @@ void SQLDeleteStatement::walk ( SQLTreeWalker *walker ) {
 SQLDeleteStatement *SQLDeleteStatement::clone () const {
   return new SQLDeleteStatement ( table ? table->clone () : NULL, where ? where->clone () : NULL );
 }
+
+size_t SQLDeleteStatement::showAtVerboseLevel () const {
+  return 1;
+}

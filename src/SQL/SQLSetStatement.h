@@ -21,6 +21,7 @@ public:
     virtual void resolve ( SQLParserContext *context );
     virtual void walk ( SQLTreeWalker *walker );
     virtual SQLSetStatement *clone () const;
+    virtual size_t showAtVerboseLevel () const;
 private:
     ArgsType args;
 };

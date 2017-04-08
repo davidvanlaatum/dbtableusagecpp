@@ -1061,6 +1061,9 @@ stmt: binlog_stmt {
 
 binlog_stmt: BINLOG MLSTRING {
   $$ = new SQLBinLogStatement(@$,$2,ctx.getEventParser());
+} | BINLOG STRING {
+  $$ = new SQLBinLogStatement(@$,$2,ctx.getEventParser());
+  free($2);
 };
 
 stmt: use_stmt {

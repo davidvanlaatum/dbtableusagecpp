@@ -18,7 +18,6 @@ add_library(sqlParser
         SQLInteger.cpp SQLInteger.h
         SQLDeleteStatement.cpp SQLDeleteStatement.h
         SQLExpression.cpp SQLExpression.h
-        SQLParserDriver.cpp SQLParserDriver.h
         SQLParserCallback.h
         SQLParserFailedException.cpp SQLParserFailedException.h
         SQLUseDatabase.cpp SQLUseDatabase.h

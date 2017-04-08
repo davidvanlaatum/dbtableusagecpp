@@ -5,7 +5,7 @@
 #ifndef DBTABLEUSAGECPP_APPMAIN_H
 #define DBTABLEUSAGECPP_APPMAIN_H
 #include <boost/program_options.hpp>
-#include <SQLParserDriver.h>
+#include <SQLParserContext.h>
 
 namespace po = boost::program_options;
 
@@ -20,7 +20,7 @@ public:
 private:
     po::options_description options;
     po::options_description config;
-    void setupDriver ( SQLParserDriver &driver, const boost::program_options::variables_map &vm ) const;
+    void setupDriver ( SQLParserContext &driver, const boost::program_options::variables_map &vm ) const;
 };
 
 

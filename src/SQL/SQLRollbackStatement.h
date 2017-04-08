@@ -15,6 +15,7 @@ public:
     virtual void walk ( SQLTreeWalker *walker );
     virtual SQLRollbackStatement * clone () const;
     virtual void getTables ( table_type &rt ) const;
+    virtual size_t showAtVerboseLevel () const;
 };
 
 

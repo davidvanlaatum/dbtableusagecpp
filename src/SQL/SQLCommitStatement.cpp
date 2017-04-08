@@ -27,3 +27,7 @@ SQLCommitStatement *SQLCommitStatement::clone () const {
 void SQLCommitStatement::getTables ( SQLStatement::table_type &rt ) const {
 
 }
+
+size_t SQLCommitStatement::showAtVerboseLevel () const {
+  return 2;
+}

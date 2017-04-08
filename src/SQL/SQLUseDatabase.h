@@ -22,6 +22,7 @@ public:
 
     virtual void walk ( SQLTreeWalker *walker );
     virtual SQLUseDatabase *clone () const;
+    virtual size_t showAtVerboseLevel () const;
 private:
     boost::shared_ptr<SQLIdentifier> name;
 };

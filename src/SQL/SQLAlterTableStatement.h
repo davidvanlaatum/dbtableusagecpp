@@ -18,7 +18,7 @@ public:
     virtual void walk ( SQLTreeWalker *walker );
     virtual SQLAlterTableStatement *clone () const;
     virtual void getTables ( table_type &rt ) const;
-
+    virtual size_t showAtVerboseLevel () const;
 private:
     boost::shared_ptr<SQLTable> table;
     SQLObjectList<> operations;

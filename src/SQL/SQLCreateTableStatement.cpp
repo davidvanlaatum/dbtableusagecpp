@@ -38,3 +38,7 @@ void SQLCreateTableStatement::walk ( SQLTreeWalker *walker ) {
 SQLCreateTableStatement *SQLCreateTableStatement::clone () const {
   return new SQLCreateTableStatement(false,false,NULL,NULL);// TODO
 }
+
+size_t SQLCreateTableStatement::showAtVerboseLevel () const {
+  return 1;
+}

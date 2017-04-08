@@ -44,3 +44,7 @@ void SQLAlterTableStatement::getTables ( SQLStatement::table_type &rt ) const {
     rt[table] = ALTER;
   }
 }
+
+size_t SQLAlterTableStatement::showAtVerboseLevel () const {
+  return 1;
+}

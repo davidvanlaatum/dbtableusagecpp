@@ -28,3 +28,7 @@ SQLCreateDatabaseStatement *SQLCreateDatabaseStatement::clone () const {
   rt->name = name;
   return rt;
 }
+
+size_t SQLCreateDatabaseStatement::showAtVerboseLevel () const {
+  return 1;
+}

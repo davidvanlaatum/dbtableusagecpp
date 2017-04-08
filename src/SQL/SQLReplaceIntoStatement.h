@@ -18,11 +18,10 @@ public:
     virtual void getTables ( table_type &rt ) const;
     virtual void resolve ( SQLParserContext *context );
     virtual SQLReplaceIntoStatement *clone () const;
+    virtual void walk ( SQLTreeWalker *walker );
+    virtual size_t showAtVerboseLevel () const;
 private:
     boost::shared_ptr<SQLTable> table;
-public:
-    virtual void walk ( SQLTreeWalker *walker );
-private:
     boost::shared_ptr<SQLObjectList<> > values;
 };
 

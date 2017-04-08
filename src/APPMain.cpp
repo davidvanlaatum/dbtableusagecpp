@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <DataStore.h>
 #include "APPMain.h"
-#include "SQL/SQLParserDriver.h"
+#include "SQL/SQLParserContext.h"
 #include "data/DataCollector.h"
 #include "LogFileFetcher.h"
 namespace po = boost::program_options;
@@ -43,6 +43,7 @@ APPMain::APPMain () : options ( "options" ), config ( "config" ) {
           ( "storage.url", po::value<std::string> (), "URL of database to store results in" )
           ( "storage.user", po::value<std::string> (), "Username to connect with" )
           ( "storage.password", po::value<std::string> (), "password to connect with" )
+          ( "storage.commit", po::value<unsigned> ()->default_value ( 10 ), "Commit to database interval" )
           ( "monitor.host", po::value<std::string> (), "hostname to connect to for logs" )
           ( "monitor.user", po::value<std::string> (), "Username to connect with" )
           ( "monitor.password", po::value<std::string> ()->default_value ( "" ), "password to connect with" );
@@ -74,14 +75,15 @@ int APPMain::main ( int argc, char *argv[] ) {
     if ( exit == 0 ) {
       try {
         DataCollector collector;
+        collector.setCommitInterval ( vm["storage.commit"].as<unsigned> () );
         if ( vm.count ( "input" ) ) {
-          SQLParserDriver driver;
-          setupDriver ( driver, vm );
+          SQLParserContext context ( &collector );
+          setupDriver ( context, vm );
           std::string file = vm["input"].as<std::string> ();
           if ( file == "-" ) {
-            driver.parseStdIn ( &collector );
+            context.parseStdIn ();
           } else {
-            driver.parseFile ( file, &collector );
+            context.parseFile ( file );
           }
         } else {
           if ( !vm.count ( "monitor.host" ) ) {
@@ -104,9 +106,10 @@ int APPMain::main ( int argc, char *argv[] ) {
             while ( exit == 0 && fetcher.hasMoreLogs () ) {
               collector.setCurrentFileSize ( fetcher.currentLogFileSize () );
               FILE *handle = fetcher.fileHandle ();
-              SQLParserDriver driver;
-              setupDriver ( driver, vm );
-              driver.parseFileHandle ( handle, fetcher.currentLogFile (), &collector );
+              SQLParserContext context ( &collector );
+              context.setFileName ( fetcher.currentLogFile () );
+              setupDriver ( context, vm );
+              context.parseFileHandle ( handle, fetcher.currentLogFile () );
               int rt = pclose ( handle );
               if ( rt != 0 ) {
                 std::cerr << "mysqlbinlog exited with " << rt << std::endl;
@@ -134,7 +137,7 @@ int APPMain::main ( int argc, char *argv[] ) {
   return exit;
 }
 
-void APPMain::setupDriver ( SQLParserDriver &driver, const boost::program_options::variables_map &vm ) const {
+void APPMain::setupDriver ( SQLParserContext &driver, const boost::program_options::variables_map &vm ) const {
   if ( vm["debug"].as<int> () ) {
     driver.setDebugStream ( &std::cout );
   }

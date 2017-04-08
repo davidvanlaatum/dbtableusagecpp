@@ -5,6 +5,7 @@
 #include <glib.h>
 #include <iostream>
 #include <sys/mman.h>
+#include <sstream>
 #include "SQLBinLogStatement.h"
 #include "MySQLBinLogEvent.h"
 
@@ -34,7 +35,20 @@ SQLBinLogStatement::~SQLBinLogStatement () {
 }
 
 std::string SQLBinLogStatement::toString () const {
-  return "BINLOG";
+  std::stringstream s;
+  s << "BINLOG";
+  if ( !tables.empty () ) {
+    s << "(";
+    for ( table_type::const_iterator it = tables.begin (); it != tables.end ();) {
+      s << it->first->getName ()->getId () << "="
+        << (it->second & INSERT ? "I" : "-")
+        << (it->second & UPDATE ? "U" : "-")
+        << (it->second & DELETE ? "D" : "-")
+        << (++it != tables.end () ? "," : "" );
+    }
+    s << ")";
+  }
+  return s.str ();
 }
 
 void SQLBinLogStatement::getTables ( table_type &rt ) const {
@@ -62,5 +76,9 @@ void SQLBinLogStatement::event ( MySQLBinLogEvent *event, MySQLEventParser *pars
   }
 
   delete event;
+}
+
+size_t SQLBinLogStatement::showAtVerboseLevel () const {
+  return 1;
 }
 

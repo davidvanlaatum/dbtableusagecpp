@@ -18,6 +18,7 @@ public:
     virtual void resolve ( SQLParserContext *context );
     virtual void walk ( SQLTreeWalker *walker );
     virtual SQLDeleteStatement *clone () const;
+    virtual size_t showAtVerboseLevel () const;
 private:
     boost::shared_ptr<SQLTable> table;
     boost::shared_ptr<SQLObject> where;

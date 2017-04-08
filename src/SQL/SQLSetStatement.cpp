@@ -52,3 +52,7 @@ void SQLSetStatement::walk ( SQLTreeWalker *walker ) {
 SQLSetStatement *SQLSetStatement::clone () const {
   return new SQLSetStatement ( (SQLObjectList<> *) &args );
 }
+
+size_t SQLSetStatement::showAtVerboseLevel () const {
+  return 2;
+}

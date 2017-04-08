@@ -81,7 +81,7 @@ SQLDataLength *SQLDataLength::clone () const {
   return new SQLDataLength ( 0 );// TODO
 }
 
-SQLDataCollation::SQLDataCollation ( char *name ) : name ( name ) {
+SQLDataCollation::SQLDataCollation ( const char *name ) : name ( name ) {
 
 }
 
