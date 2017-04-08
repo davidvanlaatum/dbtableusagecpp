@@ -355,6 +355,7 @@ class SQLColumnDefinition;
 %token SAVEPOINT
 %token <file>MLSTRING
 %token MODIFY
+%token ENCRYPTION
 
  /* functions with special syntax */
 %token FSUBSTRING

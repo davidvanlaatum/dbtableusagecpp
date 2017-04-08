@@ -269,6 +269,7 @@ ROLLBACK { return token::ROLLBACK; }
 COMMIT { return token::COMMIT; }
 SAVEPOINT { return token::SAVEPOINT; }
 MODIFY { return token::MODIFY; }
+ENCRYPTION { return token::ENCRYPTION; }
 
    /* numbers */
 
