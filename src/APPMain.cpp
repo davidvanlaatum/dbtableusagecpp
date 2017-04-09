@@ -9,7 +9,6 @@
 #include <DataStore.h>
 #include "APPMain.h"
 #include "DataCollector.h"
-#include "LogFileFetcher.h"
 #include "TeeStream.h"
 #include "MySQLBinLogFileFeeder.h"
 #include "CLILogFileFeeder.h"
