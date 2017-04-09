@@ -21,6 +21,7 @@ private:
     po::options_description options;
     po::options_description config;
     bool nostore;
+    bool skipPreload;
     std::ostream *errorLog;
     std::ostream *outputLog;
     std::ostream *debugLog;

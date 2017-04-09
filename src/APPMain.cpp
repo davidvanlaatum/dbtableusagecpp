@@ -36,6 +36,7 @@ APPMain::APPMain () : options ( "options" ), config ( "config" ) {
            ( "dump", po::bool_switch (), "dump settings" )
            ( "print", po::bool_switch (), "print usage at end" )
            ( "no-store", po::bool_switch (&nostore), "do not store to db" )
+           ( "skip-preload", po::bool_switch ( &skipPreload ), "Don't query for the current list of tables on start" )
 #ifdef HAVE_PARSE_CONFIG_FILE
            ( "config,c", po::value<std::string> ()->default_value ( "config.ini" ), "config file" )
 #endif
@@ -111,7 +112,9 @@ int APPMain::main ( int argc, char *argv[] ) {
           dataStore.setConnection ( vm["storage.url"].as<std::string> () );
           collector.setMonitoredHost ( vm["monitor.host"].as<std::string> () );
           collector.setDataStore ( &dataStore );
-          populater.populate ( collector.getHost () );
+          if ( !skipPreload ) {
+            populater.populate ( collector.getHost () );
+          }
         }
         feeder->feed ( &collector );
         if ( vm["print"].as<bool> () ) {

@@ -71,6 +71,8 @@ void DataCollector::statement ( yy::location &location, SQL::SQLStatement *state
     time_t diff = context->currentTime () - start.statement;
     timeval timeDiff;
     timersub ( &currentTime, &start.time, &timeDiff );
+    timeval interval;
+    timersub ( &currentTime, &lastUpdate, &interval );
 
     double speed = diff / ( timeDiff.tv_sec + ( timeDiff.tv_usec / 1000000.0f ) );
     double bspeed = 0;
@@ -92,7 +94,7 @@ void DataCollector::statement ( yy::location &location, SQL::SQLStatement *state
           last.logPos = 0;
         }
         uint64_t bdiff = context->getLogPos () - last.logPos;
-        bspeed = bdiff / ( timeDiff.tv_sec + ( timeDiff.tv_usec / 1000000.0f ) );
+        bspeed = bdiff / ( interval.tv_sec + ( interval.tv_usec / 1000000.0f ) );
       }
 
       *progress << std::setprecision ( 4 );
