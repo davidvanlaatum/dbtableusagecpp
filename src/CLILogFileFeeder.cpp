@@ -3,6 +3,7 @@
 //
 
 #include <sys/stat.h>
+#include <errno.h>
 #include "CLILogFileFeeder.h"
 
 CLILogFileFeeder::CLILogFileFeeder ( std::ostream *outputLog, std::ostream *errorLog, std::ostream *debugLog,

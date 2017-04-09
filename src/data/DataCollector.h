@@ -6,6 +6,8 @@
 #define DBTABLEUSAGECPP_DATACOLLECTOR_H
 
 #include <map>
+#include <stdint.h>
+#include <location.hh>
 #include "boost/scoped_ptr.hpp"
 #include "SQLParserCallback.h"
 #include "SQLObject.h"
