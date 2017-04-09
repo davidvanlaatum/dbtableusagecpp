@@ -84,14 +84,14 @@ void DataCollector::doProgress ( const location *location, SQL::SQLParserContext
   double bspeed = 0;
 
   if ( last.time != 0 ) {
-    std::__1::string units = "s/s";
+    std::string units = "s/s";
     if ( speed > 60 ) {
       speed /= 60.0f;
       units = "m/s";
     }
-    std::__1::stringstream logPosExtra;
+    std::stringstream logPosExtra;
     if ( currentFileSize > 0 ) {
-      logPosExtra << std::__1::setprecision ( 3 ) << "/" << bytesToString ( currentFileSize ) << " "
+      logPosExtra << std::setprecision ( 3 ) << "/" << bytesToString ( currentFileSize ) << " "
                   << ( ( context->getLogPos () / (double) currentFileSize ) * 100 ) << "%";
     }
 
@@ -100,11 +100,11 @@ void DataCollector::doProgress ( const location *location, SQL::SQLParserContext
       bspeed = bdiff / ( interval.tv_sec + ( interval.tv_usec / 1000000.0f ) );
     }
 
-    *progress << std::__1::setprecision ( 4 );
+    *progress << std::setprecision ( 4 );
     *progress << toString ( context->currentTime () )
               << " stmts: " << now.statements << "(" << now.statements - last.statements << ")"
               << " trans: " << now.transactions << "(" << now.transactions - last.transactions << ")"
-              << " speed: " << std::__1::setw ( 7 ) << speed << units
+              << " speed: " << std::setw ( 7 ) << speed << units
               << " " << bytesToString ( bspeed ) << "/s"
               << " logpos: " << bytesToString ( context->getLogPos () ) << logPosExtra.str ();
 
