@@ -98,7 +98,7 @@ class SQLColumnDefinition;
 %destructor {} <flag>
 %destructor { fclose($$); } <file>
 %destructor { if($$) { std::cerr << "Destroying " << SQL::SQLObject::toString($$) << std::endl; delete $$; } } <*>
-%printer { yyoutput << $$; } <*>
+%printer { debug_stream() << $$; } <*>
 
   /* names and literal values */
 
@@ -705,16 +705,16 @@ insert_stmt: INSERT insert_opts opt_into NAME opt_col_names
 
 insert_asgn_list:
      NAME COMPARISON expr
-     { if ($2 != SQL::EQUALTO) error(@$,format("bad insert assignment to %s", $1));
+     { if ($2 != SQL::EQUALTO) { error(@$,format("bad insert assignment to %s", $1)); YYERROR; }
        $$ = NULL; emit("ASSIGN %s", $1); free($1); $$ = 1; }
    | NAME COMPARISON DEFAULT
-               { if ($2 != SQL::EQUALTO) error(@$,format("bad insert assignment to %s", $1));
+               { if ($2 != SQL::EQUALTO) { error(@$,format("bad insert assignment to %s", $1)); YYERROR; }
                  $$ = NULL; emit("DEFAULT"); $$ = NULL; emit("ASSIGN %s", $1); free($1); $$ = 1; }
    | insert_asgn_list ',' NAME COMPARISON expr
-               { if ($4 != SQL::EQUALTO) error(@$,format("bad insert assignment to %s", $1));
+               { if ($4 != SQL::EQUALTO) { error(@$,format("bad insert assignment to %s", $1)); YYERROR; }
                  $$ = NULL; emit("ASSIGN %s", $3); free($3); $$ = $1 + 1; }
    | insert_asgn_list ',' NAME COMPARISON DEFAULT
-               { if ($4 != SQL::EQUALTO) error(@$,format("bad insert assignment to %s", $1));
+               { if ($4 != SQL::EQUALTO) { error(@$,format("bad insert assignment to %s", $1)); YYERROR; }
                  $$ = NULL; emit("DEFAULT"); $$ = NULL; emit("ASSIGN %s", $3); free($3); $$ = $1 + 1; }
    ;
 
@@ -754,16 +754,16 @@ update_opts: /* nil */ { $$ = 0; }
 
 update_asgn_list:
      NAME COMPARISON expr
-       { if ($2 != SQL::EQUALTO) error(@$,format("bad insert assignment to %s", $1));
+       { if ($2 != SQL::EQUALTO) { error(@$,format("bad insert assignment to %s", $1)); YYERROR; }
    $$ = NULL; emit("ASSIGN %s", $1); free($1); $$ = 1; }
    | NAME '.' NAME COMPARISON expr
-       { if ($4 != SQL::EQUALTO) error(@$,format("bad insert assignment to %s", $1));
+       { if ($4 != SQL::EQUALTO) { error(@$,format("bad insert assignment to %s", $1)); YYERROR; }
    $$ = NULL; emit("ASSIGN %s.%s", $1, $3); free($1); free($3); $$ = 1; }
    | update_asgn_list ',' NAME COMPARISON expr
-       { if ($4 != SQL::EQUALTO) error(@$,format("bad insert assignment to %s", $3));
+       { if ($4 != SQL::EQUALTO) { error(@$,format("bad insert assignment to %s", $3)); YYERROR; }
    $$ = NULL; emit("ASSIGN %s.%s", $3); free($3); $$ = $1 + 1; }
    | update_asgn_list ',' NAME '.' NAME COMPARISON expr
-       { if ($6 != SQL::EQUALTO) error(@$,format("bad insert assignment to %s.$s", $3, $5));
+       { if ($6 != SQL::EQUALTO) { error(@$,format("bad insert assignment to %s.$s", $3, $5)); YYERROR; }
    $$ = NULL; emit("ASSIGN %s.%s", $3, $5); free($3); free($5); $$ = 1; }
    ;
 
@@ -936,7 +936,7 @@ set_expr:
       varaible_name COMPARISON set_value {
         if ($2 != SQL::EQUALTO) {
           error(@$,format("bad set to @%s", $1));
-          $$ = NULL;
+          YYERROR;
         } else {
           $$ = new SQL::SQLSetPair($1,$3);
         }
