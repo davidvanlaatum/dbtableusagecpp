@@ -8,4 +8,4 @@ target_include_directories(data SYSTEM PRIVATE $<TARGET_PROPERTY:Boost::boost,IN
 target_include_directories(data SYSTEM PUBLIC ${SOCI_INCLUDE_DIR})
 target_include_directories(data PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} $<TARGET_PROPERTY:sqlParser,INCLUDE_DIRECTORIES>)
 get_target_property(E data INCLUDE_DIRECTORIES)
-message("INCLUDES=${E}")
+add_dependencies(data sqlParser)
