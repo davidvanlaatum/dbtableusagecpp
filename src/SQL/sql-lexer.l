@@ -5,6 +5,7 @@
 #include "SQLTable.h"
 #include "SQLColumn.h"
 #include "SQLComparision.h"
+#include "SQLDecimal.h"
 #include "sql-parser.hpp"
 #include <stdarg.h>
 #include <string.h>
@@ -281,8 +282,10 @@ NUMERIC { return token::NUMERIC; }
 -?"."[0-9]+ |
 -?[0-9]+E[-+]?[0-9]+ |
 -?[0-9]+"."[0-9]*E[-+]?[0-9]+ |
--?"."[0-9]*E[-+]?[0-9]+ { yylval->floatval = atof(yytext) ;
-                                  return token::APPROXNUM; }
+-?"."[0-9]*E[-+]?[0-9]+ {
+  yylval->sqlval = new SQL::SQLDecimal(yytext);
+  return token::APPROXNUM;
+}
     /* booleans */
 TRUE { yylval->intval = 1; return token::BOOL; }
 UNKNOWN { yylval->intval = -1; return token::BOOL; }
@@ -378,11 +381,11 @@ _[A-Za-z][A-Za-z0-9_]+ { yylval->strval = strdup(yytext);
 ":="     { return token::ASSIGN; }
 
  /* comments */
-#.*"\n"  { ctx.parseComment(yytext); yylloc->lines(1);};
-"--".*"\n" { yylloc->lines(1); };
+#.*"\n"  { ctx.parseComment(yytext); yylloc->lines(1); yylloc->step(); };
+"--".*"\n" { yylloc->lines(1); yylloc->step(); };
 
 "/*"            { oldstate = YY_START; BEGIN XCOMMENT; }
-<XCOMMENT>"*/"   { BEGIN oldstate; }
+<XCOMMENT>"*/"   { BEGIN oldstate; yylloc->step(); }
 <XCOMMENT>.
 <XCOMMENT>\n     { yylloc->lines(1);}
 <XCOMMENT><<EOF>> { yyerror(yylloc,ctx,"unclosed comment"); return 0; }

@@ -87,11 +87,11 @@ SQL::SQLDataType *SQL::SQLDataType::clone () const {
   return new SQLDataType ( type );// TODO
 }
 
-SQL::SQLDataLength::SQLDataLength ( int length ) {
+SQL::SQLDataLength::SQLDataLength ( int length ) : length(length) {
 // TODO
 }
 
-SQL::SQLDataLength::SQLDataLength ( int length, int ) {
+SQL::SQLDataLength::SQLDataLength ( int length, int ) : length(length) {
 // TODO
 }
 
@@ -100,7 +100,9 @@ SQL::SQLDataLength::~SQLDataLength () {
 }
 
 std::string SQL::SQLDataLength::toString () const {
-  return "LENGTH";// TODO
+  std::stringstream s;
+  s << length;
+  return s.str ();// TODO
 }
 
 void SQL::SQLDataLength::resolve ( SQLParserContext *context ) {

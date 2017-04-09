@@ -18,7 +18,7 @@ TEST(type ## Test,TestToString) {\
 }
 
 #define EMPTY_CONSTRUCTOR(type) type () { }
-#define EMPTY_CONSTRUCTORI(type,init) type () : init { }
+#define EMPTY_CONSTRUCTORI(type,init...) type () : init { }
 #include "SQLObject.h"
 using namespace testing;
 using namespace SQL;

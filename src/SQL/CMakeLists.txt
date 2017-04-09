@@ -50,7 +50,7 @@ add_library(sqlParser OBJECT
         SQLColumnDefinition.cpp SQLColumnDefinition.h
         SQLDataType.cpp SQLDataType.h
         SQLColumnAttributes.cpp SQLColumnAttributes.h
-        )
+        SQLDecimal.cpp SQLDecimal.h)
 target_include_directories(sqlParser PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 target_include_directories(sqlParser SYSTEM PRIVATE ${GLib_INCLUDE_DIRS}
         $<TARGET_PROPERTY:Boost::boost,INTERFACE_INCLUDE_DIRECTORIES>)

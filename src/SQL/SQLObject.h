@@ -12,7 +12,7 @@
 
 #ifndef EMPTY_CONSTRUCTOR
 #define EMPTY_CONSTRUCTOR(type)
-#define EMPTY_CONSTRUCTORI(type,init)
+#define EMPTY_CONSTRUCTORI(type,init...)
 #endif
 namespace SQL {
   class SQLParserContext;

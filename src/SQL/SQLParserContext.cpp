@@ -17,6 +17,7 @@
 #include "SQLInteger.h"
 #include "SQLUseDatabase.h"
 #include "SQLParserCallback.h"
+#include "SQLDecimal.h"
 
 extern FILE *yyin;
 SQL::SQLParserContext *currentContext;
@@ -94,8 +95,12 @@ void SQL::SQLParserContext::push ( yy::location &yylloc, SQLStatement *statement
         if ( ( *it )->getName () == "TIMESTAMP" ) {
           if ( SQLInteger *t = dynamic_cast<SQLInteger *> (( *it )->getValue ()) ) {
             updateTime ( t->toInt () );
+          } else if ( SQLDecimal *d = dynamic_cast<SQLDecimal *>(( *it )->getValue ()) ) {
+            updateTime ( d->getWhole () );
           } else {
-            error () << yylloc << " invalid value for timestamp " << ( *it )->getValue () << std::endl;
+            std::stringstream buf;
+            buf << "invalid value for timestamp " << ( *it )->getValue ();
+            error ( yylloc, buf.str () );
           }
         }
       }

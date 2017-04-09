@@ -97,7 +97,8 @@ class SQLColumnDefinition;
 %destructor {} <comparisionType>
 %destructor {} <flag>
 %destructor { fclose($$); } <file>
-%destructor { if($$) delete $$; } <*>
+%destructor { if($$) { std::cerr << "Destroying " << SQL::SQLObject::toString($$) << std::endl; delete $$; } } <*>
+%printer { yyoutput << $$; } <*>
 
   /* names and literal values */
 
@@ -105,7 +106,7 @@ class SQLColumnDefinition;
 %token <strval> STRING
 %token <intval> INTNUM
 %token <intval> BOOL
-%token <floatval> APPROXNUM
+%token <sqlval> APPROXNUM
 
        /* user @abc names */
 
@@ -351,7 +352,7 @@ class SQLColumnDefinition;
 %token ZEROFILL
 %token DELIMITER;
 %token BINLOG;
-%token TBEGIN;
+%token TBEGIN "BEGIN";
 %token ROLLBACK;
 %token COMMIT;
 %token <strval>INTRODUCER
@@ -957,7 +958,7 @@ expr: column_name          { $$ = $1; }
    | USERVAR         { $$ = NULL; emit("USERVAR %s", $1); free($1); }
    | STRING        { $$ = new SQL::SQLString($1); free($1); }
    | INTNUM        { $$ = new SQL::SQLInteger($1); }
-   | APPROXNUM     { $$ = NULL; emit("FLOAT %g", $1); }
+   | APPROXNUM     { $$ = $1; }
    | BOOL          { $$ = NULL; emit("BOOL %d", $1); }
    ;
 

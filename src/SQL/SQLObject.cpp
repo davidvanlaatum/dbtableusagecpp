@@ -5,7 +5,7 @@
 #include "SQLObject.h"
 
 std::ostream &SQL::operator<< ( std::ostream &os, const SQL::SQLObject &statement ) {
-  os << statement.toString ();
+  os << SQLObject::toString (&statement);
   return os;
 }
 
@@ -14,11 +14,7 @@ SQL::SQLObject::~SQLObject () {
 }
 
 std::ostream &SQL::operator<< ( std::ostream &os, const SQL::SQLObject *statement ) {
-  if ( statement ) {
-    os << statement->toString ();
-  } else {
-    os << "(null statement)";
-  }
+  os << SQLObject::toString (statement);
   return os;
 }
 

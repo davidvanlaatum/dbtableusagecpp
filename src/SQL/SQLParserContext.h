@@ -73,8 +73,8 @@ namespace SQL {
       uint64_t logPos;
       time_t timestamp;
       SQLParserCallback *callback;
-      std::ostream *errorStream;
       std::ostream *outStream;
+      std::ostream *errorStream;
       std::ostream *debugStream;
       boost::shared_ptr<SQLIdentifier> currentDatabase;
       FILE *multiLineBuffer;

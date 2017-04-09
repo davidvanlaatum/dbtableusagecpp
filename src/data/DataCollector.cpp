@@ -64,7 +64,9 @@ typedef SQL::SQLSetStatement::ArgsType SetArgs;
 void DataCollector::statement ( yy::location &location, SQL::SQLStatement *statement, SQL::SQLParserContext *context ) {
   if ( SQL::SQLSetStatement *set = dynamic_cast<SQL::SQLSetStatement *> (statement) ) {
     for ( SetArgs::const_iterator it = set->getArgs ().begin (); it != set->getArgs ().end (); ++it ) {
-      variables[( *it )->getName ()] = boost::shared_ptr<SQL::SQLObject> ( ( *it )->getValue ()->clone () );
+      if ( ( *it )->getValue () ) {
+        variables[( *it )->getName ()] = boost::shared_ptr<SQL::SQLObject> ( ( *it )->getValue ()->clone () );
+      }
     }
   }
 

@@ -10,6 +10,7 @@
 #include <SQLInteger.h>
 #include <SQLReplaceIntoStatement.h>
 #include <SQLParserCallback.h>
+#include <SQLDecimal.h>
 
 using namespace testing;
 using namespace SQL;
@@ -17,6 +18,11 @@ using namespace SQL;
 MATCHER_P2 ( HasVariableWithIntValue, name, value, "" ) {
   SQLInteger *valueptr = dynamic_cast<SQLInteger *> ( arg->getValue ());
   return arg->getName () == name && valueptr != NULL && valueptr->toInt () == value;
+}
+
+MATCHER_P2 ( HasVariableWithSqlValue, name, value, "" ) {
+  SQLObject *valueptr = dynamic_cast<SQLObject *> ( (arg)->getValue ());
+  return arg->getName () == name && valueptr != NULL && value == *valueptr;
 }
 
 TEST( ScanBuffer, Buffer ) {
@@ -29,7 +35,24 @@ TEST( ScanBuffer, Buffer ) {
       HasVariableWithIntValue ( "TIMESTAMP", 123 )
     ) )
   ), _ ) );
-  driver.parseString ( "SET TIMESTAMP=123;");
+  driver.parseString ( "SET TIMESTAMP=123;" );
+}
+
+TEST( ScanBuffer, Buffer2 ) {
+  std::stringstream output;
+  StrictMock<MockSQLParserCallback> callback;
+  SQLParserContext driver ( &callback, &output, &output, &output );
+  SQLDecimal d ( 123, 4 );
+
+  SQLSetPair pair = SQLSetPair ( "TIMESTAMP", d.clone () );
+  ASSERT_THAT ( &pair, HasVariableWithSqlValue ( "TIMESTAMP", d ) );
+
+  EXPECT_CALL ( callback, statement ( _, WhenDynamicCastTo<SQLSetStatement *> (
+    Property ( &SQLSetStatement::getArgs, Contains (
+      HasVariableWithSqlValue ( "TIMESTAMP", d )
+    ) )
+  ), _ ) );
+  driver.parseString ( "SET TIMESTAMP=123.4;" );
 }
 
 TEST ( ErrorTests, UnclosedComment ) {
