@@ -22,6 +22,7 @@ public:
     FILE *fileHandle ();
     void next ();
     uint64_t currentLogFileSize ();
+    void setProgressStream ( std::ostream *progress );
 private:
     int initalOffset;
     int fileNum;
@@ -31,6 +32,7 @@ private:
     session sql;
     std::map<std::string, uint64_t> logFiles;
     std::map<std::string, uint64_t>::iterator current;
+    std::ostream *progress;
 };
 
 

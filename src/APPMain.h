@@ -20,6 +20,11 @@ public:
 private:
     po::options_description options;
     po::options_description config;
+    bool nostore;
+    std::ostream *errorLog;
+    std::ostream *outputLog;
+    std::ostream *debugLog;
+    std::ostream *progress;
     void setupDriver ( SQL::SQLParserContext &driver, const boost::program_options::variables_map &vm ) const;
 };
 

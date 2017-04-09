@@ -48,7 +48,7 @@ namespace soci {
             p.setLastLogFile ( v.get<> ( "LAST_LOG_FILE", std::string () ) );
             p.setLastLogPos ( v.get<int> ( "LAST_LOG_POS", 0 ) );
           } catch ( std::bad_cast &e ) {
-            std::cerr << "Bad cast in host from_base" << std::endl;
+            throw std::runtime_error("Bad cast in host from_base");
             throw;
           }
         }
@@ -62,8 +62,7 @@ namespace soci {
           v.set<int> ( "LAST_LOG_POS", p.getLastLogPos (), p.getLastLogPos () == 0 ? i_null : i_ok );
           ind = i_ok;
         } catch ( std::bad_cast &e ) {
-          std::cerr << "Bad cast in host to_base" << std::endl;
-          throw;
+          throw std::runtime_error("Bad cast in host to_base");
         }
       }
   };

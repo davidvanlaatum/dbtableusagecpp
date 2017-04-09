@@ -72,8 +72,7 @@ namespace soci {
             p.setLastDelete ( v.get<time_type> ( "DELETE", 0 ) );
             p.setLastAlter ( v.get<time_type> ( "ALTER", 0 ) );
           } catch ( std::bad_cast &e ) {
-            std::cerr << "Bad cast in table from_base" << std::endl;
-            throw;
+            throw std::runtime_error("Bad cast in table from_base");
           }
         }
       }
@@ -92,8 +91,7 @@ namespace soci {
           v.set<time_type> ( "ALTER", p.getLastAlter (), p.getLastAlter () == 0 ? i_null : i_ok );
           ind = i_ok;
         } catch ( std::bad_cast &e ) {
-          std::cerr << "Bad cast in table to_base" << std::endl;
-          throw;
+          throw std::runtime_error("Bad cast in table to_base");
         }
       }
   };

@@ -5,10 +5,14 @@
 #include <boost/filesystem.hpp>
 #include "appversion.h"
 #include <iostream>
+#include <fstream>
 #include <DataStore.h>
 #include "APPMain.h"
 #include "DataCollector.h"
 #include "LogFileFetcher.h"
+#include "TeeStream.h"
+#include "MySQLBinLogFileFeeder.h"
+#include "CLILogFileFeeder.h"
 namespace po = boost::program_options;
 namespace fs = boost::filesystem;
 
@@ -31,13 +35,17 @@ APPMain::APPMain () : options ( "options" ), config ( "config" ) {
            ( "version,V", po::bool_switch (), "version" )
            ( "dump", po::bool_switch (), "dump settings" )
            ( "print", po::bool_switch (), "print usage at end" )
+           ( "no-store", po::bool_switch (&nostore), "do not store to db" )
 #ifdef HAVE_PARSE_CONFIG_FILE
            ( "config,c", po::value<std::string> ()->default_value ( "config.ini" ), "config file" )
 #endif
-           ( "input", po::value<std::string> (), "local file to read" );
+           ( "input", po::value<std::vector<std::string> > ()->multitoken (), "local file to read" );
   config.add_options ()
           ( "debug,d", po::value<int> ()->default_value ( 0 )->implicit_value ( 1 ), "Set debugging level" )
           ( "verbose,v", po::value<int> ()->default_value ( 0 )->implicit_value ( 1 ), "verbose mode" )
+          ( "errorlog", po::value<std::string> (), "Also send errors to file" )
+          ( "logfile", po::value<std::string> (), "Also send output to file" )
+          ( "debuglog", po::value<std::string> (), "Also send debug output to file" )
           ( "storage.url", po::value<std::string> (), "URL of database to store results in" )
           ( "storage.user", po::value<std::string> (), "Username to connect with" )
           ( "storage.password", po::value<std::string> (), "password to connect with" )
@@ -48,11 +56,16 @@ APPMain::APPMain () : options ( "options" ), config ( "config" ) {
           ( "monitor.ignoredb", po::value<std::vector<std::string> > ()->multitoken ()->composing (), "ignore "
             "databases" );
   options.add ( config );
+  outputLog = &std::cout;
+  errorLog = &std::cerr;
+  debugLog = &std::cout;
+  progress = &std::cerr;
 }
 
 int APPMain::main ( int argc, char *argv[] ) {
   int exit = 0;
   po::variables_map vm;
+  std::ofstream logfile;
   try {
     po::positional_options_description p;
     p.add ( "input", -1 );
@@ -76,70 +89,49 @@ int APPMain::main ( int argc, char *argv[] ) {
       try {
         DataCollector collector;
         collector.setCommitInterval ( vm["storage.commit"].as<unsigned> () );
-        if ( vm.count ( "input" ) ) {
-          SQL::SQLParserContext context ( &collector );
-          setupDriver ( context, vm );
-          std::string file = vm["input"].as<std::string> ();
-          if ( file == "-" ) {
-            context.parseStdIn ();
-          } else {
-            context.parseFile ( file );
-          }
-        } else {
-          if ( !vm.count ( "monitor.host" ) ) {
-            throw std::runtime_error ( "monitor.host is required" );
-          }
-          if ( !vm.count ( "monitor.user" ) ) {
-            throw std::runtime_error ( "monitor.user is required" );
-          }
-          if ( !vm.count ( "storage.url" ) ) {
-            throw std::runtime_error ( "storage.url is required" );
-          }
-          LogFileFetcher fetcher;
-          DataStore dataStore;
-          fetcher.setConnection ( vm["monitor.host"].as<std::string> (), vm["monitor.user"].as<std::string> (),
-                                  vm["monitor.password"].as<std::string> () );
+        if ( vm.count ( "errorlog" ) ) {
+          logfile.open ( vm["errorlog"].as<std::string> (), std::ofstream::out | std::ofstream::app );
+          errorLog = new TeeStream ( logfile, std::cerr );
+        }
+        collector.setProgressStream ( progress );
+        collector.setOutputStream ( outputLog );
+
+        DataStore dataStore;
+        boost::shared_ptr<LogFileFeeder> feeder;
+        if ( !nostore && vm.count ( "storage.url" ) && vm.count ( "monitor.host" ) ) {
           dataStore.setConnection ( vm["storage.url"].as<std::string> () );
           collector.setMonitoredHost ( vm["monitor.host"].as<std::string> () );
           collector.setDataStore ( &dataStore );
-          if ( fetcher.fetchLogs ( collector.getHost () ) ) {
-            while ( exit == 0 && fetcher.hasMoreLogs () ) {
-              collector.setCurrentFileSize ( fetcher.currentLogFileSize () );
-              FILE *handle = fetcher.fileHandle ();
-              SQL::SQLParserContext context ( &collector );
-              setupDriver ( context, vm );
-              context.parseFileHandle ( handle, fetcher.currentLogFile () );
-              int rt = pclose ( handle );
-              if ( rt != 0 ) {
-                std::cerr << "mysqlbinlog exited with " << rt << std::endl;
-                exit = 1;
-              } else {
-                fetcher.next ();
-              }
-            }
-          }
         }
+        if ( vm.count ( "input" ) ) {
+          feeder = boost::shared_ptr<LogFileFeeder> (
+            new CLILogFileFeeder ( outputLog, errorLog, debugLog, progress, vm ) );
+        } else {
+          feeder = boost::shared_ptr<LogFileFeeder> ( new MySQLBinLogFileFeeder ( outputLog, errorLog, debugLog,
+                                                                                  progress, vm ) );
+        }
+        feeder->feed ( &collector );
         if ( vm["print"].as<bool> () ) {
           collector.dump ();
         }
       } catch ( std::exception &e ) {
-        std::cerr << e.what () << std::endl;
+        *errorLog << e.what () << std::endl;
         exit = 1;
       }
     }
   } catch ( po::error &e ) {
-    std::cerr << e.what () << std::endl;
+    *errorLog << e.what () << std::endl;
   } catch ( std::exception &e ) {
-    std::cerr << "Unhandled exception " << typeid ( e ).name () << ": " << e.what () << std::endl;
+    *errorLog << "Unhandled exception " << typeid ( e ).name () << ": " << e.what () << std::endl;
   }
 
   return exit;
 }
 
 void APPMain::setupDriver ( SQL::SQLParserContext &driver, const boost::program_options::variables_map &vm ) const {
-  if ( vm["debug"].as<int> () ) {
-    driver.setDebugStream ( &std::cout );
-  }
+  driver.setDebugStream ( debugLog );
+  driver.setErrorStream ( errorLog );
+  driver.setOutStream ( outputLog );
   driver.setDebug ( vm["debug"].as<int> () );
   driver.setVerbose ( vm["verbose"].as<int> () );
   if (vm.count ("monitor.ignoredb")) {

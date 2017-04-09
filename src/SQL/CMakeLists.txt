@@ -53,5 +53,6 @@ add_library(sqlParser OBJECT
         SQLDecimal.cpp SQLDecimal.h)
 target_include_directories(sqlParser PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 target_include_directories(sqlParser SYSTEM PRIVATE ${GLib_INCLUDE_DIRS}
-        $<TARGET_PROPERTY:Boost::boost,INTERFACE_INCLUDE_DIRECTORIES>)
+        $<TARGET_PROPERTY:Boost::boost,INTERFACE_INCLUDE_DIRECTORIES>
+        $<TARGET_PROPERTY:util,INCLUDE_DIRECTORIES>)
 set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES position.hh location.hh stack.hh)

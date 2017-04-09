@@ -22,6 +22,9 @@ public:
     void setMonitoredHost ( const std::string &host );
     const Host *getHost () const;
     void setCommitInterval ( size_t interval );
+    void setProgressStream ( std::ostream *progress );
+    void setOutputStream ( std::ostream *output );
+    void startNewFile();
 private:
     typedef std::map<std::string, boost::shared_ptr<SQL::SQLObject> > variables_type;
     variables_type variables;
@@ -41,6 +44,8 @@ private:
     size_t commitInterval;
     bool inTransaction;
     DataStore *pStore;
+    std::ostream *progress;
+    std::ostream *output;
 
     class Walker : public SQL::SQLTreeWalker {
     public:

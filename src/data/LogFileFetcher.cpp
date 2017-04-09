@@ -10,6 +10,7 @@
 LogFileFetcher::LogFileFetcher () {
   initalOffset = 0;
   fileNum = 1;
+  progress = &std::cerr;
 }
 
 void LogFileFetcher::setConnection ( std::string host, std::string user, std::string password ) {
@@ -74,10 +75,14 @@ void LogFileFetcher::next () {
   current++;
   fileNum++;
   if ( hasMoreLogs () ) {
-    std::cerr << "Now on file " << fileNum << " of " << logFiles.size () << std::endl;
+    *progress << "Now on file " << fileNum << " of " << logFiles.size () << std::endl;
   }
 }
 
 uint64_t LogFileFetcher::currentLogFileSize () {
   return current->second;
+}
+
+void LogFileFetcher::setProgressStream ( std::ostream *progress ) {
+  LogFileFetcher::progress = progress;
 }

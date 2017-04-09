@@ -42,7 +42,7 @@ namespace soci {
             p.setHost ( v.get<> ( "HOST", 0 ) );
             p.setName ( v.get<> ( "NAME", std::string () ) );
           } catch ( std::bad_cast &e ) {
-            std::cerr << "Bad cast in host from_base" << std::endl;
+            throw std::runtime_error("Bad cast in host from_base");
             throw;
           }
         }
@@ -55,8 +55,7 @@ namespace soci {
           v.set ( "NAME", p.getName () );
           ind = i_ok;
         } catch ( std::bad_cast &e ) {
-          std::cerr << "Bad cast in host to_base" << std::endl;
-          throw;
+          throw std::runtime_error("Bad cast in host to_base");
         }
       }
   };

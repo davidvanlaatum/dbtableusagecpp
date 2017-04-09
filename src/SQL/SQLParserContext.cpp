@@ -18,10 +18,10 @@
 #include "SQLUseDatabase.h"
 #include "SQLParserCallback.h"
 #include "SQLDecimal.h"
+#include <byteutils.h>
 
 extern FILE *yyin;
 SQL::SQLParserContext *currentContext;
-std::string bytesToString ( uint64_t bytes );
 
 void signalHandler ( int sig ) {
   if ( currentContext ) {
@@ -60,6 +60,8 @@ SQL::SQLParserContext::SQLParserContext ( SQLParserCallback *callback, std::ostr
   lastLineOffset = 0;
   lastLineLen = 0;
   readBytes = 0;
+  debugLevel = 0;
+  verbose = 0;
 }
 
 SQL::SQLParserContext::~SQLParserContext () {
@@ -384,8 +386,8 @@ int SQL::SQLParserContext::getNextInput ( char *buf, int max_size ) {
       }
       if ( !fgets ( lineBuffers[lineBufferIndex], LINE_BUFFER_LEN, yyin ) ) {
         lineBuffers[lineBufferIndex][0] = 0;
-      } else if ( currentContext->getDebug () ) {
-        currentContext->debug () << "Read '" << lineBuffers[lineBufferIndex] << "'" << std::endl;
+      } else if ( debugLevel ) {
+        *debugStream << "Read '" << lineBuffers[lineBufferIndex] << "'" << std::endl;
       }
       lastLineLen = strlen ( lineBuffers[lineBufferIndex] );
       readBytes += lastLineLen;
