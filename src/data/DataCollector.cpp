@@ -64,57 +64,62 @@ void DataCollector::statement ( yy::location &location, SQL::SQLStatement *state
     start.time = currentTime;
   }
 
-  host->setLastLogPos ( (int) context->getLogPos () );
-
   if ( lastUpdate.tv_sec < currentTime.tv_sec - commitInterval && !inTransaction ) {
-    host->setLastLogFile ( *location.begin.filename );
-    time_t diff = context->currentTime () - start.statement;
-    timeval timeDiff;
-    timersub ( &currentTime, &start.time, &timeDiff );
-    timeval interval;
-    timersub ( &currentTime, &lastUpdate, &interval );
-
-    double speed = diff / ( timeDiff.tv_sec + ( timeDiff.tv_usec / 1000000.0f ) );
-    double bspeed = 0;
-
-    if ( last.time != 0 ) {
-      std::string units = "s/s";
-      if ( speed > 60 ) {
-        speed /= 60.0f;
-        units = "m/s";
-      }
-      std::stringstream logPosExtra;
-      if ( currentFileSize > 0 ) {
-        logPosExtra << std::setprecision ( 3 ) << "/" << bytesToString ( currentFileSize ) << " "
-                    << ( ( context->getLogPos () / (double) currentFileSize ) * 100 ) << "%";
-      }
-
-      if ( last.logPos > 0 ) {
-        if ( last.logPos > context->getLogPos () ) {
-          last.logPos = 0;
-        }
-        uint64_t bdiff = context->getLogPos () - last.logPos;
-        bspeed = bdiff / ( interval.tv_sec + ( interval.tv_usec / 1000000.0f ) );
-      }
-
-      *progress << std::setprecision ( 4 );
-      *progress << toString ( context->currentTime () )
-                << " stmts: " << now.statements << "(" << now.statements - last.statements << ")"
-                << " trans: " << now.transactions << "(" << now.transactions - last.transactions << ")"
-                << " speed: " << std::setw ( 7 ) << speed << units
-                << " " << bytesToString ( bspeed ) << "/s"
-                << " logpos: " << bytesToString ( context->getLogPos () ) << logPosExtra.str ();
-
-      if ( pStore ) {
-        pStore->save ( *host );
-        *progress << " Saved: " << pStore->getSaveCount ();
-      }
-
-      *progress << " " << location << "\n";
-      lastUpdate = currentTime;
-    }
-    last = now;
+    doProgress ( &location, context, currentTime );
   }
+}
+
+void DataCollector::doProgress ( const location *location, SQL::SQLParserContext *context, timeval &currentTime ) {
+  if ( location && location->begin.filename ) {
+    host->setLastLogFile ( *location->begin.filename );
+  }
+  host->setLastLogPos ( (int) context->getLogPos () );
+  time_t diff = context->currentTime () - start.statement;
+  timeval timeDiff;
+  timersub ( &currentTime, &start.time, &timeDiff );
+  timeval interval;
+  timersub ( &currentTime, &lastUpdate, &interval );
+
+  double speed = diff / ( timeDiff.tv_sec + ( timeDiff.tv_usec / 1000000.0f ) );
+  double bspeed = 0;
+
+  if ( last.time != 0 ) {
+    std::__1::string units = "s/s";
+    if ( speed > 60 ) {
+      speed /= 60.0f;
+      units = "m/s";
+    }
+    std::__1::stringstream logPosExtra;
+    if ( currentFileSize > 0 ) {
+      logPosExtra << std::__1::setprecision ( 3 ) << "/" << bytesToString ( currentFileSize ) << " "
+                  << ( ( context->getLogPos () / (double) currentFileSize ) * 100 ) << "%";
+    }
+
+    if ( last.logPos > 0 ) {
+      uint64_t bdiff = context->getLogPos () - last.logPos;
+      bspeed = bdiff / ( interval.tv_sec + ( interval.tv_usec / 1000000.0f ) );
+    }
+
+    *progress << std::__1::setprecision ( 4 );
+    *progress << toString ( context->currentTime () )
+              << " stmts: " << now.statements << "(" << now.statements - last.statements << ")"
+              << " trans: " << now.transactions << "(" << now.transactions - last.transactions << ")"
+              << " speed: " << std::__1::setw ( 7 ) << speed << units
+              << " " << bytesToString ( bspeed ) << "/s"
+              << " logpos: " << bytesToString ( context->getLogPos () ) << logPosExtra.str ();
+
+    if ( pStore ) {
+      pStore->save ( *host );
+      *progress << " Saved: " << pStore->getSaveCount ();
+    }
+
+    if ( location ) {
+      *progress << " " << *location;
+    }
+    *progress << "\n";
+  }
+  lastUpdate = currentTime;
+  last = now;
 }
 
 #define COLWIDTH 22
@@ -191,8 +196,13 @@ void DataCollector::setOutputStream ( std::ostream *output ) {
   DataCollector::output = output;
 }
 
-void DataCollector::startNewFile () {
-
+void DataCollector::endOfFile ( SQL::SQLParserContext *context ) {
+  timeval currentTime;
+  gettimeofday ( &currentTime, NULL );
+  doProgress ( NULL, context, currentTime );
+  bzero ( &last, sizeof ( last ) );
+  bzero ( &now, sizeof ( now ) );
+  currentFileSize = 0;
 }
 
 DataCollector::Walker::Walker ( boost::shared_ptr<Host> &host, SQL::SQLParserContext *context ) : host ( host ),

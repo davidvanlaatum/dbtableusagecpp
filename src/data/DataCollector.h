@@ -26,7 +26,7 @@ public:
     void setCommitInterval ( size_t interval );
     void setProgressStream ( std::ostream *progress );
     void setOutputStream ( std::ostream *output );
-    void startNewFile();
+    void endOfFile ( SQL::SQLParserContext *context );
 private:
     typedef std::map<std::string, boost::shared_ptr<SQL::SQLObject> > variables_type;
     variables_type variables;
@@ -57,6 +57,7 @@ private:
         boost::shared_ptr<Host> host;
         SQL::SQLParserContext *ctx;
     };
+    void doProgress ( const yy::location *location, SQL::SQLParserContext *context, timeval &currentTime );
 };
 
 

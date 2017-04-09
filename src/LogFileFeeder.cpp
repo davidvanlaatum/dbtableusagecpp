@@ -20,11 +20,11 @@ int LogFileFeeder::feed ( DataCollector *collector ) {
     do {
       FILE *handle = fileHandle ();
       *progress << "Now reading " << progressText () << std::endl;
-      collector->startNewFile ();
       collector->setCurrentFileSize ( fileSize () );
       SQL::SQLParserContext context ( collector );
       setupContext ( context );
       context.parseFileHandle ( handle, fileName () );
+      collector->endOfFile ( &context );
     } while ( next () );
   } else {
     *errorLog << "Nothing to do" << std::endl;
