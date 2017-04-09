@@ -89,7 +89,7 @@ int APPMain::main ( int argc, char *argv[] ) {
         DataCollector collector;
         collector.setCommitInterval ( vm["storage.commit"].as<unsigned> () );
         if ( vm.count ( "errorlog" ) ) {
-          logfile.open ( vm["errorlog"].as<std::string> (), std::ofstream::out | std::ofstream::app );
+          logfile.open ( vm["errorlog"].as<std::string> (), std::ios_base::out | std::ios_base::app );
           errorLog = new TeeStream ( logfile, std::cerr );
         }
         collector.setProgressStream ( progress );
