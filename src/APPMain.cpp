@@ -7,6 +7,7 @@
 #include <iostream>
 #include <fstream>
 #include <DataStore.h>
+#include <MySQLPrePopulater.h>
 #include "APPMain.h"
 #include "DataCollector.h"
 #include "TeeStream.h"
@@ -97,17 +98,20 @@ int APPMain::main ( int argc, char *argv[] ) {
 
         DataStore dataStore;
         boost::shared_ptr<LogFileFeeder> feeder;
-        if ( !nostore && vm.count ( "storage.url" ) && vm.count ( "monitor.host" ) ) {
-          dataStore.setConnection ( vm["storage.url"].as<std::string> () );
-          collector.setMonitoredHost ( vm["monitor.host"].as<std::string> () );
-          collector.setDataStore ( &dataStore );
-        }
         if ( vm.count ( "input" ) ) {
           feeder = boost::shared_ptr<LogFileFeeder> (
             new CLILogFileFeeder ( outputLog, errorLog, debugLog, progress, vm ) );
         } else {
           feeder = boost::shared_ptr<LogFileFeeder> ( new MySQLBinLogFileFeeder ( outputLog, errorLog, debugLog,
                                                                                   progress, vm ) );
+        }
+        if ( !nostore && vm.count ( "storage.url" ) && vm.count ( "monitor.host" ) ) {
+          MySQLPrePopulater populater ( vm["monitor.host"].as<std::string> (), vm["monitor.user"].as<std::string> (),
+                                        vm["monitor.password"].as<std::string> () );
+          dataStore.setConnection ( vm["storage.url"].as<std::string> () );
+          collector.setMonitoredHost ( vm["monitor.host"].as<std::string> () );
+          collector.setDataStore ( &dataStore );
+          populater.populate ( collector.getHost () );
         }
         feeder->feed ( &collector );
         if ( vm["print"].as<bool> () ) {
@@ -125,20 +129,6 @@ int APPMain::main ( int argc, char *argv[] ) {
   }
 
   return exit;
-}
-
-void APPMain::setupDriver ( SQL::SQLParserContext &driver, const boost::program_options::variables_map &vm ) const {
-  driver.setDebugStream ( debugLog );
-  driver.setErrorStream ( errorLog );
-  driver.setOutStream ( outputLog );
-  driver.setDebug ( vm["debug"].as<int> () );
-  driver.setVerbose ( vm["verbose"].as<int> () );
-  if (vm.count ("monitor.ignoredb")) {
-    std::vector<std::string> ignoredb = vm["monitor.ignoredb"].as<std::vector<std::string> > ();
-    for ( std::vector<std::string>::iterator it = ignoredb.begin (); it != ignoredb.end (); ++it ) {
-      driver.addIgnoreDB ( *it );
-    }
-  }
 }
 
 void APPMain::parseConfig ( boost::program_options::variables_map &vm ) {

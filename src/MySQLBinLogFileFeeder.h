@@ -7,8 +7,6 @@
 
 #include "LogFileFeeder.h"
 
-using namespace soci;
-
 class MySQLBinLogFileFeeder : public LogFileFeeder {
 public:
     MySQLBinLogFileFeeder ( std::ostream *outputLog, std::ostream *errorLog, std::ostream *debugLog, std::ostream *map,

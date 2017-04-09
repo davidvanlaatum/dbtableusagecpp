@@ -173,7 +173,7 @@ void DataCollector::setDataStore ( DataStore *pStore ) {
   this->pStore = pStore;
 }
 
-const Host *DataCollector::getHost () const {
+Host *DataCollector::getHost () const {
   return host.get ();
 }
 

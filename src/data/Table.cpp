@@ -137,3 +137,10 @@ int Table::getDatabase () const {
 void Table::setDatabase ( int database ) {
   Table::database = database;
 }
+
+void Table::updateCreated ( time_t i ) {
+  if ( i > created) {
+    created = i;
+    changed ();
+  }
+}

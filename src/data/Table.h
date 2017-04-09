@@ -40,6 +40,7 @@ public:
     void setCreated ( time_t created );
     int getDatabase () const;
     void setDatabase ( int database );
+    void updateCreated ( time_t i );
 private:
     int id;
     std::string name;

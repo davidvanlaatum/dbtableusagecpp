@@ -5,6 +5,8 @@
 #include <soci.h>
 #include "MySQLBinLogFileFeeder.h"
 
+using namespace soci;
+
 MySQLBinLogFileFeeder::MySQLBinLogFileFeeder ( std::ostream *outputLog, std::ostream *errorLog,
                                                std::ostream *debugLog, std::ostream *progress,
                                                boost::program_options::variables_map &vm )

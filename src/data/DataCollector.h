@@ -22,7 +22,7 @@ public:
     void setCurrentFileSize ( uint64_t currentFileSize );
     void setDataStore ( DataStore *pStore );
     void setMonitoredHost ( const std::string &host );
-    const Host *getHost () const;
+    Host *getHost () const;
     void setCommitInterval ( size_t interval );
     void setProgressStream ( std::ostream *progress );
     void setOutputStream ( std::ostream *output );
