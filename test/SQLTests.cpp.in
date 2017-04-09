@@ -4,9 +4,6 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-#include "SQLObject.h"
-using namespace testing;
-using namespace SQL;
 
 #define SQLTEST( type ) TEST(type ## Test,TestClone) {\
   type *ptr; \
@@ -22,3 +19,6 @@ TEST(type ## Test,TestToString) {\
 
 #define EMPTY_CONSTRUCTOR(type) type () { }
 #define EMPTY_CONSTRUCTORI(type,init) type () : init { }
+#include "SQLObject.h"
+using namespace testing;
+using namespace SQL;
