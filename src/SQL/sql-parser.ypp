@@ -656,7 +656,7 @@ delete_stmt: DELETE delete_opts
 
    /* statements: insert statement */
 
-stmt: insert_stmt { ctx.push(@$,$1); }
+stmt: insert_stmt { /*ctx.push(@$,$1);*/ }
    ;
 
 insert_stmt: INSERT insert_opts opt_into NAME
