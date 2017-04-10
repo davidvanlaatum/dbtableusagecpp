@@ -273,6 +273,7 @@ MODIFY { return token::MODIFY; }
 ENCRYPTION { return token::ENCRYPTION; }
 JSON { return token::JSON; }
 NUMERIC { return token::NUMERIC; }
+INSERT_ID { return token::INSERT_ID; }
 
    /* numbers */
 

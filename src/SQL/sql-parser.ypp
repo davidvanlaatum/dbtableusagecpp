@@ -362,6 +362,7 @@ class SQLColumnDefinition;
 %token ENCRYPTION
 %token JSON
 %token NUMERIC
+%token INSERT_ID
 
  /* functions with special syntax */
 %token FSUBSTRING
@@ -930,7 +931,7 @@ set_list: set_expr {
   $$->push($3);
 };
 
-varaible_name: USERVAR | TIMESTAMP { $$ = strdup("TIMESTAMP"); };
+varaible_name: USERVAR | TIMESTAMP { $$ = strdup("TIMESTAMP"); } | INSERT_ID { $$ = strdup("INSERT_ID"); }
 
 set_expr:
       varaible_name COMPARISON set_value {
