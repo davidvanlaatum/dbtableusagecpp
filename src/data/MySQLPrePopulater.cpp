@@ -26,7 +26,7 @@ void MySQLPrePopulater::populate ( Host *pHost ) {
       "FROM\n"
       "\t`information_schema`.`tables`\n"
       "WHERE\n"
-      "\ttable_type = 'BASE TABLE' AND table_schema NOT IN('PERFORMANCE_SCHEMA','mysql');" );
+      "\ttable_type = 'BASE TABLE' AND table_schema NOT IN('PERFORMANCE_SCHEMA','mysql','sys');" );
 
     boost::local_time::local_time_input_facet timeParser;
     timeParser.set_iso_format ();
